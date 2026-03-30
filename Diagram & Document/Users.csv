@@ -1,0 +1,5 @@
+user_id,full_name,email,phone,password_hash,avatar_url,gender,birth_date,role,is_verified,email_opt_in,member_level,status,created_at,updated_at
+1,"Nguyen Van A",a@gmail.com,0900000001,hashed_pw,NULL,other,NULL,customer,1,0,standard,active,"2026-03-30 12:12:13","2026-03-30 12:12:13"
+2,"Tran Thi B",b@gmail.com,0900000002,hashed_pw,NULL,other,NULL,customer,1,0,standard,active,"2026-03-30 12:12:13","2026-03-30 12:12:13"
+3,"Le Van C",c@gmail.com,0900000003,hashed_pw,NULL,other,NULL,customer,1,0,standard,active,"2026-03-30 12:12:13","2026-03-30 12:12:13"
+4,Admin,admin@gmail.com,0900000009,hashed_pw,NULL,other,NULL,admin,1,0,standard,active,"2026-03-30 12:12:13","2026-03-30 12:12:13"

@@ -1,0 +1,4 @@
+payment_method_id,method_code,method_name,status
+1,COD,"Thanh toán khi nhận hàng",active
+2,MOMO,"Ví MoMo",active
+3,CARD,"Thẻ ngân hàng",active

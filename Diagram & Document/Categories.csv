@@ -1,0 +1,5 @@
+category_id,name,slug,image_url,parent_id,status
+1,Áo,NULL,NULL,NULL,active
+2,Quần,NULL,NULL,NULL,active
+3,Giày,NULL,NULL,NULL,active
+4,"Phụ kiện",NULL,NULL,NULL,active

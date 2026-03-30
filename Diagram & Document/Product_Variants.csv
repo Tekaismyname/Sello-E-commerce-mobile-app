@@ -1,0 +1,11 @@
+variant_id,product_id,sku_variant,color,size,price,stock_qty,weight,image_url,status
+1,1,NULL,Đen,M,200000.00,50,NULL,NULL,active
+2,1,NULL,Trắng,L,200000.00,30,NULL,NULL,active
+3,2,NULL,Xám,M,210000.00,40,NULL,NULL,active
+4,3,NULL,Đen,L,220000.00,20,NULL,NULL,active
+5,4,NULL,Trắng,S,190000.00,60,NULL,NULL,active
+6,5,NULL,Đen,M,300000.00,25,NULL,NULL,active
+7,6,NULL,Xám,L,320000.00,30,NULL,NULL,active
+8,7,NULL,Trắng,M,280000.00,35,NULL,NULL,active
+9,8,NULL,Đen,42,800000.00,10,NULL,NULL,active
+10,9,NULL,Trắng,43,900000.00,15,NULL,NULL,active

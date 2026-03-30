@@ -1,0 +1,6 @@
+brand_id,name,slug,logo_url,status
+1,Nike,NULL,NULL,active
+2,Adidas,NULL,NULL,active
+3,Uniqlo,NULL,NULL,active
+4,Zara,NULL,NULL,active
+5,"Local Brand",NULL,NULL,active

@@ -1,0 +1,3 @@
+address_id,user_id,recipient_name,phone,province,district,ward,detail_address,address_type,is_default,latitude,longitude,created_at,updated_at
+1,1,"Nguyen Van A",0900000001,HCM,Q1,"Ben Nghe","123 Nguyen Hue",NULL,0,NULL,NULL,"2026-03-30 12:12:13","2026-03-30 12:12:13"
+2,2,"Tran Thi B",0900000002,HCM,Q3,"Vo Thi Sau","456 Cach Mang Thang 8",NULL,0,NULL,NULL,"2026-03-30 12:12:13","2026-03-30 12:12:13"

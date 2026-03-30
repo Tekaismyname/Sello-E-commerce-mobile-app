@@ -1,0 +1,4 @@
+order_item_id,order_id,product_id,variant_id,product_name_snapshot,variant_snapshot,unit_price,quantity,line_total
+1,1,1,NULL,"Áo thun Nike 1",NULL,200000.00,2,400000.00
+2,1,5,NULL,"Quần Nike 1",NULL,300000.00,1,300000.00
+3,2,8,NULL,"Giày Nike 1",NULL,800000.00,1,800000.00

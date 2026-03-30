@@ -1,0 +1,4 @@
+review_id,product_id,user_id,order_item_id,rating,title,comment,is_verified_purchase,helpful_count,created_at
+1,1,1,NULL,5,NULL,"Sản phẩm rất tốt",0,0,"2026-03-30 12:14:06"
+2,8,2,NULL,4,NULL,"Giày đẹp, giao nhanh",0,0,"2026-03-30 12:14:06"
+3,5,1,NULL,3,NULL,"Ổn trong tầm giá",0,0,"2026-03-30 12:14:06"
