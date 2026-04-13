@@ -8,6 +8,7 @@ import { JwtTokenService } from './services/jwt-token.service';
 import { MySqlDatabaseService } from './services/mysql-database.service';
 import { OtpService } from './services/otp.service';
 import { PasswordService } from './services/password.service';
+import { GoogleStrategy } from '../../google.strategy';
 
 @Module({
   controllers: [AuthController],
@@ -20,6 +21,7 @@ import { PasswordService } from './services/password.service';
     OtpService,
     PasswordService,
     RolesGuard,
+    GoogleStrategy,
   ],
   exports: [JwtTokenService, MySqlDatabaseService],
 })

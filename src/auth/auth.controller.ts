@@ -21,6 +21,7 @@ import {
 import { Roles } from './decorators/roles.decorator';
 import { LogoutDto } from './dto/logout.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtPayload } from './types/auth.types';
 
@@ -60,6 +61,21 @@ export class AuthController {
   @Post('logout')
   logout(@Body() payload: LogoutDto) {
     return this.authService.logout(payload);
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  googleAuth() {
+    // Endpoint này sẽ tự động redirect đến trang đăng nhập của Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleAuthCallback(@Req() req: AuthenticatedRequest) {
+    // Google redirect về đây sau khi user đăng nhập thành công.
+    // GoogleStrategy đã xử lý và gắn thông tin user vào req.user.
+    return this.authService.oAuthLogin(req.user);
   }
 
   @Get('me')

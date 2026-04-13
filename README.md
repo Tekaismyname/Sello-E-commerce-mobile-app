@@ -2,6 +2,7 @@
 
 Backend NestJS cho Sello Ecommerce, hien dang co:
 - Auth flow: register, verify OTP, login, logout, forgot password, reset password
+- Social login: Google (OAuth2), iCloud (Apple)
 - Role-based access: `customer`, `admin`
 - Homepage API: `GET /home`
 - MySQL integration
@@ -83,6 +84,8 @@ POST /auth/login
 POST /auth/forgot-password
 POST /auth/reset-password
 POST /auth/logout
+GET /auth/google
+GET /auth/icloud
 ```
 
 ### Protected

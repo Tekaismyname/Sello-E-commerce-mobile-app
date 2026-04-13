@@ -167,6 +167,74 @@ export class AuthService {
     };
   }
 
+  async oAuthLogin(userPayload: any) {
+    if (!userPayload || !userPayload.email) {
+      throw new BadRequestException('Invalid OAuth payload');
+    }
+
+    let user = await this.database.findUserByIdentifier(userPayload.email);
+
+    if (!user) {
+      user = await this.database.createUser({
+        fullName: userPayload.fullName || 'OAuth User',
+        email: userPayload.email,
+        phone: undefined as any, // Bỏ qua số điện thoại vì user đăng nhập bằng Google
+        passwordHash: '', // User đăng nhập qua OAuth không có password
+        role: 'customer',
+        status: 'active',
+        isVerified: true, // User từ Google đã được xác thực email
+      });
+
+      if (!user) {
+        throw new BadRequestException('Failed to create user from OAuth');
+      }
+    } else if (!user.isVerified) {
+      await this.database.updateUser(user.id, { isVerified: true });
+      user = (await this.database.findUserById(user.id))!;
+    }
+
+    if (user.status !== 'active') {
+      throw new UnauthorizedException('User is blocked');
+    }
+
+    const permissions = this.database.getPermissionsByRole(user.role);
+    const accessToken = this.jwtTokenService.sign({
+      sub: user.id,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      permissions,
+      type: 'access',
+    });
+    const refreshToken = this.jwtTokenService.sign(
+      {
+        sub: user.id,
+        role: user.role,
+        type: 'refresh',
+      },
+      7 * 24 * 60 * 60,
+    );
+
+    await this.database.createRefreshToken({
+      userId: user.id,
+      tokenHash: this.hashToken(refreshToken),
+      expiresAt: this.getRefreshTokenExpiryDate(refreshToken),
+    });
+
+    return {
+      message: 'OAuth Login successful',
+      tokens: {
+        accessToken,
+        refreshToken,
+        tokenType: 'Bearer',
+      },
+      user: {
+        ...this.toSafeUser(user),
+        permissions,
+      },
+    };
+  }
+
   async logout(payload: LogoutDto) {
     this.validateRefreshToken(payload.refreshToken);
 
