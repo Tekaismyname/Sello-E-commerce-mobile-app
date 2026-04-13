@@ -352,3 +352,6 @@ CREATE TABLE search_histories (
         FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 );
+
+ALTER TABLE users
+ADD COLUMN admin_level TINYINT NULL;

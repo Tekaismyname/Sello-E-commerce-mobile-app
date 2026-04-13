@@ -7,7 +7,7 @@ FROM information_schema.tables
 WHERE table_schema = 'Sello_Commerce';
 
 
-/* Find table that */
+/* Find table which inserted data and quanity of that */
 SET SESSION group_concat_max_len = 1000000;
 SELECT GROUP_CONCAT(
     CONCAT('SELECT "', table_name, '" AS table_name, COUNT(*) AS total FROM ', table_name)
@@ -43,4 +43,14 @@ SELECT * FROM vouchers;
 SELECT * FROM wishlist_items;
 SELECT * FROM wishlists;
 
+
+DESCRIBE users;
+DESCRIBE user_otps;
+
+UPDATE users
+SET role = 'admin',
+    status = 'active',
+    is_verified = 1,
+    admin_level = 1
+WHERE email = 'admin@gmail.com';
 

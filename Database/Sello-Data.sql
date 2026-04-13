@@ -9,6 +9,33 @@ VALUES
 	('Le Van C', 'c@gmail.com', '0900000003', 'hashed_pw', 'customer', TRUE),
 	('Admin', 'admin@gmail.com', '0900000009', 'hashed_pw', 'admin', TRUE);
 
+INSERT INTO users
+(full_name, email, phone, password_hash, role, status, is_verified, admin_level)
+VALUES
+(
+  'Admin 2',
+  'admin2@gmail.com',
+  '0911111112',
+  '277939e03a6566a41ae1f7c0b0b7d08f:8780d5e57de1acfd7fd4bbb92baefa8b81ded570f98ab6c6a09189a3a5a277db5f93e7eabac245d010b0fcc9e5faa4c1b8403ef9225b327edf620b2313fefa6e',
+  'admin',
+  'active',
+  1,
+  2
+),
+(
+  'Admin 3',
+  'admin3@gmail.com',
+  '0911111113',
+  '8fe4b87ae8b967925cec54ded9bfeb4d:dfa51a94b874054aa64448422b21dc0f7eb73661e8bf905e08f3ca056664c8410ede7b770039fcb66a198347036e44e8a4986d85292bf622b458a5d5e47bd0fd',
+  'admin',
+  'active',
+  1,
+  3
+);
+
+
+
+
 /*CATEGORIES insert field*/
 INSERT INTO categories (name) VALUES
 	('Áo'),
