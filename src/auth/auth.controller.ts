@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
+import { AdminLevels } from './decorators/admin-levels.decorator';
 import {
   ForgotPasswordDto,
   LoginDto,
@@ -22,6 +23,7 @@ import { Roles } from './decorators/roles.decorator';
 import { LogoutDto } from './dto/logout.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { AdminLevelGuard } from './guards/admin-level.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtPayload } from './types/auth.types';
 
@@ -88,8 +90,9 @@ export class AuthController {
   }
 
   @Get('admin/ping')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, AdminLevelGuard)
   @Roles('admin')
+  @AdminLevels(1, 2, 3)
   adminPing(@Req() request: AuthenticatedRequest) {
     return {
       message: 'Admin access granted',
@@ -97,9 +100,21 @@ export class AuthController {
     };
   }
 
-  @Delete('users/:userId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('admin/operations/ping')
+  @UseGuards(JwtAuthGuard, RolesGuard, AdminLevelGuard)
   @Roles('admin')
+  @AdminLevels(1, 2)
+  adminOperationsPing(@Req() request: AuthenticatedRequest) {
+    return {
+      message: 'Operations admin access granted',
+      user: request.user,
+    };
+  }
+
+  @Delete('users/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard, AdminLevelGuard)
+  @Roles('admin')
+  @AdminLevels(1)
   deleteUser(@Param('userId', ParseIntPipe) userId: number) {
     return this.authService.deleteUser(userId);
   }

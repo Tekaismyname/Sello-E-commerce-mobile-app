@@ -1,0 +1,11 @@
+section,key,value
+summary,users,8
+summary,orders,2
+revenue,2026-03,1500000
+top_selling,Admin Test Product Updated,2
+top_selling,Quần Nike 1,1
+top_selling,Giày Nike 1,1
+top_selling,Áo thun Nike 2,0
+top_selling,Áo Adidas 1,0
+order_status,delivered,1
+order_status,shipping,1

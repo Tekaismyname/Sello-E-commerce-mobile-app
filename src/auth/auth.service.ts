@@ -46,6 +46,7 @@ export class AuthService {
       phone: payload.phone,
       passwordHash: this.passwordService.hash(payload.password),
       role: 'customer',
+      adminLevel: null,
       status: 'active',
       isVerified: false,
     });
@@ -129,12 +130,13 @@ export class AuthService {
       throw new UnauthorizedException('User has not verified OTP');
     }
 
-    const permissions = this.database.getPermissionsByRole(user.role);
+    const permissions = this.database.getPermissionsForUser(user);
     const accessToken = this.jwtTokenService.sign({
       sub: user.id,
       email: user.email,
       phone: user.phone,
       role: user.role,
+      adminLevel: user.adminLevel,
       permissions,
       type: 'access',
     });
@@ -142,6 +144,7 @@ export class AuthService {
       {
         sub: user.id,
         role: user.role,
+        adminLevel: user.adminLevel,
         type: 'refresh',
       },
       7 * 24 * 60 * 60,
@@ -181,6 +184,7 @@ export class AuthService {
         phone: undefined as any, // Bỏ qua số điện thoại vì user đăng nhập bằng Google
         passwordHash: '', // User đăng nhập qua OAuth không có password
         role: 'customer',
+        adminLevel: null,
         status: 'active',
         isVerified: true, // User từ Google đã được xác thực email
       });
@@ -197,12 +201,13 @@ export class AuthService {
       throw new UnauthorizedException('User is blocked');
     }
 
-    const permissions = this.database.getPermissionsByRole(user.role);
+    const permissions = this.database.getPermissionsForUser(user);
     const accessToken = this.jwtTokenService.sign({
       sub: user.id,
       email: user.email,
       phone: user.phone,
       role: user.role,
+      adminLevel: user.adminLevel,
       permissions,
       type: 'access',
     });
@@ -210,6 +215,7 @@ export class AuthService {
       {
         sub: user.id,
         role: user.role,
+        adminLevel: user.adminLevel,
         type: 'refresh',
       },
       7 * 24 * 60 * 60,
@@ -343,6 +349,7 @@ export class AuthService {
       email: user.email,
       phone: user.phone,
       role: user.role,
+      adminLevel: user.adminLevel,
       status: user.status,
       isVerified: user.isVerified,
       createdAt: user.createdAt,

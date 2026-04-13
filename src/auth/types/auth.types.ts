@@ -1,6 +1,7 @@
 export type UserRole = 'admin' | 'customer';
+export type AdminLevel = 1 | 2 | 3;
 
-export type UserStatus = 'active' | 'blocked';
+export type UserStatus = 'active' | 'inactive' | 'blocked';
 
 export type AuthPurpose = 'register' | 'reset_password';
 export type OtpDeliveryMethod = 'email' | 'phone';
@@ -14,6 +15,7 @@ export interface User {
   phone: string;
   passwordHash: string;
   role: UserRole;
+  adminLevel: AdminLevel | null;
   status: UserStatus;
   isVerified: boolean;
   createdAt: Date;
@@ -47,6 +49,7 @@ export interface CreateUserInput {
   phone: string;
   passwordHash: string;
   role: UserRole;
+  adminLevel?: AdminLevel | null;
   status: UserStatus;
   isVerified: boolean;
 }
@@ -69,6 +72,7 @@ export interface JwtPayload {
   sub: number;
   role: UserRole;
   type: string;
+  adminLevel?: AdminLevel | null;
   email?: string;
   phone?: string;
   permissions?: string[];
