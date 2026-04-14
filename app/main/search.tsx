@@ -12,7 +12,7 @@ export default function SearchScreen() {
     <SafeAreaView className="flex-1 bg-[#f3f5f8]" edges={["top"]}>
       <View className="px-4 py-3">
         <View className="h-[50px] flex-row items-center rounded-[12px] bg-[#eef1f5] px-3">
-          <Pressable className="mr-2 h-8 w-8 items-center justify-center" onPress={() => router.back()}>
+          <Pressable className="mr-2 h-8 w-8 items-center justify-center" onPress={() => router.canGoBack() ? router.back() : router.navigate("/main/home" as any)}>
             <Feather name="arrow-left" size={19} color="#495463" />
           </Pressable>
           <Feather name="search" size={16} color="#8c96a2" />

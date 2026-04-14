@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_ENDPOINTS } from "@/constants/api";
+import { API_BASE_URL_CANDIDATES, API_ENDPOINTS } from "@/constants/api";
 import {
   ForgotPasswordPayload,
   ForgotPasswordResponse,
@@ -13,19 +13,29 @@ import {
 } from "@/types/auth";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  let response: Response;
+  let response: Response | null = null;
+  const triedBaseUrls: string[] = [];
 
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...(init?.headers ?? {}),
-      },
-    });
-  } catch {
+  for (const baseUrl of API_BASE_URL_CANDIDATES) {
+    triedBaseUrls.push(baseUrl);
+
+    try {
+      response = await fetch(`${baseUrl}${path}`, {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          ...(init?.headers ?? {}),
+        },
+      });
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  if (!response) {
     throw new Error(
-      "Không thể kết nối backend. Kiểm tra EXPO_PUBLIC_API_BASE_URL hoặc server NestJS đang chạy.",
+      `Không thể kết nối backend. Đã thử: ${triedBaseUrls.join(", ")}.`,
     );
   }
 
@@ -82,5 +92,24 @@ export const authService = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+
+  logout(refreshToken: string) {
+    return request<{ message: string; clearTokens: boolean }>(
+      API_ENDPOINTS.auth.logout,
+      {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+      },
+    );
+  },
+
+  me(accessToken: string) {
+    return request<{ message: string; user: { sub: number; email: string; phone: string; role: string; adminLevel: number | null; permissions: string[] } }>(
+      API_ENDPOINTS.auth.me,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
   },
 };

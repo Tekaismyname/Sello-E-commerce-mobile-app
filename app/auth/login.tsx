@@ -17,8 +17,10 @@ import { SelloAuthLogo } from "@/components/auth/sello-auth-logo";
 import { SocialAuthOptions } from "@/components/auth/social-auth-options";
 import { useAuthAction } from "@/hooks/auth/use-auth-action";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,9 +48,18 @@ export default function LoginScreen() {
         password,
       });
 
+      // Persist tokens + user to AsyncStorage
+      await signIn(response);
+
       setSuccessMessage(`Login success: ${response.user.fullName}`);
+      const normalizedRole = response.user.role?.trim().toLowerCase();
+      const redirectPath =
+        normalizedRole === "admin"
+          ? ("/admin/dashboard" as Href)
+          : ("/main/home" as Href);
+
       setTimeout(() => {
-        router.replace("/main/home" as Href);
+        router.replace(redirectPath);
       }, 350);
 
       return response;

@@ -13,8 +13,8 @@ export function FlashSalesSection({ countdownValues, products }: FlashSalesSecti
       <View className="mb-2 flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <Feather name="zap" size={16} color="#7d2de2" />
-          <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">GIẢM</Text>
-          <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">SỐC</Text>
+          <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">FLASH</Text>
+          <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">SALE</Text>
         </View>
         <View className="flex-row gap-1">
           {countdownValues.map((value) => (

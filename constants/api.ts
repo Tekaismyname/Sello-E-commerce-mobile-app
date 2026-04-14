@@ -16,6 +16,29 @@ const replaceHostKeepingPort = (url: string, host: string) => {
   }
 };
 
+const uniqueUrls = (urls: string[]) => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const url of urls) {
+    const normalized = trimTrailingSlash(url.trim());
+
+    if (!normalized) {
+      continue;
+    }
+
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(normalized);
+  }
+
+  return result;
+};
+
 const resolveExpoDevHost = () => {
   const hostUriFromConfig = Constants.expoConfig?.hostUri;
   const maybeHostUri =
@@ -36,33 +59,36 @@ const resolveExpoDevHost = () => {
   return host;
 };
 
-const resolveApiBaseUrl = () => {
+const resolveApiBaseUrls = () => {
+  const candidates: string[] = [];
   const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
   if (envBaseUrl) {
     if (Platform.OS === "android" && isLocalhostUrl(envBaseUrl)) {
-      return replaceHostKeepingPort(envBaseUrl, "10.0.2.2");
+      candidates.push(replaceHostKeepingPort(envBaseUrl, "10.0.2.2"));
     }
-
-    return trimTrailingSlash(envBaseUrl);
+    candidates.push(envBaseUrl);
   }
 
   if (Platform.OS !== "web") {
     const expoDevHost = resolveExpoDevHost();
 
     if (expoDevHost) {
-      return `http://${expoDevHost}:3000`;
+      candidates.push(`http://${expoDevHost}:3000`);
     }
   }
 
   if (Platform.OS === "android") {
-    return "http://10.0.2.2:3000";
+    candidates.push("http://10.0.2.2:3000");
   }
 
-  return "http://127.0.0.1:3000";
+  candidates.push("http://127.0.0.1:3000");
+
+  return uniqueUrls(candidates);
 };
 
-export const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL_CANDIDATES = resolveApiBaseUrls();
+export const API_BASE_URL = API_BASE_URL_CANDIDATES[0] ?? "http://127.0.0.1:3000";
 
 export const API_ENDPOINTS = {
   auth: {
@@ -71,8 +97,69 @@ export const API_ENDPOINTS = {
     forgotPassword: "/auth/forgot-password",
     verifyOtp: "/auth/verify-otp",
     resetPassword: "/auth/reset-password",
+    logout: "/auth/logout",
+    me: "/auth/me",
+    google: "/auth/google",
+    deleteUser: (userId: number) => `/auth/users/${userId}`,
   },
   main: {
     home: "/home",
+  },
+  products: {
+    detail: (productId: number) => `/products/${productId}`,
+  },
+  customer: {
+    profile: "/me",
+    updateProfile: "/me",
+    updatePassword: "/me/password",
+    addresses: "/addresses",
+    createAddress: "/addresses",
+    updateAddress: (addressId: number) => `/addresses/${addressId}`,
+    setDefaultAddress: (addressId: number) => `/addresses/${addressId}/default`,
+    deleteAddress: (addressId: number) => `/addresses/${addressId}`,
+    notifications: "/notifications",
+    markNotificationRead: (notificationId: number) => `/notifications/${notificationId}/read`,
+    markAllNotificationsRead: "/notifications/read-all",
+    wishlist: "/wishlist",
+    addWishlistItem: "/wishlist/items",
+    deleteWishlistItem: (wishlistItemId: number) => `/wishlist/items/${wishlistItemId}`,
+    createReview: "/reviews",
+  },
+  cart: {
+    get: "/cart",
+    addItem: "/cart/items",
+    updateItem: (cartItemId: number) => `/cart/items/${cartItemId}`,
+    selectItem: (cartItemId: number) => `/cart/items/${cartItemId}/select`,
+    deleteItem: (cartItemId: number) => `/cart/items/${cartItemId}`,
+    summary: "/cart/summary",
+  },
+  checkout: {
+    preview: "/checkout/preview",
+    applyVoucher: "/checkout/apply-voucher",
+    createOrder: "/orders",
+  },
+  orders: {
+    myOrders: "/orders/me",
+    detail: (orderId: number) => `/orders/${orderId}`,
+    cancel: (orderId: number) => `/orders/${orderId}/cancel`,
+    tracking: (orderId: number) => `/orders/${orderId}/tracking`,
+    mockPaymentCallback: (paymentId: number) => `/payments/mock/${paymentId}/callback`,
+  },
+  admin: {
+    dashboard: "/admin/system/dashboard",
+    updateConfig: "/admin/system/config",
+    users: "/admin/users",
+    userDetail: (userId: number) => `/admin/users/${userId}`,
+    updateUserStatus: (userId: number) => `/admin/users/${userId}/status`,
+    updateUserRole: (userId: number) => `/admin/users/${userId}/role`,
+    orders: "/admin/orders",
+    orderDetail: (orderId: number) => `/admin/orders/${orderId}`,
+    updateOrderStatus: (orderId: number) => `/admin/orders/${orderId}/status`,
+    products: "/admin/products",
+    createProduct: "/admin/products",
+    updateProduct: (productId: number) => `/admin/products/${productId}`,
+    updateProductStatus: (productId: number) => `/admin/products/${productId}/status`,
+    reportsOverview: "/admin/reports/overview",
+    exportReport: "/admin/reports/export",
   },
 } as const;

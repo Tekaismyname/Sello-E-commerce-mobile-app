@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from "react-native";
-import { SuggestedProductCard } from "@/components/product/suggested-product-card";
+import { SuggestedProductCard } from "@/components/product";
 import { ProductCard } from "@/types/main";
 
 type SuggestedProductsSectionProps = {

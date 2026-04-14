@@ -1,28 +1,77 @@
 import { Href, router } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SelloHeader } from "@/components/main/sello-header";
+import { profileService } from "@/services/customer.service";
+import { authService } from "@/services/auth.service";
+import { UserProfile } from "@/types/customer";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function ProfileScreen() {
+  const { token, refreshToken, signOut } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    profileService
+      .getProfile(token)
+      .then((res) => setProfile(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) {
+        await authService.logout(refreshToken);
+      }
+    } catch {
+      // Ignore logout API errors and clear local state anyway.
+    } finally {
+      await signOut();
+    }
+
+    router.replace("/onboarding/welcome" as Href);
+  };
+
+  const displayName = profile?.fullName || "Sello Member";
+  const displayEmail = profile?.email || "member@sello.app";
+  const initials = displayName.charAt(0).toUpperCase();
+
   return (
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
       <SelloHeader />
       <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
         <View className="rounded-[16px] bg-white p-4">
-          <View className="h-14 w-14 items-center justify-center rounded-full bg-[#dfeaff]">
-            <Text className="text-[26px] font-extrabold text-[#2d6dff]">S</Text>
-          </View>
-          <Text className="mt-3 text-[20px] font-extrabold text-[#1f2934]">Sello Member</Text>
-          <Text className="text-[12px] text-[#7d8896]">member@sello.app</Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#006397" />
+          ) : (
+            <>
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-[#dfeaff]">
+                <Text className="text-[26px] font-extrabold text-[#2d6dff]">{initials}</Text>
+              </View>
+              <Text className="mt-3 text-[20px] font-extrabold text-[#1f2934]">{displayName}</Text>
+              <Text className="text-[12px] text-[#7d8896]">{displayEmail}</Text>
+              {profile?.phone && (
+                <Text className="text-[12px] text-[#7d8896]">{profile.phone}</Text>
+              )}
+            </>
+          )}
         </View>
 
         <View className="mt-4 gap-2">
           {[
-            "Thông tin tài khoản",
-            "Địa chỉ giao hàng",
-            "Phương thức thanh toán",
-            "Thông báo",
+            "Thong tin tai khoan",
+            "Dia chi giao hang",
+            "Phuong thuc thanh toan",
+            "Thong bao",
           ].map((item) => (
             <Pressable
               key={item}
@@ -36,9 +85,9 @@ export default function ProfileScreen() {
 
         <Pressable
           className="mt-6 h-[46px] items-center justify-center rounded-[12px] border border-[#d7deea] bg-white"
-          onPress={() => router.replace("/onboarding/welcome" as Href)}
+          onPress={handleLogout}
         >
-          <Text className="text-[14px] font-bold text-[#2b3642]">Quay lại màn chào</Text>
+          <Text className="text-[14px] font-bold text-[#BA1A1A]">Dang xuat</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

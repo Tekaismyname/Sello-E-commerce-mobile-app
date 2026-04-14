@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_ENDPOINTS } from "@/constants/api";
+import { API_BASE_URL_CANDIDATES, API_ENDPOINTS } from "@/constants/api";
 import {
   BackendHomeResponse,
   CategoriesData,
@@ -78,7 +78,7 @@ const mapBackendProductToCard = (
   const badgeValues = ["-18%", "-33%", "-20%", "-60%"];
 
   return {
-    id: `be-${product.id}-${index}`,
+    id: String(product.id),
     title: product.name,
     subtitle: product.brand?.name ?? "Sản phẩm nổi bật",
     price: formatPrice(basePrice),
@@ -153,12 +153,22 @@ const mapProductListData = (payload: BackendHomeResponse): ProductListData => ({
 });
 
 async function requestMain<T>(path: string): Promise<T> {
-  let response: Response;
+  let response: Response | null = null;
+  const triedBaseUrls: string[] = [];
 
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`);
-  } catch {
-    throw new Error("Không thể kết nối backend cho dữ liệu main.");
+  for (const baseUrl of API_BASE_URL_CANDIDATES) {
+    triedBaseUrls.push(baseUrl);
+
+    try {
+      response = await fetch(`${baseUrl}${path}`);
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  if (!response) {
+    throw new Error(`Không thể kết nối backend cho dữ liệu main. Đã thử: ${triedBaseUrls.join(", ")}.`);
   }
 
   const raw = await response.text();

@@ -5,6 +5,7 @@ export default function MainLayout() {
   return (
     <Tabs
       initialRouteName="home"
+      backBehavior="history"
       tabBar={(props) => <SelloTabBar {...props} />}
       screenOptions={{
         headerShown: false,
