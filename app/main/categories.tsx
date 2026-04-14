@@ -28,9 +28,7 @@ export default function CategoriesScreen() {
             />
             <View className="px-4 py-4">
               <View className="self-start rounded-full bg-[#188c63] px-3 py-1">
-                <Text className="text-[10px] font-bold uppercase tracking-[0.6px] text-white">
-                  TIÊU ĐIỂM THÁNG 10
-                </Text>
+                <Text className="text-[10px] font-bold uppercase tracking-[0.6px] text-white">TIÊU ĐIỂM THÁNG 10</Text>
               </View>
               <Text className="mt-2 max-w-[65%] text-[40px] font-extrabold leading-[42px] text-white">
                 Đỉnh Cao Công Nghệ
@@ -46,7 +44,9 @@ export default function CategoriesScreen() {
               <Pressable
                 key={tile.id}
                 className="w-[48.5%] overflow-hidden rounded-[14px] bg-white"
-                onPress={() => router.push("/main/product-list" as Href)}
+                onPress={() =>
+                  router.push((`/main/product-list?keyword=${encodeURIComponent(tile.title)}` as unknown) as Href)
+                }
               >
                 <Image
                   source={{ uri: tile.imageUrl }}
@@ -66,6 +66,9 @@ export default function CategoriesScreen() {
                 <Pressable
                   key={brand}
                   className="h-9 items-center justify-center rounded-[10px] border border-[#e2e7ec] bg-[#eef2f6] px-4"
+                  onPress={() =>
+                    router.push((`/main/product-list?keyword=${encodeURIComponent(brand)}` as unknown) as Href)
+                  }
                 >
                   <Text className="text-[12px] font-bold text-[#8b95a0]">{brand}</Text>
                 </Pressable>

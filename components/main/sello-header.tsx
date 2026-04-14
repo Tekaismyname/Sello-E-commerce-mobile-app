@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { Href, router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 type SelloHeaderProps = {
@@ -21,9 +22,11 @@ export function SelloHeader({
         >
           <Feather name="menu" size={18} color="#2d3640" />
         </Pressable>
-        <Text className="text-[20px] font-extrabold tracking-[-0.4px] text-[#1a232d]">
-          Sello Commerce
-        </Text>
+        <Pressable onPress={() => router.replace("/main/home" as Href)}>
+          <Text className="text-[20px] font-extrabold tracking-[-0.4px] text-[#1a232d]">
+            Sello Commerce
+          </Text>
+        </Pressable>
       </View>
 
       <View className="flex-row items-center gap-1">

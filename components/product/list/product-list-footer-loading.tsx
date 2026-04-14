@@ -1,6 +1,14 @@
 import { Text, View } from "react-native";
 
-export function ProductListFooterLoading() {
+type ProductListFooterLoadingProps = {
+  visible?: boolean;
+};
+
+export function ProductListFooterLoading({ visible = true }: ProductListFooterLoadingProps) {
+  if (!visible) {
+    return null;
+  }
+
   return (
     <View className="mt-4 flex-row items-center justify-center gap-2">
       <View className="h-1.5 w-1.5 rounded-full bg-[#2f7ed6]" />

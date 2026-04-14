@@ -1,4 +1,5 @@
 import { Href, router } from "expo-router";
+import { useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FeaturedCategoriesSection } from "@/components/main/home/featured-categories-section";
@@ -10,8 +11,29 @@ import { SearchTriggerBar } from "@/components/main/search-trigger-bar";
 import { SelloHeader } from "@/components/main/sello-header";
 import { useHomeData } from "@/hooks/main/use-main-data";
 
+const HOME_PAGE_SIZE = 4;
+
 export default function HomeScreen() {
   const { data, loading, errorMessage } = useHomeData();
+  const [visibleSuggestedCount, setVisibleSuggestedCount] = useState(HOME_PAGE_SIZE);
+  const [loadingMoreSuggested, setLoadingMoreSuggested] = useState(false);
+
+  const visibleSuggestedProducts = useMemo(
+    () => (data?.suggestedProducts ?? []).slice(0, visibleSuggestedCount),
+    [data?.suggestedProducts, visibleSuggestedCount],
+  );
+
+  const hasMoreSuggested = (data?.suggestedProducts?.length ?? 0) > visibleSuggestedProducts.length;
+
+  const handleViewMoreSuggested = () => {
+    if (!hasMoreSuggested || loadingMoreSuggested) return;
+
+    setLoadingMoreSuggested(true);
+    setTimeout(() => {
+      setVisibleSuggestedCount((prev) => prev + HOME_PAGE_SIZE);
+      setLoadingMoreSuggested(false);
+    }, 450);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
@@ -29,9 +51,15 @@ export default function HomeScreen() {
           <HomePromoBanner />
           <FeaturedCategoriesSection categories={data.quickCategories} />
           <FlashSalesSection countdownValues={data.countdownValues} products={data.flashSaleProducts} />
-          <SuggestedProductsSection products={data.suggestedProducts} />
+          <SuggestedProductsSection
+            products={visibleSuggestedProducts}
+            hasMore={hasMoreSuggested}
+            loadingMore={loadingMoreSuggested}
+            onViewMore={handleViewMoreSuggested}
+          />
         </ScrollView>
       ) : null}
     </SafeAreaView>
   );
 }
+

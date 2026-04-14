@@ -6,9 +6,16 @@ import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
 import { adminService } from "@/services/admin.service";
 import { AdminProductsData } from "@/types/admin";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminProductsScreen() {
@@ -39,9 +46,11 @@ export default function AdminProductsScreen() {
     }
   }, [token]);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProducts();
+    }, [fetchProducts]),
+  );
 
   const handleAddProduct = () => {
     router.push("/admin/add-product");
@@ -53,13 +62,13 @@ export default function AdminProductsScreen() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 relative"
+        className="relative flex-1"
       >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4 pb-24">
           <AdminSearchFilter searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
 
           {loading && (
-            <View className="flex-1 items-center justify-center mt-10">
+            <View className="mt-10 flex-1 items-center justify-center">
               <ActivityIndicator size="large" color="#006397" />
             </View>
           )}

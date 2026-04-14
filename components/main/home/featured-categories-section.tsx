@@ -22,7 +22,9 @@ export function FeaturedCategoriesSection({ categories }: FeaturedCategoriesSect
           <Pressable
             key={item.id}
             className="w-[18.5%] items-center"
-            onPress={() => router.push("/main/categories" as Href)}
+            onPress={() =>
+              router.push((`/main/product-list?keyword=${encodeURIComponent(item.label)}` as unknown) as Href)
+            }
           >
             <View
               className="mb-2 h-11 w-11 items-center justify-center rounded-[12px]"

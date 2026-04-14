@@ -9,8 +9,16 @@ type ProductListCardProps = {
 };
 
 export function ProductListCard({ product }: ProductListCardProps) {
+  const canOpenDetail = !product.isPlaceholder;
+
   return (
-    <Pressable className="w-[48.5%]" onPress={() => router.push(`/product/detail?id=${product.id}` as Href)}>
+    <Pressable
+      className="w-[48.5%]"
+      onPress={() => {
+        if (!canOpenDetail) return;
+        router.push(`/product/detail?id=${product.id}` as Href);
+      }}
+    >
       <UICard className="w-full pb-3 overflow-hidden">
         <View className="relative h-[170px]">
           <Image source={{ uri: product.imageUrl }} className="h-full w-full" resizeMode="cover" />

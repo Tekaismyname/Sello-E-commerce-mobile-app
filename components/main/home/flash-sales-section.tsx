@@ -17,8 +17,8 @@ export function FlashSalesSection({ countdownValues, products }: FlashSalesSecti
           <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">SALE</Text>
         </View>
         <View className="flex-row gap-1">
-          {countdownValues.map((value) => (
-            <View key={value} className="min-w-[24px] rounded-full bg-[#8f46e9] px-2 py-[3px]">
+          {countdownValues.map((value, index) => (
+            <View key={`${value}-${index}`} className="min-w-[24px] rounded-full bg-[#8f46e9] px-2 py-[3px]">
               <Text className="text-center text-[11px] font-extrabold text-white">{value}</Text>
             </View>
           ))}
@@ -26,8 +26,8 @@ export function FlashSalesSection({ countdownValues, products }: FlashSalesSecti
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3">
-        {products.map((product) => (
-          <View key={product.id} className="w-[120px] overflow-hidden rounded-[12px] bg-white pb-3">
+        {products.map((product, index) => (
+          <View key={`${product.id}-${index}`} className="w-[120px] overflow-hidden rounded-[12px] bg-white pb-3">
             <View className="relative h-[84px]">
               <Image source={{ uri: product.imageUrl }} className="h-full w-full" resizeMode="cover" />
               {product.badge ? (

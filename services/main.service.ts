@@ -9,25 +9,9 @@ import {
   SearchData,
 } from "@/types/main";
 
-const quickCategoryIcons = [
-  "smartphone",
-  "shirt",
-  "home",
-  "book-open",
-  "monitor",
-  "watch",
-  "headphones",
-] as const;
+const quickCategoryIcons = ["smartphone", "shopping-bag", "home", "book-open", "monitor", "watch", "headphones"] as const;
 
-const quickCategoryColors = [
-  "#eaf5ff",
-  "#f2ecff",
-  "#edfff3",
-  "#eef5ff",
-  "#f5f6ff",
-  "#fff3e8",
-  "#ecfbff",
-] as const;
+const quickCategoryColors = ["#eaf5ff", "#f2ecff", "#edfff3", "#eef5ff", "#f5f6ff", "#fff3e8", "#ecfbff"] as const;
 
 const fallbackImages = [
   "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80",
@@ -44,7 +28,7 @@ const countdownValues = ["02", "45", "12"];
 let cachedHomePromise: Promise<BackendHomeResponse> | null = null;
 let cachedHomeData: BackendHomeResponse | null = null;
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 
 const uniqueList = (items: string[], max: number) => {
   const seen = new Set<string>();
@@ -70,21 +54,50 @@ const uniqueList = (items: string[], max: number) => {
 
 const mapBackendProductToCard = (
   product: BackendHomeResponse["featuredProducts"][number],
+  categoryName: string,
   index: number,
   withBadge = false,
 ): ProductCard => {
   const basePrice = Number(product.basePrice) || 0;
   const oldPrice = basePrice > 0 ? Math.round(basePrice * 1.15) : 0;
   const badgeValues = ["-18%", "-33%", "-20%", "-60%"];
+  const brandName = product.brand?.name ?? "Sello";
+  const ratingValue = 3.8 + (index % 13) / 10;
 
   return {
     id: String(product.id),
     title: product.name,
-    subtitle: product.brand?.name ?? "Sản phẩm nổi bật",
+    subtitle: brandName,
+    brandName,
+    categoryName,
+    searchKeywords: [product.name, brandName, categoryName],
+    priceValue: basePrice,
+    ratingValue,
     price: formatPrice(basePrice),
     oldPrice: oldPrice > 0 ? formatPrice(oldPrice) : undefined,
     badge: withBadge ? badgeValues[index % badgeValues.length] : undefined,
     imageUrl: product.primaryImageUrl ?? fallbackImages[index % fallbackImages.length],
+  };
+};
+
+const mapCategoryPlaceholderToCard = (categoryName: string, index: number): ProductCard => {
+  const basePrice = 390000 + (index % 8) * 110000;
+  const oldPrice = Math.round(basePrice * 1.14);
+
+  return {
+    id: `placeholder-${index}-${categoryName}`,
+    title: `${categoryName} noi bat`,
+    subtitle: "Sello",
+    brandName: "Sello",
+    categoryName,
+    searchKeywords: [categoryName, `${categoryName} gia re`, `${categoryName} ban chay`],
+    priceValue: basePrice,
+    ratingValue: 4 + (index % 8) / 10,
+    price: formatPrice(basePrice),
+    oldPrice: formatPrice(oldPrice),
+    badge: index % 2 === 0 ? "-15%" : undefined,
+    imageUrl: fallbackImages[index % fallbackImages.length],
+    isPlaceholder: true,
   };
 };
 
@@ -97,13 +110,19 @@ const mapQuickCategories = (payload: BackendHomeResponse): QuickCategory[] =>
   }));
 
 const mapHomeData = (payload: BackendHomeResponse): HomeData => {
+  const categoryMap = new Map<number, string>(payload.categories.map((c) => [c.id, c.name]));
+
   const mappedProducts = payload.featuredProducts.map((product, index) =>
-    mapBackendProductToCard(product, index),
+    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index),
   );
+
   const flashSaleProducts = payload.featuredProducts
     .slice(0, 4)
-    .map((product, index) => mapBackendProductToCard(product, index, true));
-  const suggestedProducts = mappedProducts.slice(0, 4);
+    .map((product, index) =>
+      mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index, true),
+    );
+
+  const suggestedProducts = mappedProducts;
 
   return {
     quickCategories: mapQuickCategories(payload),
@@ -120,38 +139,38 @@ const mapCategoriesData = (payload: BackendHomeResponse): CategoriesData => ({
     subtitle: undefined,
     imageUrl: fallbackImages[index % fallbackImages.length],
   })),
-  popularBrands: uniqueList(
-    payload.brands.map((brand) => brand.name),
-    6,
-  ),
+  popularBrands: uniqueList(payload.brands.map((brand) => brand.name), 6),
 });
 
 const mapSearchData = (payload: BackendHomeResponse): SearchData => ({
-  searchHistory: uniqueList(
-    payload.featuredProducts.map((product) => product.name),
-    4,
-  ),
+  searchHistory: uniqueList(payload.featuredProducts.map((product) => product.name), 4),
   popularSearches: uniqueList(
-    [
-      ...payload.categories.map((category) => category.name),
-      ...payload.brands.map((brand) => `${brand.name} khuyến mãi`),
-    ],
+    [...payload.categories.map((category) => category.name), ...payload.brands.map((brand) => `${brand.name} khuyến mãi`)],
     5,
   ),
-  recommendedKeywords: uniqueList(
-    payload.featuredProducts.map((product) => `${product.name} giá tốt`),
-    4,
-  ),
+  recommendedKeywords: uniqueList(payload.featuredProducts.map((product) => `${product.name} giá tốt`), 4),
 });
 
-const mapProductListData = (payload: BackendHomeResponse): ProductListData => ({
-  filterChips: ["Giá", "Đánh giá", "Thương hiệu"],
-  sortTabs: ["Phổ biến", "Bán chạy", "Giá thấp > cao"],
-  productListItems: payload.featuredProducts
-    .map((product, index) => mapBackendProductToCard(product, index, index % 2 === 1))
-    .slice(0, 8),
-});
+const mapProductListData = (payload: BackendHomeResponse): ProductListData => {
+  const categoryMap = new Map<number, string>(payload.categories.map((c) => [c.id, c.name]));
+  const mappedProducts = payload.featuredProducts.map((product, index) =>
+    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index, index % 2 === 1),
+  );
+  const categorySeeds = ["Áo", "Quần", "Giày", "Phụ kiện"];
+  const allCategoryNames = Array.from(new Set([...payload.categories.map((category) => category.name), ...categorySeeds]));
+  const categoryNamesInProducts = new Set(
+    mappedProducts.map((item) => (item.categoryName ?? "").trim().toLowerCase()).filter(Boolean),
+  );
+  const missingCategoryProducts = allCategoryNames
+    .filter((categoryName) => !categoryNamesInProducts.has(categoryName.trim().toLowerCase()))
+    .map((categoryName, index) => mapCategoryPlaceholderToCard(categoryName, mappedProducts.length + index));
 
+  return {
+    filterChips: ["Giá", "Đánh giá", "Thương hiệu"],
+    sortTabs: ["Phổ biến", "Bán chạy", "Giá thấp > cao"],
+    productListItems: [...mappedProducts, ...missingCategoryProducts],
+  };
+};
 async function requestMain<T>(path: string): Promise<T> {
   let response: Response | null = null;
   const triedBaseUrls: string[] = [];
@@ -183,8 +202,7 @@ async function requestMain<T>(path: string): Promise<T> {
   }
 
   if (!response.ok) {
-    const message =
-      typeof payload.message === "string" ? payload.message : "Tải dữ liệu main thất bại";
+    const message = typeof payload.message === "string" ? payload.message : "Tải dữ liệu main thất bại";
     throw new Error(message);
   }
 
@@ -226,3 +244,4 @@ export const mainService = {
     return mapProductListData(await getBackendHomeData());
   },
 };
+

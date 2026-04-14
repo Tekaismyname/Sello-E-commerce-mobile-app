@@ -6,6 +6,12 @@ export type ProductCard = {
   oldPrice?: string;
   badge?: string;
   imageUrl: string;
+  brandName?: string;
+  categoryName?: string;
+  priceValue?: number;
+  ratingValue?: number;
+  searchKeywords?: string[];
+  isPlaceholder?: boolean;
 };
 
 export type QuickCategory = {

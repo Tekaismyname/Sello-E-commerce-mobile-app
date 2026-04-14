@@ -40,7 +40,7 @@ export default function ProductDetailScreen() {
       .getProductDetail(productId)
       .then((res) => {
         setProduct(res.data);
-        // Set default selections from variants
+
         const variants = res.data.variants ?? [];
         const sizes = [...new Set(variants.map((v) => v.size).filter(Boolean))];
         const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))];
@@ -54,9 +54,9 @@ export default function ProductDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center" edges={["top", "bottom"]}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-white" edges={["top", "bottom"]}>
         <ActivityIndicator size="large" color="#006397" />
-        <Text className="mt-3 text-[14px] text-[#7d8896]">Đang tải sản phẩm…</Text>
+        <Text className="mt-3 text-[14px] text-[#7d8896]">Đang tải sản phẩm...</Text>
       </SafeAreaView>
     );
   }
@@ -66,7 +66,7 @@ export default function ProductDetailScreen() {
       <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
         <ProductDetailHeader />
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-[16px] font-semibold text-[#BA1A1A] text-center">
+          <Text className="text-center text-[16px] font-semibold text-[#BA1A1A]">
             {error || "Không tìm thấy sản phẩm"}
           </Text>
         </View>
@@ -74,23 +74,20 @@ export default function ProductDetailScreen() {
     );
   }
 
-  const formatPrice = (value: number) =>
-    `${new Intl.NumberFormat("vi-VN").format(value)}₫`;
+  const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 
   const variants = product.variants ?? [];
   const sizes = [...new Set(variants.map((v) => v.size).filter(Boolean))] as string[];
-  const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))].map(
-    (colorName) => {
-      const variant = variants.find((v) => v.color === colorName);
-      return {
-        name: colorName!,
-        imageUrl:
-          variant?.imageUrl ??
-          product.primaryImageUrl ??
-          "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80",
-      };
-    },
-  );
+  const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))].map((colorName) => {
+    const variant = variants.find((v) => v.color === colorName);
+    return {
+      name: colorName!,
+      imageUrl:
+        variant?.imageUrl ??
+        product.primaryImageUrl ??
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80",
+    };
+  });
 
   const images =
     product.images.length > 0
@@ -122,19 +119,11 @@ export default function ProductDetailScreen() {
         />
 
         {colors.length > 0 && (
-          <ProductColorSelector
-            colors={colors}
-            selectedColor={selectedColor}
-            onSelectColor={setSelectedColor}
-          />
+          <ProductColorSelector colors={colors} selectedColor={selectedColor} onSelectColor={setSelectedColor} />
         )}
 
         {sizes.length > 0 && (
-          <ProductSizeSelector
-            sizes={sizes}
-            selectedSize={selectedSize}
-            onSelectSize={setSelectedSize}
-          />
+          <ProductSizeSelector sizes={sizes} selectedSize={selectedSize} onSelectSize={setSelectedSize} />
         )}
 
         <View className="h-2 w-full bg-[#f3f5f8]" />
@@ -154,8 +143,7 @@ export default function ProductDetailScreen() {
         <View className="h-2 w-full bg-[#f3f5f8]" />
 
         <ProductReviewOverview productId={String(product.id)} />
-        
-        {/* Padding for bottom nav */}
+
         <View className="h-[80px]" />
       </ScrollView>
 
@@ -163,4 +151,3 @@ export default function ProductDetailScreen() {
     </SafeAreaView>
   );
 }
-

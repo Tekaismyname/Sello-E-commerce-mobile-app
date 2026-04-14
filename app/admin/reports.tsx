@@ -2,7 +2,14 @@ import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
 import { adminService } from "@/services/admin.service";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type ReportOverview = {
@@ -25,7 +32,7 @@ export default function AdminReportsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lÃ²ng Ä‘Äƒng nháº­p tÃ i khoáº£n admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
       setLoading(false);
       return;
     }
@@ -50,22 +57,32 @@ export default function AdminReportsScreen() {
     try {
       setExporting(true);
       const res = await adminService.exportReport(token, "overview", format);
-      Alert.alert("Xuáº¥t bÃ¡o cÃ¡o thÃ nh cÃ´ng", `${res.data.fileName}\n${res.data.filePath}`);
+      Alert.alert(
+        "Xuất báo cáo thành công",
+        `${res.data.fileName}\n${res.data.filePath}`,
+      );
     } catch (err: any) {
-      Alert.alert("Lá»—i", err.message);
+      Alert.alert("Lỗi", err.message);
     } finally {
       setExporting(false);
     }
   };
 
-  const formatMoney = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}Ä‘`;
+  const formatMoney = (value: number) =>
+    `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="BÃ¡o cÃ¡o" />
+      <AdminHeader title="Báo cáo" />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4 pb-24">
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">BÃ¡o cÃ¡o vÃ  xuáº¥t file</Text>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="p-4 pb-24"
+      >
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">
+          Báo cáo và xuất file
+        </Text>
 
         <View className="mt-4 flex-row gap-2">
           <Pressable
@@ -80,7 +97,9 @@ export default function AdminReportsScreen() {
             disabled={exporting || !report}
             className="flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3"
           >
-            <Text className="text-[12px] font-bold text-[#006397]">Export JSON</Text>
+            <Text className="text-[12px] font-bold text-[#006397]">
+              Export JSON
+            </Text>
           </Pressable>
         </View>
 
@@ -92,23 +111,36 @@ export default function AdminReportsScreen() {
 
         {!loading && error && (
           <View className="mt-4 rounded-[12px] bg-white p-4">
-            <Text className="text-[14px] font-medium text-[#b3261e]">{error}</Text>
+            <Text className="text-[14px] font-medium text-[#b3261e]">
+              {error}
+            </Text>
           </View>
         )}
 
         {!loading && !error && report && (
           <View className="mt-4 gap-3">
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Tá»•ng quan</Text>
-              <Text className="mt-2 text-[13px] text-[#3d4651]">Users: {report.users}</Text>
-              <Text className="text-[13px] text-[#3d4651]">Orders: {report.orders}</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">
+                Tổng quan
+              </Text>
+              <Text className="mt-2 text-[13px] text-[#3d4651]">
+                Users: {report.users}
+              </Text>
+              <Text className="text-[13px] text-[#3d4651]">
+                Orders: {report.orders}
+              </Text>
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo thÃ¡ng</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">
+                Doanh thu theo tháng
+              </Text>
               <View className="mt-2 gap-1">
                 {report.revenueByPeriod.slice(-6).map((item) => (
-                  <Text key={item.period} className="text-[12px] text-[#3d4651]">
+                  <Text
+                    key={item.period}
+                    className="text-[12px] text-[#3d4651]"
+                  >
                     {item.period}: {formatMoney(item.revenue)}
                   </Text>
                 ))}
@@ -116,10 +148,15 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Top sáº£n pháº©m bÃ¡n cháº¡y</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">
+                Top sản phẩm bán chạy
+              </Text>
               <View className="mt-2 gap-1">
                 {report.topSellingProducts.map((item) => (
-                  <Text key={item.productId} className="text-[12px] text-[#3d4651]">
+                  <Text
+                    key={item.productId}
+                    className="text-[12px] text-[#3d4651]"
+                  >
                     {item.name}: {item.totalSold}
                   </Text>
                 ))}
@@ -127,10 +164,15 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">PhÃ¢n bá»‘ tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">
+                Phân bố trạng thái đơn hàng
+              </Text>
               <View className="mt-2 gap-1">
                 {report.orderStatusDistribution.map((item) => (
-                  <Text key={item.status} className="text-[12px] text-[#3d4651]">
+                  <Text
+                    key={item.status}
+                    className="text-[12px] text-[#3d4651]"
+                  >
                     {item.status}: {item.total}
                   </Text>
                 ))}

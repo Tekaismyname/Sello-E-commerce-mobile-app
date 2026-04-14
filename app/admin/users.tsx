@@ -26,7 +26,7 @@ export default function AdminUsersScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lÃ²ng Ä‘Äƒng nháº­p tÃ i khoáº£n admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
       setLoading(false);
       return;
     }
@@ -54,7 +54,7 @@ export default function AdminUsersScreen() {
       await adminService.updateUserStatus(token, user.id, nextStatus);
       fetchUsers();
     } catch (err: any) {
-      Alert.alert("Lá»—i", err.message);
+      Alert.alert("Lỗi", err.message);
     }
   };
 
@@ -68,16 +68,16 @@ export default function AdminUsersScreen() {
       await adminService.updateUserRole(token, user.id, nextRole, nextAdminLevel);
       fetchUsers();
     } catch (err: any) {
-      Alert.alert("Lá»—i", err.message);
+      Alert.alert("Lỗi", err.message);
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="NgÆ°á»i dÃ¹ng" />
+      <AdminHeader title="Người dùng" />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4 pb-24">
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quáº£n lÃ½ ngÆ°á»i dÃ¹ng</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý người dùng</Text>
 
         {loading && (
           <View className="mt-10 items-center">
@@ -101,7 +101,7 @@ export default function AdminUsersScreen() {
 
                 <View className="mt-2 flex-row items-center gap-2">
                   <View className="rounded-full bg-[#E8F1F8] px-3 py-1">
-                    <Text className="text-[11px] font-bold text-[#0f4d75]">Role: {user.role}</Text>
+                    <Text className="text-[11px] font-bold text-[#0f4d75]">Vai trò: {user.role}</Text>
                   </View>
                   <View className={`rounded-full px-3 py-1 ${user.status === "blocked" ? "bg-[#FDECEC]" : "bg-[#EAF7EF]"}`}>
                     <Text className={`text-[11px] font-bold ${user.status === "blocked" ? "text-[#A92A2A]" : "text-[#1D7A38]"}`}>
@@ -116,7 +116,7 @@ export default function AdminUsersScreen() {
                     className="flex-1 items-center justify-center rounded-[10px] border border-[#D5DCE5] py-2"
                   >
                     <Text className="text-[12px] font-bold text-[#344252]">
-                      {user.status === "blocked" ? "Má»Ÿ khÃ³a" : "KhÃ³a tÃ i khoáº£n"}
+                      {user.status === "blocked" ? "Mở khóa" : "Khóa tài khoản"}
                     </Text>
                   </Pressable>
 
@@ -125,7 +125,7 @@ export default function AdminUsersScreen() {
                     className="flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-2"
                   >
                     <Text className="text-[12px] font-bold text-white">
-                      {user.role === "admin" ? "Vá» customer" : "LÃªn admin"}
+                      {user.role === "admin" ? "Về customer" : "Lên admin"}
                     </Text>
                   </Pressable>
                 </View>
@@ -133,8 +133,8 @@ export default function AdminUsersScreen() {
             ))}
 
             {users.length === 0 && (
-              <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#5b6470]">KhÃ´ng cÃ³ dá»¯ liá»‡u user.</Text>
+              <View className="items-center rounded-[14px] bg-white p-6">
+                <Text className="text-[14px] text-[#5b6470]">Không có dữ liệu user.</Text>
               </View>
             )}
           </View>
