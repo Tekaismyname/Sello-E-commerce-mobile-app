@@ -66,6 +66,29 @@ export default function LoginScreen() {
     });
   };
 
+  const submitGoogleLogin = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    await runAuthAction(async () => {
+      const response = await authService.loginWithGoogle();
+      await signIn(response);
+
+      setSuccessMessage(`Login success: ${response.user.fullName}`);
+      const normalizedRole = response.user.role?.trim().toLowerCase();
+      const redirectPath =
+        normalizedRole === "admin"
+          ? ("/admin/dashboard" as Href)
+          : ("/main/home" as Href);
+
+      setTimeout(() => {
+        router.replace(redirectPath);
+      }, 350);
+
+      return response;
+    });
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#f8f9fd]">
       <KeyboardAvoidingView
@@ -144,7 +167,7 @@ export default function LoginScreen() {
           </View>
 
           <SocialAuthOptions
-            onGooglePress={() => setErrorMessage("Google login will be added later.")}
+            onGooglePress={submitGoogleLogin}
             onApplePress={() => setErrorMessage("Apple login will be added later.")}
           />
 

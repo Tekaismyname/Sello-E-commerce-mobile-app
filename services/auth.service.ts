@@ -1,4 +1,5 @@
 import { API_BASE_URL_CANDIDATES, API_ENDPOINTS } from "@/constants/api";
+import * as WebBrowser from "expo-web-browser";
 import {
   ForgotPasswordPayload,
   ForgotPasswordResponse,
@@ -11,6 +12,8 @@ import {
   VerifyOtpPayload,
   VerifyOtpResponse,
 } from "@/types/auth";
+
+WebBrowser.maybeCompleteAuthSession();
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response | null = null;
@@ -39,6 +42,43 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
 
+  const raw = await response.text();
+  let payload: Record<string, unknown> = {};
+
+  if (raw) {
+    try {
+      payload = JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      payload = {};
+    }
+  }
+
+  if (!response.ok) {
+    const message = typeof payload.message === "string" ? payload.message : "Yêu cầu thất bại";
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
+async function resolveReachableBaseUrl(): Promise<string> {
+  for (const baseUrl of API_BASE_URL_CANDIDATES) {
+    try {
+      const response = await fetch(`${baseUrl}/home`, { method: "GET" });
+      if (response.ok) {
+        return baseUrl;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error(
+    `Không thể kết nối backend để đăng nhập Google. Đã thử: ${API_BASE_URL_CANDIDATES.join(", ")}`,
+  );
+}
+
+async function parseJsonResponse<T>(response: Response): Promise<T> {
   const raw = await response.text();
   let payload: Record<string, unknown> = {};
 
@@ -111,5 +151,31 @@ export const authService = {
         headers: { Authorization: `Bearer ${accessToken}` },
       },
     );
+  },
+
+  async loginWithGoogle() {
+    const baseUrl = await resolveReachableBaseUrl();
+
+    const authUrl = `${baseUrl}${API_ENDPOINTS.auth.google}`;
+    const callbackPrefix = `${baseUrl}/auth/google/callback`;
+
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, callbackPrefix);
+
+    if (result.type !== "success") {
+      throw new Error("Bạn đã huỷ đăng nhập Google.");
+    }
+
+    if (!result.url?.startsWith(callbackPrefix)) {
+      throw new Error("Không nhận được callback Google hợp lệ từ backend.");
+    }
+
+    const callbackResponse = await fetch(result.url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    return parseJsonResponse<LoginResponse>(callbackResponse);
   },
 };
