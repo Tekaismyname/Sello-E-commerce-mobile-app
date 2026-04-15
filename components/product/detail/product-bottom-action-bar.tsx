@@ -11,8 +11,8 @@ export function ProductBottomActionBar() {
 
       <UIButton
         title="Them vao gio"
-        className="flex-1 rounded-[12px] border border-[#1872cc] bg-white h-[52px] items-center justify-center"
-        textClassName="text-[#1872cc] font-bold text-[15px]"
+        className="flex-1 rounded-[20px] border border-[#1872cc] bg-white h-[52px] items-center justify-center"
+        textClassName="text-[#0089FF] font-bold text-[15px]"
         onPress={() => {}}
       />
 
