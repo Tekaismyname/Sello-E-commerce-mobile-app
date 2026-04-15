@@ -147,6 +147,7 @@ export const API_ENDPOINTS = {
   },
   admin: {
     dashboard: "/admin/system/dashboard",
+    systemConfigOptions: "/admin/system/config-options",
     updateConfig: "/admin/system/config",
     users: "/admin/users",
     userDetail: (userId: number) => `/admin/users/${userId}`,
@@ -156,6 +157,7 @@ export const API_ENDPOINTS = {
     orderDetail: (orderId: number) => `/admin/orders/${orderId}`,
     updateOrderStatus: (orderId: number) => `/admin/orders/${orderId}/status`,
     products: "/admin/products",
+    productDetail: (productId: number) => `/admin/products/${productId}`,
     createProduct: "/admin/products",
     updateProduct: (productId: number) => `/admin/products/${productId}`,
     updateProductStatus: (productId: number) => `/admin/products/${productId}/status`,

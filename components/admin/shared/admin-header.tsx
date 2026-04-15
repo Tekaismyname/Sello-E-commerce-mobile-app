@@ -1,7 +1,34 @@
+import { useAuth } from "@/contexts/auth-context";
+import { authService } from "@/services/auth.service";
+import { Href, router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 
 export function AdminHeader({ title }: { title?: string }) {
+  const { refreshToken, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    Alert.alert("Dang xuat", "Ban muon dang xuat khoi tai khoan admin?", [
+      { text: "Huy", style: "cancel" },
+      {
+        text: "Dang xuat",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            if (refreshToken) {
+              await authService.logout(refreshToken);
+            }
+          } catch {
+            // Ignore logout API errors and clear local state anyway.
+          } finally {
+            await signOut();
+            router.replace("/auth/login" as Href);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <View className="flex-row items-center justify-between bg-white px-4 py-3 shadow-sm z-10">
       <View className="flex-row items-center gap-4">
@@ -28,6 +55,9 @@ export function AdminHeader({ title }: { title?: string }) {
             <Feather name="shopping-bag" size={22} color="#1a232d" />
           </Pressable>
         ) : null}
+        <Pressable className="h-10 w-10 items-center justify-center" onPress={handleLogout}>
+          <Feather name="log-out" size={20} color="#BA1A1A" />
+        </Pressable>
       </View>
     </View>
   );

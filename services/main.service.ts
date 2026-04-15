@@ -227,21 +227,41 @@ async function getBackendHomeData(): Promise<BackendHomeResponse> {
   return cachedHomePromise;
 }
 
+async function getFreshBackendHomeData(): Promise<BackendHomeResponse> {
+  cachedHomeData = null;
+  cachedHomePromise = null;
+
+  return getBackendHomeData();
+}
+
 export const mainService = {
-  async getHomeData(): Promise<HomeData> {
-    return mapHomeData(await getBackendHomeData());
+  clearHomeCache() {
+    cachedHomeData = null;
+    cachedHomePromise = null;
   },
 
-  async getCategoriesData(): Promise<CategoriesData> {
-    return mapCategoriesData(await getBackendHomeData());
+  async getHomeData(options?: { forceRefresh?: boolean }): Promise<HomeData> {
+    return mapHomeData(
+      options?.forceRefresh ? await getFreshBackendHomeData() : await getBackendHomeData(),
+    );
   },
 
-  async getSearchData(): Promise<SearchData> {
-    return mapSearchData(await getBackendHomeData());
+  async getCategoriesData(options?: { forceRefresh?: boolean }): Promise<CategoriesData> {
+    return mapCategoriesData(
+      options?.forceRefresh ? await getFreshBackendHomeData() : await getBackendHomeData(),
+    );
   },
 
-  async getProductListData(): Promise<ProductListData> {
-    return mapProductListData(await getBackendHomeData());
+  async getSearchData(options?: { forceRefresh?: boolean }): Promise<SearchData> {
+    return mapSearchData(
+      options?.forceRefresh ? await getFreshBackendHomeData() : await getBackendHomeData(),
+    );
+  },
+
+  async getProductListData(options?: { forceRefresh?: boolean }): Promise<ProductListData> {
+    return mapProductListData(
+      options?.forceRefresh ? await getFreshBackendHomeData() : await getBackendHomeData(),
+    );
   },
 };
 

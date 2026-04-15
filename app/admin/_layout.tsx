@@ -16,6 +16,7 @@ export default function AdminLayout() {
       <Tabs.Screen name="users" options={{ title: "Users" }} />
       <Tabs.Screen name="orders" options={{ title: "Orders" }} />
       <Tabs.Screen name="reports" options={{ title: "Reports" }} />
+      <Tabs.Screen name="system" options={{ title: "System" }} />
       <Tabs.Screen name="add-product" options={{ href: null }} />
     </Tabs>
   );

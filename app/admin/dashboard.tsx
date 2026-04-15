@@ -2,6 +2,7 @@ import { AdminRecentOrders } from "@/components/admin/dashboard/admin-recent-ord
 import { AdminSalesChart } from "@/components/admin/dashboard/admin-sales-chart";
 import { AdminStatCards } from "@/components/admin/dashboard/admin-stat-cards";
 import { AdminHeader } from "@/components/admin/shared/admin-header";
+import { useAuth } from "@/contexts/auth-context";
 import { adminService } from "@/services/admin.service";
 import { AdminDashboardData } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
@@ -9,7 +10,6 @@ import { Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "@/contexts/auth-context";
 
 export default function AdminDashboardScreen() {
   const { token } = useAuth();
@@ -23,7 +23,7 @@ export default function AdminDashboardScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lòng đăng nhập tài khoản admin.");
+      setError("Vui long dang nhap tai khoan admin.");
       setLoading(false);
       return;
     }
@@ -46,28 +46,45 @@ export default function AdminDashboardScreen() {
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
       <AdminHeader />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4 pb-24">
-        <View className="flex-row items-center gap-1 mb-6 mt-2">
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="p-4 pb-24"
+      >
+        <View className="mb-6 mt-2 flex-row items-center gap-1">
           <Text className="text-[13px] text-[#6b7682]">Trang quan tri</Text>
           <Feather name="chevron-right" size={14} color="#6b7682" />
-          <Text className="text-[13px] font-bold text-[#006397]">Tổng quan</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Tong quan</Text>
         </View>
 
         <View className="mb-6">
-          <Text className="text-[28px] font-extrabold text-[#191C1F] leading-[36px] mb-2">Xin chào quản trị viên</Text>
-          <Text className="text-[15px] text-[#3F4850] leading-[24px]">Đây là thông tin tổng quan hệ thống hôm nay.</Text>
+          <Text className="mb-2 text-[28px] font-extrabold leading-[36px] text-[#191C1F]">
+            Xin chao quan tri vien
+          </Text>
+          <Text className="text-[15px] leading-[24px] text-[#3F4850]">
+            Day la thong tin tong quan he thong hom nay. Tu day ban co the di nhanh den bao cao va cau hinh he thong.
+          </Text>
         </View>
 
-        <Pressable
-          className="mb-8 w-full h-[50px] bg-[#006397] rounded-[12px] flex-row items-center justify-center gap-2 shadow-sm"
-          onPress={() => router.push("/admin/reports" as Href)}
-        >
-          <Feather name="download" size={18} color="white" />
-          <Text className="text-[16px] font-bold text-white">Báo cáo và xuất file</Text>
-        </Pressable>
+        <View className="mb-8 flex-row gap-3">
+          <Pressable
+            className="h-[50px] flex-1 flex-row items-center justify-center gap-2 rounded-[12px] bg-[#006397] shadow-sm"
+            onPress={() => router.push("/admin/reports" as Href)}
+          >
+            <Feather name="download" size={18} color="white" />
+            <Text className="text-[16px] font-bold text-white">Bao cao</Text>
+          </Pressable>
+          <Pressable
+            className="h-[50px] flex-1 flex-row items-center justify-center gap-2 rounded-[12px] border border-[#006397] bg-white"
+            onPress={() => router.push("/admin/system" as Href)}
+          >
+            <Feather name="settings" size={18} color="#006397" />
+            <Text className="text-[16px] font-bold text-[#006397]">He thong</Text>
+          </Pressable>
+        </View>
 
         {loading && (
-          <View className="flex-1 items-center justify-center mt-10">
+          <View className="mt-10 flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#006397" />
           </View>
         )}
@@ -81,6 +98,29 @@ export default function AdminDashboardScreen() {
         {!loading && !error && data && (
           <>
             <AdminStatCards data={data.stats} />
+            {data.systemSummary && (
+              <View className="mt-4 rounded-[16px] bg-white p-5 shadow-sm">
+                <Text className="text-[16px] font-bold text-[#191C1F]">He thong hom nay</Text>
+                <View className="mt-4 flex-row flex-wrap gap-3">
+                  <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
+                    <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
+                      Users
+                    </Text>
+                    <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
+                      {data.systemSummary.users}
+                    </Text>
+                  </View>
+                  <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
+                    <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
+                      Products
+                    </Text>
+                    <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
+                      {data.systemSummary.products}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
             <View className="mt-4" />
             <AdminSalesChart />
             <View className="mt-4" />
