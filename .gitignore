@@ -1,6 +1,7 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 .env
 
+
 # dependencies
 node_modules/
 
@@ -9,6 +10,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.gradle-local/
+android/
+
 
 # Native
 .kotlin/

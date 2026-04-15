@@ -1,4 +1,6 @@
 import { API_BASE_URL_CANDIDATES, API_ENDPOINTS } from "@/constants/api";
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import {
   ForgotPasswordPayload,
@@ -14,6 +16,13 @@ import {
 } from "@/types/auth";
 
 WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CALLBACK_PATH = "auth/callback";
+const APP_SCHEME = "selloecommerce";
+
+function isRunningInExpoGo() {
+  return Constants.executionEnvironment === "storeClient";
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response | null = null;
@@ -37,9 +46,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response) {
-    throw new Error(
-      `Không thể kết nối backend. Đã thử: ${triedBaseUrls.join(", ")}.`,
-    );
+    throw new Error(`Khong the ket noi backend. Da thu: ${triedBaseUrls.join(", ")}.`);
   }
 
   const raw = await response.text();
@@ -54,7 +61,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
-    const message = typeof payload.message === "string" ? payload.message : "Yêu cầu thất bại";
+    const message =
+      typeof payload.message === "string" ? payload.message : "Yeu cau that bai";
     throw new Error(message);
   }
 
@@ -74,7 +82,7 @@ async function resolveReachableBaseUrl(): Promise<string> {
   }
 
   throw new Error(
-    `Không thể kết nối backend để đăng nhập Google. Đã thử: ${API_BASE_URL_CANDIDATES.join(", ")}`,
+    `Khong the ket noi backend de dang nhap Google. Da thu: ${API_BASE_URL_CANDIDATES.join(", ")}`,
   );
 }
 
@@ -91,11 +99,106 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   }
 
   if (!response.ok) {
-    const message = typeof payload.message === "string" ? payload.message : "Yêu cầu thất bại";
+    const message =
+      typeof payload.message === "string" ? payload.message : "Yeu cau that bai";
     throw new Error(message);
   }
 
   return payload as T;
+}
+
+function buildGoogleRedirectUrl() {
+  if (isRunningInExpoGo()) {
+    return Linking.createURL(GOOGLE_CALLBACK_PATH);
+  }
+
+  return Linking.createURL(GOOGLE_CALLBACK_PATH, {
+    scheme: APP_SCHEME,
+  });
+}
+
+function appendGoogleRedirectParams(authUrl: string, redirectUrl: string) {
+  try {
+    const parsed = new URL(authUrl);
+
+    // Support both the new Expo Go param name and a few compatible fallbacks.
+    parsed.searchParams.set("appRedirectUri", redirectUrl);
+    parsed.searchParams.set("redirect_uri", redirectUrl);
+    parsed.searchParams.set("redirectUrl", redirectUrl);
+    parsed.searchParams.set("callbackUrl", redirectUrl);
+
+    return parsed.toString();
+  } catch {
+    return authUrl;
+  }
+}
+
+function parseBooleanParam(value: string | null) {
+  if (!value) {
+    return false;
+  }
+
+  return value === "true" || value === "1";
+}
+
+function parseGoogleLoginResponseFromRedirect(url: string): LoginResponse | null {
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return null;
+  }
+
+  const accessToken =
+    parsedUrl.searchParams.get("accessToken") ?? parsedUrl.searchParams.get("access_token");
+  const refreshToken =
+    parsedUrl.searchParams.get("refreshToken") ?? parsedUrl.searchParams.get("refresh_token");
+
+  if (!accessToken || !refreshToken) {
+    return null;
+  }
+
+  const userParam = parsedUrl.searchParams.get("user");
+  let user: LoginResponse["user"] | null = null;
+
+  if (userParam) {
+    try {
+      user = JSON.parse(userParam) as LoginResponse["user"];
+    } catch {
+      user = null;
+    }
+  }
+
+  if (!user) {
+    user = {
+      id: Number(parsedUrl.searchParams.get("id") ?? 0),
+      fullName:
+        parsedUrl.searchParams.get("fullName") ??
+        parsedUrl.searchParams.get("full_name") ??
+        "",
+      email: parsedUrl.searchParams.get("email") ?? "",
+      phone: parsedUrl.searchParams.get("phone") ?? "",
+      role: parsedUrl.searchParams.get("role") ?? "customer",
+      status: parsedUrl.searchParams.get("status") ?? "active",
+      isVerified: parseBooleanParam(
+        parsedUrl.searchParams.get("isVerified") ?? parsedUrl.searchParams.get("is_verified"),
+      ),
+    };
+  }
+
+  return {
+    message: parsedUrl.searchParams.get("message") ?? "Login success",
+    tokens: {
+      accessToken,
+      refreshToken,
+      tokenType:
+        parsedUrl.searchParams.get("tokenType") ??
+        parsedUrl.searchParams.get("token_type") ??
+        "Bearer",
+    },
+    user,
+  };
 }
 
 export const authService = {
@@ -135,47 +238,63 @@ export const authService = {
   },
 
   logout(refreshToken: string) {
-    return request<{ message: string; clearTokens: boolean }>(
-      API_ENDPOINTS.auth.logout,
-      {
-        method: "POST",
-        body: JSON.stringify({ refreshToken }),
-      },
-    );
+    return request<{ message: string; clearTokens: boolean }>(API_ENDPOINTS.auth.logout, {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    });
   },
 
   me(accessToken: string) {
-    return request<{ message: string; user: { sub: number; email: string; phone: string; role: string; adminLevel: number | null; permissions: string[] } }>(
-      API_ENDPOINTS.auth.me,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      },
-    );
+    return request<{
+      message: string;
+      user: {
+        sub: number;
+        email: string;
+        phone: string;
+        role: string;
+        adminLevel: number | null;
+        permissions: string[];
+      };
+    }>(API_ENDPOINTS.auth.me, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
   },
 
   async loginWithGoogle() {
     const baseUrl = await resolveReachableBaseUrl();
+    const appRedirectUrl = buildGoogleRedirectUrl();
+    const backendCallbackUrl = `${baseUrl}/auth/google/callback`;
+    const authUrl = appendGoogleRedirectParams(
+      `${baseUrl}${API_ENDPOINTS.auth.google}`,
+      appRedirectUrl,
+    );
 
-    const authUrl = `${baseUrl}${API_ENDPOINTS.auth.google}`;
-    const callbackPrefix = `${baseUrl}/auth/google/callback`;
-
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, callbackPrefix);
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, appRedirectUrl);
 
     if (result.type !== "success") {
-      throw new Error("Bạn đã huỷ đăng nhập Google.");
+      throw new Error("Ban da huy dang nhap Google.");
     }
 
-    if (!result.url?.startsWith(callbackPrefix)) {
-      throw new Error("Không nhận được callback Google hợp lệ từ backend.");
+    if (!result.url) {
+      throw new Error("Khong nhan duoc callback Google hop le.");
     }
 
-    const callbackResponse = await fetch(result.url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    const redirectPayload = parseGoogleLoginResponseFromRedirect(result.url);
+    if (redirectPayload) {
+      return redirectPayload;
+    }
 
-    return parseJsonResponse<LoginResponse>(callbackResponse);
+    if (result.url.startsWith(backendCallbackUrl)) {
+      const callbackResponse = await fetch(result.url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      return parseJsonResponse<LoginResponse>(callbackResponse);
+    }
+
+    throw new Error("Khong nhan duoc callback Google hop le tu backend hoac app.");
   },
 };
