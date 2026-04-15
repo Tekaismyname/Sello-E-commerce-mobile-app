@@ -262,6 +262,10 @@ interface ReviewListRow extends RowDataPacket {
 export class MySqlDatabaseService implements OnModuleDestroy {
   private readonly logger = new Logger(MySqlDatabaseService.name);
 
+  private normalizeAdminBrandId(brandId?: number | null) {
+    return brandId && brandId > 0 ? brandId : null;
+  }
+
   private readonly rolePermissions: RolePermissionMap = {
     admin: [
       'system:dashboard:read',
@@ -2415,12 +2419,12 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           )
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-        [
-          input.categoryId,
-          input.brandId ?? null,
-          input.name,
-          input.slug ?? null,
-          input.sku ?? null,
+          [
+            input.categoryId,
+            this.normalizeAdminBrandId(input.brandId),
+            input.name,
+            input.slug ?? null,
+            input.sku ?? null,
           input.shortDescription ?? null,
           input.description ?? null,
           input.basePrice,
@@ -2513,10 +2517,10 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         fields.push('category_id = ?');
         values.push(input.categoryId);
       }
-      if (input.brandId !== undefined) {
-        fields.push('brand_id = ?');
-        values.push(input.brandId);
-      }
+        if (input.brandId !== undefined) {
+          fields.push('brand_id = ?');
+          values.push(this.normalizeAdminBrandId(input.brandId));
+        }
       if (input.name !== undefined) {
         fields.push('name = ?');
         values.push(input.name);
@@ -2804,6 +2808,70 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }));
   }
 
+  async getAdminSystemConfigOptions() {
+    const hasCategoryStatus = await this.hasColumn('categories', 'status');
+    const [categoryRows] = await this.pool.query<
+      Array<CategoryRow & { status?: string | null }>
+    >(
+      `
+        SELECT category_id, name ${hasCategoryStatus ? ', status' : ", 'active' AS status"}
+        FROM categories
+        ORDER BY category_id ASC
+      `,
+    );
+    const [paymentMethodRows] = await this.pool.query<PaymentMethodRow[]>(
+      `
+        SELECT payment_method_id, method_code, method_name, status
+        FROM payment_methods
+        ORDER BY payment_method_id ASC
+      `,
+    );
+    const [voucherRows] = await this.pool.query<VoucherRow[]>(
+      `
+        SELECT
+          voucher_id,
+          code,
+          name,
+          description,
+          voucher_type,
+          discount_type,
+          discount_value,
+          max_discount_value,
+          min_order_value,
+          usage_limit,
+          used_count,
+          start_at,
+          end_at,
+          is_active
+        FROM vouchers
+        ORDER BY voucher_id ASC
+      `,
+    );
+
+    return {
+      categories: categoryRows.map((row) => ({
+        id: row.category_id,
+        name: row.name,
+        status: row.status ?? 'active',
+      })),
+      paymentMethods: paymentMethodRows.map((row) => ({
+        id: row.payment_method_id,
+        code: row.method_code,
+        name: row.method_name,
+        status: row.status,
+      })),
+      vouchers: voucherRows.map((row) => ({
+        id: row.voucher_id,
+        code: row.code,
+        name: row.name,
+        discountType: row.discount_type,
+        discountValue: Number(row.discount_value ?? 0),
+        minOrderValue: Number(row.min_order_value ?? 0),
+        isActive: Boolean(row.is_active),
+      })),
+    };
+  }
+
   async getHomeBrands(limit = 12) {
     const [rows] = await this.pool.query<BrandRow[]>(
       `
@@ -2837,15 +2905,15 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           pi.image_url AS primary_image_url
         FROM products p
         LEFT JOIN brands b ON b.brand_id = p.brand_id
-        LEFT JOIN product_images pi
-          ON pi.product_id = p.product_id
-         AND pi.is_primary = TRUE
-        ${hasStatus ? "WHERE p.status = 'active'" : ''}
-        ORDER BY p.product_id ASC
-        LIMIT ?
-      `,
-      [limit],
-    );
+          LEFT JOIN product_images pi
+            ON pi.product_id = p.product_id
+           AND pi.is_primary = TRUE
+          ${hasStatus ? "WHERE p.status = 'active'" : ''}
+          ORDER BY p.product_id DESC
+          LIMIT ?
+        `,
+        [limit],
+      );
 
     return rows.map((row) => ({
       id: row.product_id,

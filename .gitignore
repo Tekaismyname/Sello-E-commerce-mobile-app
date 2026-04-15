@@ -1,6 +1,12 @@
 # dependencies
 /node_modules
 
+.expo/
+.expo-shared/
+android/
+.gradle/
+.gradle-local/
+
 # build output
 /dist
 /coverage
@@ -16,6 +22,7 @@ lerna-debug.log*
 
 # env files
 .env
+.env.e
 .env.*
 !.env.example
 

@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash } from 'node:crypto';
+import { URL } from 'node:url';
 import {
   ForgotPasswordDto,
   LoginDto,
@@ -18,6 +19,32 @@ import { JwtTokenService } from './services/jwt-token.service';
 import { MySqlDatabaseService } from './services/mysql-database.service';
 import { OtpService } from './services/otp.service';
 import { PasswordService } from './services/password.service';
+
+type AuthLoginResult = {
+  message: string;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    tokenType: string;
+  };
+  user: {
+    id: number;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    role: string;
+    adminLevel: number | null;
+    status: string;
+    isVerified: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    permissions: ReturnType<MySqlDatabaseService['getPermissionsForUser']>;
+  };
+};
+
+type AuthRedirectState = {
+  appRedirectUri?: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -109,7 +136,7 @@ export class AuthService {
     };
   }
 
-  async login(payload: LoginDto) {
+  async login(payload: LoginDto): Promise<AuthLoginResult> {
     this.validateLoginPayload(payload);
 
     const user = await this.database.findUserByIdentifier(payload.identifier);
@@ -170,7 +197,7 @@ export class AuthService {
     };
   }
 
-  async oAuthLogin(userPayload: any) {
+  async oAuthLogin(userPayload: any): Promise<AuthLoginResult> {
     if (!userPayload || !userPayload.email) {
       throw new BadRequestException('Invalid OAuth payload');
     }
@@ -239,6 +266,44 @@ export class AuthService {
         permissions,
       },
     };
+  }
+
+  extractRedirectUriFromState(stateValue: string | string[] | undefined) {
+    if (typeof stateValue !== 'string' || !stateValue.trim()) {
+      return null;
+    }
+
+    try {
+      const parsedState = JSON.parse(
+        Buffer.from(stateValue, 'base64url').toString('utf8'),
+      ) as AuthRedirectState;
+
+      return this.resolveOAuthRedirectUri(parsedState.appRedirectUri);
+    } catch {
+      return null;
+    }
+  }
+
+  buildOAuthSuccessRedirectUrl(
+    loginResponse: AuthLoginResult,
+    requestedRedirectUri?: string | null,
+  ) {
+    const redirectUri = this.resolveOAuthRedirectUri(requestedRedirectUri);
+
+    const redirectUrl = new URL(redirectUri);
+    redirectUrl.searchParams.set(
+      'accessToken',
+      loginResponse.tokens.accessToken,
+    );
+    redirectUrl.searchParams.set(
+      'refreshToken',
+      loginResponse.tokens.refreshToken,
+    );
+    redirectUrl.searchParams.set('tokenType', loginResponse.tokens.tokenType);
+    redirectUrl.searchParams.set('message', loginResponse.message);
+    redirectUrl.searchParams.set('user', JSON.stringify(loginResponse.user));
+
+    return redirectUrl.toString();
   }
 
   async logout(payload: LogoutDto) {
@@ -487,5 +552,25 @@ export class AuthService {
     }
 
     return new Date(exp * 1000);
+  }
+
+  private resolveOAuthRedirectUri(redirectUri?: string | null) {
+    const fallbackRedirectUri =
+      process.env.APP_AUTH_REDIRECT_URI?.trim() ||
+      'selloecommerce://auth/callback';
+    const candidateUri = redirectUri?.trim() || fallbackRedirectUri;
+
+    try {
+      const parsedUrl = new URL(candidateUri);
+      const allowedProtocols = new Set(['selloecommerce:', 'exp:', 'exps:']);
+
+      if (!allowedProtocols.has(parsedUrl.protocol)) {
+        return fallbackRedirectUri;
+      }
+
+      return parsedUrl.toString();
+    } catch {
+      return fallbackRedirectUri;
+    }
   }
 }

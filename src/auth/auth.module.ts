@@ -11,6 +11,7 @@ import { MySqlDatabaseService } from './services/mysql-database.service';
 import { OtpService } from './services/otp.service';
 import { PasswordService } from './services/password.service';
 import { GoogleStrategy } from '../../google.strategy';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 
 @Module({
   controllers: [AuthController],
@@ -18,6 +19,7 @@ import { GoogleStrategy } from '../../google.strategy';
     AuthService,
     AdminLevelGuard,
     EmailService,
+    GoogleAuthGuard,
     JwtTokenService,
     JwtAuthGuard,
     MySqlDatabaseService,

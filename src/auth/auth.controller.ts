@@ -7,9 +7,10 @@ import {
   ParseIntPipe,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { AdminLevels } from './decorators/admin-levels.decorator';
 import {
@@ -22,13 +23,14 @@ import {
 import { Roles } from './decorators/roles.decorator';
 import { LogoutDto } from './dto/logout.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { AuthGuard } from '@nestjs/passport';
 import { AdminLevelGuard } from './guards/admin-level.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtPayload } from './types/auth.types';
 
 type AuthenticatedRequest = Request & {
   user?: JwtPayload;
+  query: Record<string, string | string[] | undefined>;
 };
 
 @Controller('auth')
@@ -66,18 +68,27 @@ export class AuthController {
   }
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleAuthGuard)
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   googleAuth() {
     // Endpoint này sẽ tự động redirect đến trang đăng nhập của Google
   }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthCallback(@Req() req: AuthenticatedRequest) {
+  @UseGuards(GoogleAuthGuard)
+  async googleAuthCallback(
+    @Req() req: AuthenticatedRequest,
+    @Res() res: Response,
+  ) {
     // Google redirect về đây sau khi user đăng nhập thành công.
     // GoogleStrategy đã xử lý và gắn thông tin user vào req.user.
-    return this.authService.oAuthLogin(req.user);
+    const loginResponse = await this.authService.oAuthLogin(req.user);
+    return res.redirect(
+      this.authService.buildOAuthSuccessRedirectUrl(
+        loginResponse,
+        this.authService.extractRedirectUriFromState(req.query.state),
+      ),
+    );
   }
 
   @Get('me')

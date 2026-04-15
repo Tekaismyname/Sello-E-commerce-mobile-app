@@ -28,6 +28,13 @@ export class AdminService {
     };
   }
 
+  async getSystemConfigOptions() {
+    return {
+      message: 'System config options fetched successfully',
+      data: await this.database.getAdminSystemConfigOptions(),
+    };
+  }
+
   async updateSystemConfig(payload: UpdateSystemConfigDto) {
     return {
       message: 'System configuration updated successfully',
@@ -135,6 +142,19 @@ export class AdminService {
     return {
       message: 'Products fetched successfully',
       data: await this.database.listAdminProducts(),
+    };
+  }
+
+  async getProductDetail(productId: number) {
+    const product = await this.database.getAdminProductDetail(productId);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return {
+      message: 'Product detail fetched successfully',
+      data: product,
     };
   }
 

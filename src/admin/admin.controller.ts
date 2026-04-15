@@ -45,6 +45,12 @@ export class AdminController {
     return this.adminService.getSystemDashboard();
   }
 
+  @Get('system/config-options')
+  @Permissions('system:dashboard:read')
+  getSystemConfigOptions() {
+    return this.adminService.getSystemConfigOptions();
+  }
+
   @Put('system/config')
   @Permissions('system:config:update')
   updateSystemConfig(@Body() payload: UpdateSystemConfigDto) {
@@ -111,6 +117,12 @@ export class AdminController {
   @Permissions('products:read')
   listProducts() {
     return this.adminService.listProducts();
+  }
+
+  @Get('products/:productId')
+  @Permissions('products:read')
+  getProductDetail(@Param('productId', ParseIntPipe) productId: number) {
+    return this.adminService.getProductDetail(productId);
   }
 
   @Post('products')
