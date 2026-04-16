@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+﻿import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { AdminStatOverview } from "@/types/admin";
 

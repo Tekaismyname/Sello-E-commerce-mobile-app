@@ -1,4 +1,4 @@
-import { AdminProductImage } from "@/types/admin";
+﻿import { AdminProductImage } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 
@@ -58,10 +58,10 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
       <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-[16px] font-bold text-[#191C1F]">1. Hinh anh san pham</Text>
+        <Text className="text-[16px] font-bold text-[#191C1F]">1. Hình ảnh sản phẩm</Text>
         <Pressable onPress={addImage} className="flex-row items-center gap-1">
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[13px] font-bold text-[#006397]">Them anh</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Thêm ảnh</Text>
         </Pressable>
       </View>
 
@@ -70,7 +70,7 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
           <View key={`image-${index}`} className="rounded-[12px] border border-[#E7E8EC] bg-[#F8F9FA] p-3">
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="text-[12px] font-bold uppercase text-[#6B7682]">
-                {image.isPrimary ? "Anh chinh" : `Anh ${index + 1}`}
+                {image.isPrimary ? "Ảnh chính" : `Ảnh ${index + 1}`}
               </Text>
               <Pressable onPress={() => removeImage(index)} className="h-7 w-7 items-center justify-center rounded-full bg-[#FFEAEB]">
                 <Feather name="trash-2" size={12} color="#DC2626" />
@@ -79,7 +79,7 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
 
             <TextInput
               className="h-12 rounded-[12px] border border-[#E7E8EC] bg-white px-4 text-[14px] text-[#191C1F]"
-              placeholder="Dan URL hinh anh..."
+              placeholder="Dán URL hình ảnh..."
               placeholderTextColor="#97A0AB"
               value={image.imageUrl}
               onChangeText={(value) => updateImage(index, "imageUrl", value)}
@@ -107,7 +107,7 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
                   image.isPrimary ? "text-white" : "text-[#44515F]"
                 }`}
               >
-                {image.isPrimary ? "Dang la anh chinh" : "Dat lam anh chinh"}
+                {image.isPrimary ? "Đang là ảnh chính" : "Đặt làm ảnh chính"}
               </Text>
             </Pressable>
           </View>
@@ -115,7 +115,7 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
       </View>
 
       <Text className="mt-4 text-[12px] leading-[18px] text-[#97A0AB]">
-        Meo: hien tai form nhan URL anh de thao tac nhanh trong admin. Anh chinh se duoc gui voi
+        Mẹo: hiện tại form nhận URL ảnh để thao tác nhanh trong admin. Ảnh chính sẽ được gửi với
         isPrimary=true.
       </Text>
     </View>

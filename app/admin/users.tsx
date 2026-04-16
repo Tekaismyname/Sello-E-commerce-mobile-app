@@ -151,9 +151,9 @@ export default function AdminUsersScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quan ly nguoi dung</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý người dùng</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Xem danh sach, tim kiem, loc, xem chi tiet va cap nhat role/trang thai tai khoan.
+          Xem danh sách, tìm kiếm, lọc, xem chi tiết và cập nhật role/trạng thái tài khoản.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
@@ -161,7 +161,7 @@ export default function AdminUsersScreen() {
             <Feather name="search" size={18} color="#6b7682" />
             <TextInput
               className="ml-3 flex-1 text-[14px] text-[#191C1F]"
-              placeholder="Tim theo ten, email, so dien thoai..."
+              placeholder="Tìm theo tên, email, số điện thoại..."
               placeholderTextColor="#97a0aa"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -169,7 +169,7 @@ export default function AdminUsersScreen() {
           </View>
 
           <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Loc theo vai tro
+            Lọc theo vai trò
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {ROLE_FILTERS.map((value) =>
@@ -178,7 +178,7 @@ export default function AdminUsersScreen() {
           </ScrollView>
 
           <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Loc theo trang thai
+            Lọc theo trạng thái
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {STATUS_FILTERS.map((value) =>
@@ -208,7 +208,7 @@ export default function AdminUsersScreen() {
           <View className="mt-4 gap-3">
             <View className="rounded-[14px] bg-[#E8F1FB] px-4 py-3">
               <Text className="text-[13px] font-semibold text-[#0f4d75]">
-                Hien co {filteredUsers.length}/{users.length} nguoi dung phu hop bo loc.
+                Hien co {filteredUsers.length}/{users.length} người dùng phù hợp bộ lọc.
               </Text>
             </View>
 
@@ -263,7 +263,7 @@ export default function AdminUsersScreen() {
             {filteredUsers.length === 0 && (
               <View className="items-center rounded-[14px] bg-white p-6">
                 <Text className="text-[14px] text-[#5b6470]">
-                  Khong co nguoi dung phu hop voi tim kiem/bo loc hien tai.
+                  Không có người dùng phù hợp với tìm kiếm/bộ lọc hiện tại.
                 </Text>
               </View>
             )}
@@ -275,7 +275,7 @@ export default function AdminUsersScreen() {
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[85%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiet nguoi dung</Text>
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiết người dùng</Text>
               <Pressable onPress={() => setSelectedUser(null)} className="h-10 w-10 items-center justify-center">
                 <Feather name="x" size={20} color="#1a232d" />
               </Pressable>
@@ -301,19 +301,19 @@ export default function AdminUsersScreen() {
                       Role: <Text className="font-bold">{selectedUser.role}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Trang thai: <Text className="font-bold">{selectedUser.status}</Text>
+                      Trạng thái: <Text className="font-bold">{selectedUser.status}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
                       Admin level: <Text className="font-bold">{selectedUser.adminLevel ?? "-"}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Da xac minh: <Text className="font-bold">{selectedUser.isVerified ? "Co" : "Chua"}</Text>
+                      Đã xác minh: <Text className="font-bold">{selectedUser.isVerified ? "Có" : "Chưa"}</Text>
                     </Text>
                   </View>
                 </View>
 
                 <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Hanh dong nhanh
+                  Hành động nhanh
                 </Text>
                 <View className="mt-3 gap-3">
                   <Pressable
@@ -321,7 +321,7 @@ export default function AdminUsersScreen() {
                     className="items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3"
                   >
                     <Text className="text-[13px] font-bold text-[#344252]">
-                      {selectedUser.status === "blocked" ? "Mo khoa tai khoan" : "Khoa tai khoan"}
+                      {selectedUser.status === "blocked" ? "Mở khóa tài khoản" : "Khóa tài khoản"}
                     </Text>
                   </Pressable>
 
@@ -330,13 +330,13 @@ export default function AdminUsersScreen() {
                       onPress={() => handleSetRole(selectedUser, "customer")}
                       className="flex-1 items-center justify-center rounded-[12px] bg-[#EEF2F6] py-3"
                     >
-                      <Text className="text-[13px] font-bold text-[#344252]">Dat role customer</Text>
+                      <Text className="text-[13px] font-bold text-[#344252]">Đặt role customer</Text>
                     </Pressable>
                     <Pressable
                       onPress={() => handleSetRole(selectedUser, "admin")}
                       className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
                     >
-                      <Text className="text-[13px] font-bold text-white">Dat role admin</Text>
+                      <Text className="text-[13px] font-bold text-white">Đặt role admin</Text>
                     </Pressable>
                   </View>
                 </View>

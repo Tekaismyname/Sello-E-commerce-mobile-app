@@ -121,9 +121,9 @@ export default function AdminOrdersScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quan ly don hang</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý đơn hàng</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Theo doi danh sach don, tim kiem, loc va cap nhat trang thai giao nhan.
+          Theo dõi danh sách đơn, tìm kiếm, lọc và cập nhật trạng thái giao nhận.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
@@ -139,7 +139,7 @@ export default function AdminOrdersScreen() {
           </View>
 
           <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Trang thai don hang
+            Trạng thái đơn hàng
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {(["all", ...ORDER_STATUS_OPTIONS] as const).map((status) => {
@@ -181,7 +181,7 @@ export default function AdminOrdersScreen() {
           <View className="mt-4 gap-3">
             <View className="rounded-[14px] bg-[#E8F1FB] px-4 py-3">
               <Text className="text-[13px] font-semibold text-[#0f4d75]">
-                Dang hien thi {filteredOrders.length}/{orders.length} don hang.
+                Đang hiển thị {filteredOrders.length}/{orders.length} đơn hàng.
               </Text>
             </View>
 
@@ -201,7 +201,7 @@ export default function AdminOrdersScreen() {
                 <Text className="mt-2 text-[13px] text-[#3d4651]">{order.user.fullName}</Text>
                 <Text className="text-[12px] text-[#6b7682]">{order.user.email}</Text>
                 <Text className="mt-1 text-[12px] text-[#6b7682]">
-                  Thanh toan: {order.paymentStatus} - {order.paymentMethodName}
+                  Thanh toán: {order.paymentStatus} - {order.paymentMethodName}
                 </Text>
                 <Text className="mt-2 text-[16px] font-bold text-[#1f2934]">
                   {formatPrice(order.totalAmount)}
@@ -212,7 +212,7 @@ export default function AdminOrdersScreen() {
             {filteredOrders.length === 0 && (
               <View className="items-center rounded-[14px] bg-white p-6">
                 <Text className="text-[14px] text-[#5b6470]">
-                  Khong co don hang phu hop voi bo loc hien tai.
+                  Không có đơn hàng phù hợp với bộ lọc hiện tại.
                 </Text>
               </View>
             )}
@@ -241,27 +241,27 @@ export default function AdminOrdersScreen() {
                 <View className="rounded-[16px] bg-[#F8F9FB] p-4">
                   <Text className="text-[17px] font-bold text-[#191C1F]">#{selectedOrder.orderCode}</Text>
                   <Text className="mt-2 text-[13px] text-[#3f4850]">
-                    Khach hang: <Text className="font-bold">{selectedOrder.user.fullName}</Text>
+                    Khách hàng: <Text className="font-bold">{selectedOrder.user.fullName}</Text>
                   </Text>
                   <Text className="text-[13px] text-[#3f4850]">{selectedOrder.user.email}</Text>
                   <Text className="mt-2 text-[13px] text-[#3f4850]">
-                    Thanh toan: <Text className="font-bold">{selectedOrder.paymentStatus}</Text>
+                    Thanh toán: <Text className="font-bold">{selectedOrder.paymentStatus}</Text>
                   </Text>
                   <Text className="text-[13px] text-[#3f4850]">
-                    Phuong thuc: <Text className="font-bold">{selectedOrder.paymentMethodName}</Text>
+                    Phương thức: <Text className="font-bold">{selectedOrder.paymentMethodName}</Text>
                   </Text>
                   <Text className="text-[13px] text-[#3f4850]">
-                    Tong tien: <Text className="font-bold">{formatPrice(selectedOrder.totalAmount)}</Text>
+                    Tổng tiền: <Text className="font-bold">{formatPrice(selectedOrder.totalAmount)}</Text>
                   </Text>
                   {!!selectedOrder.shippingAddress && (
                     <Text className="mt-2 text-[13px] text-[#3f4850]">
-                      Dia chi: <Text className="font-bold">{selectedOrder.shippingAddress}</Text>
+                      Địa chỉ: <Text className="font-bold">{selectedOrder.shippingAddress}</Text>
                     </Text>
                   )}
                 </View>
 
                 <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Chon trang thai moi
+                  Chọn trạng thái mới
                 </Text>
                 <View className="mt-3 flex-row flex-wrap gap-2">
                   {ORDER_STATUS_OPTIONS.map((status) => {
@@ -295,7 +295,7 @@ export default function AdminOrdersScreen() {
                     <View key={`${item.productName}-${index}`} className="rounded-[14px] bg-[#F8F9FB] p-4">
                       <Text className="text-[14px] font-bold text-[#191C1F]">{item.productName}</Text>
                       <Text className="mt-1 text-[12px] text-[#5b6470]">
-                        So luong: {item.quantity} - Gia: {formatPrice(item.price)}
+                        Số lượng: {item.quantity} - Giá bán: {formatPrice(item.price)}
                       </Text>
                     </View>
                   ))}
@@ -304,7 +304,7 @@ export default function AdminOrdersScreen() {
                 {!!selectedOrder.statusHistory?.length && (
                   <>
                     <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                      Lich su trang thai
+                      Lịch sử trạng thái
                     </Text>
                     <View className="mt-3 gap-2">
                       {selectedOrder.statusHistory.map((history, index) => (

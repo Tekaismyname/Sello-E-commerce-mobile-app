@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+﻿import { Feather } from "@expo/vector-icons";
 import { Text, TextInput, View } from "react-native";
 
 type ProductDescriptionProps = {
