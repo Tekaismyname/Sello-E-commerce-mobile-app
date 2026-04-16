@@ -1,4 +1,4 @@
-import { AdminProductVariant } from "@/types/admin";
+﻿import { AdminProductVariant } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
 import { Pressable, Text, TextInput, View } from "react-native";
 
@@ -48,10 +48,10 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
       <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-[16px] font-bold text-[#191C1F]">Phan loai san pham</Text>
+        <Text className="text-[16px] font-bold text-[#191C1F]">Phân loại sản phẩm</Text>
         <Pressable onPress={addVariant} className="flex-row items-center gap-1">
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[13px] font-bold text-[#006397]">Them variant</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Thêm variant</Text>
         </Pressable>
       </View>
 
@@ -69,14 +69,14 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
               <View className="flex-row gap-3">
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Mau sac"
+                  placeholder="Màu sắc"
                   placeholderTextColor="#97A0AB"
                   value={variant.color ?? ""}
                   onChangeText={(value) => updateVariant(index, "color", value)}
                 />
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Kich thuoc"
+                  placeholder="Kích thước"
                   placeholderTextColor="#97A0AB"
                   value={variant.size ?? ""}
                   onChangeText={(value) => updateVariant(index, "size", value)}
@@ -93,7 +93,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
 
               <TextInput
                 className="rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                placeholder="URL anh cho variant"
+                placeholder="URL ảnh cho variant"
                 placeholderTextColor="#97A0AB"
                 value={variant.imageUrl ?? ""}
                 onChangeText={(value) => updateVariant(index, "imageUrl", value)}
@@ -102,7 +102,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
               <View className="flex-row gap-3">
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Gia"
+                  placeholder="Giá"
                   placeholderTextColor="#97A0AB"
                   keyboardType="numeric"
                   value={String(variant.price ?? "")}
@@ -110,7 +110,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
                 />
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Ton kho"
+                  placeholder="Tồn kho"
                   placeholderTextColor="#97A0AB"
                   keyboardType="numeric"
                   value={String(variant.stockQty ?? "")}
@@ -125,7 +125,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
 
         {variants.length === 0 && (
           <View className="rounded-[12px] bg-[#F8F9FA] p-4">
-            <Text className="text-[13px] text-[#6B7682]">Chua co phan loai nao. Ban co the tao product don hoac them variant moi.</Text>
+            <Text className="text-[13px] text-[#6B7682]">Chưa có phân loại nào. Bạn có thể tạo product đơn hoặc thêm variant mới.</Text>
           </View>
         )}
       </View>

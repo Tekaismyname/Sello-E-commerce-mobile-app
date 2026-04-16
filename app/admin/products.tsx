@@ -144,9 +144,9 @@ export default function AdminProductsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerClassName="p-4 pb-24"
         >
-          <Text className="text-[22px] font-extrabold text-[#191C1F]">Quan ly san pham</Text>
+          <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý sản phẩm</Text>
           <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-            Tim kiem, loc theo trang thai, xem nhanh va dieu chinh thong tin/trang thai san pham.
+            Tìm kiếm, lọc theo trạng thái, xem nhanh và điều chỉnh thông tin/trạng thái sản phẩm.
           </Text>
 
           <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
@@ -162,7 +162,7 @@ export default function AdminProductsScreen() {
             </View>
 
             <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-              Trang thai
+              Trạng thái
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
               {PRODUCT_STATUS_OPTIONS.map((status) => {
@@ -205,7 +205,7 @@ export default function AdminProductsScreen() {
               <View className="mt-4 flex-row gap-3">
                 <View className="flex-1 rounded-[16px] bg-white p-4">
                   <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Tong san pham
+                    Tổng số sản phẩm
                   </Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
                     {data?.totalCount ?? 0}
@@ -213,7 +213,7 @@ export default function AdminProductsScreen() {
                 </View>
                 <View className="flex-1 rounded-[16px] bg-white p-4">
                   <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Ton kho thap
+                    Tồn kho thấp
                   </Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#C66400]">
                     {lowStockCount}
@@ -256,7 +256,7 @@ export default function AdminProductsScreen() {
                 {filteredProducts.length === 0 && (
                   <View className="items-center rounded-[14px] bg-white p-6">
                     <Text className="text-[14px] text-[#5b6470]">
-                      Khong co san pham phu hop voi bo loc hien tai.
+                      Không có sản phẩm phù hợp với bộ lọc hiện tại.
                     </Text>
                   </View>
                 )}
@@ -271,7 +271,7 @@ export default function AdminProductsScreen() {
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[86%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiet san pham</Text>
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiết sản phẩm</Text>
               <Pressable onPress={() => setSelectedProduct(null)} className="h-10 w-10 items-center justify-center">
                 <Feather name="x" size={20} color="#1a232d" />
               </Pressable>
@@ -287,16 +287,16 @@ export default function AdminProductsScreen() {
                       Product ID: <Text className="font-bold">{selectedProduct.productId ?? selectedProduct.id}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Gia co ban:{" "}
+                      Giá cơ bản:{" "}
                       <Text className="font-bold">
                         {new Intl.NumberFormat("vi-VN").format(selectedProduct.basePrice ?? 0)} d
                       </Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Ton kho: <Text className="font-bold">{selectedProduct.stockQty ?? selectedProduct.stock}</Text>
+                      Tồn kho: <Text className="font-bold">{selectedProduct.stockQty ?? selectedProduct.stock}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Trang thai: <Text className="font-bold">{selectedProduct.status ?? "active"}</Text>
+                      Trạng thái: <Text className="font-bold">{selectedProduct.status ?? "active"}</Text>
                     </Text>
                   </View>
                 </View>
@@ -306,7 +306,7 @@ export default function AdminProductsScreen() {
                     onPress={() => handleEditProduct(selectedProduct)}
                     className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
                   >
-                    <Text className="text-[13px] font-bold text-white">Sua thong tin</Text>
+                    <Text className="text-[13px] font-bold text-white">Sửa thông tin</Text>
                   </Pressable>
                   <Pressable
                     onPress={() =>

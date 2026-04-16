@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+﻿import { Feather } from "@expo/vector-icons";
 import { Pressable, Text, TextInput, View } from "react-native";
 
 type ProductFeaturesProps = {
@@ -22,10 +22,10 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
       <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-[16px] font-bold text-[#191C1F]">Dac diem noi bat</Text>
+        <Text className="text-[16px] font-bold text-[#191C1F]">Đặc điểm nổi bật</Text>
         <Pressable onPress={addFeature} className="flex-row items-center gap-1">
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[13px] font-bold text-[#006397]">Them dac diem</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Thêm đặc điểm</Text>
         </Pressable>
       </View>
 
@@ -37,7 +37,7 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
             </View>
             <TextInput
               className="flex-1 text-[14px] text-[#191C1F]"
-              placeholder="Nhap dac diem noi bat..."
+              placeholder="Nhập đặc điểm nổi bật..."
               placeholderTextColor="#97A0AB"
               value={feature}
               onChangeText={(value) => updateFeature(index, value)}
@@ -50,13 +50,13 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
 
         {features.length === 0 && (
           <View className="rounded-[12px] bg-[#F8F9FA] p-4">
-            <Text className="text-[13px] text-[#6B7682]">Chua co dac diem nao. Bam Them dac diem de bo sung.</Text>
+            <Text className="text-[13px] text-[#6B7682]">Chưa có đặc điểm nào. Bấm Thêm đặc điểm để bổ sung.</Text>
           </View>
         )}
       </View>
 
       <Text className="mt-4 text-[12px] leading-[18px] text-[#97A0AB]">
-        Cac dac diem nay se duoc luu vao short description de phuc vu hien thi nhanh.
+        Các đặc điểm này sẽ được lưu vào short description để phục vụ hiển thị nhanh.
       </Text>
     </View>
   );

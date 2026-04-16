@@ -1,4 +1,4 @@
-import { AdminHeader } from "@/components/admin/shared/admin-header";
+﻿import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
 import { adminService } from "@/services/admin.service";
 import { AdminReportOverview } from "@/types/admin";
@@ -90,14 +90,14 @@ export default function AdminReportsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Bao cao va xuat file</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Báo cáo và xuất file</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Chon ky theo doi, xem thong ke tong hop va xuat file bao cao overview.
+          Chọn kỳ theo dõi, xem thống kê tổng hợp và xuất file báo cáo overview.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
           <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Thoi gian hien thi doanh thu
+            Thời gian hiển thị doanh thu
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
             {TIME_RANGE_OPTIONS.map((option) => {
@@ -171,7 +171,7 @@ export default function AdminReportsScreen() {
 
             <View className="rounded-[14px] bg-white p-4">
               <View className="flex-row items-center justify-between">
-                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo ky</Text>
+                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo kỳ</Text>
                 <Feather name="bar-chart-2" size={18} color="#006397" />
               </View>
               <View className="mt-3 gap-3">

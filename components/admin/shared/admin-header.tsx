@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/auth-context";
+﻿import { useAuth } from "@/contexts/auth-context";
 import { authService } from "@/services/auth.service";
 import { Href, router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -8,10 +8,10 @@ export function AdminHeader({ title }: { title?: string }) {
   const { refreshToken, signOut } = useAuth();
 
   const handleLogout = async () => {
-    Alert.alert("Dang xuat", "Ban muon dang xuat khoi tai khoan admin?", [
-      { text: "Huy", style: "cancel" },
+    Alert.alert("Đăng xuất", "Bạn muốn đăng xuất khỏi tài khoản admin?", [
+      { text: "Hủy", style: "cancel" },
       {
-        text: "Dang xuat",
+        text: "Đăng xuất",
         style: "destructive",
         onPress: async () => {
           try {

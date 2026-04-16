@@ -1,4 +1,4 @@
-import { Image, Text, View } from "react-native";
+﻿import { Image, Text, View } from "react-native";
 import { AdminRecentOrder } from "@/types/admin";
 
 export function AdminRecentOrders({ orders }: { orders: AdminRecentOrder[] }) {

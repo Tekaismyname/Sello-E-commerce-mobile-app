@@ -52,17 +52,17 @@ export default function AdminDashboardScreen() {
         contentContainerClassName="p-4 pb-24"
       >
         <View className="mb-6 mt-2 flex-row items-center gap-1">
-          <Text className="text-[13px] text-[#6b7682]">Trang quan tri</Text>
+          <Text className="text-[13px] text-[#6b7682]">Trang quản trị</Text>
           <Feather name="chevron-right" size={14} color="#6b7682" />
-          <Text className="text-[13px] font-bold text-[#006397]">Tong quan</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Tổng quan</Text>
         </View>
 
         <View className="mb-6">
           <Text className="mb-2 text-[28px] font-extrabold leading-[36px] text-[#191C1F]">
-            Xin chao quan tri vien
+            Xin chào quản trị viên
           </Text>
           <Text className="text-[15px] leading-[24px] text-[#3F4850]">
-            Day la thong tin tong quan he thong hom nay. Tu day ban co the di nhanh den bao cao va cau hinh he thong.
+            Đây là thông tin tổng quan hệ thống hôm nay. Từ đây bạn có thể di chuyển nhanh đến báo cáo và cấu hình hệ thống.
           </Text>
         </View>
 
@@ -72,14 +72,14 @@ export default function AdminDashboardScreen() {
             onPress={() => router.push("/admin/reports" as Href)}
           >
             <Feather name="download" size={18} color="white" />
-            <Text className="text-[16px] font-bold text-white">Bao cao</Text>
+            <Text className="text-[16px] font-bold text-white">Báo cáo</Text>
           </Pressable>
           <Pressable
             className="h-[50px] flex-1 flex-row items-center justify-center gap-2 rounded-[12px] border border-[#006397] bg-white"
             onPress={() => router.push("/admin/system" as Href)}
           >
             <Feather name="settings" size={18} color="#006397" />
-            <Text className="text-[16px] font-bold text-[#006397]">He thong</Text>
+            <Text className="text-[16px] font-bold text-[#006397]">Hệ thống</Text>
           </Pressable>
         </View>
 
@@ -100,7 +100,7 @@ export default function AdminDashboardScreen() {
             <AdminStatCards data={data.stats} />
             {data.systemSummary && (
               <View className="mt-4 rounded-[16px] bg-white p-5 shadow-sm">
-                <Text className="text-[16px] font-bold text-[#191C1F]">He thong hom nay</Text>
+                <Text className="text-[16px] font-bold text-[#191C1F]">Hệ thống hôm nay</Text>
                 <View className="mt-4 flex-row flex-wrap gap-3">
                   <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
                     <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">

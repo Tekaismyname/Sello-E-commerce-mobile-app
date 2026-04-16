@@ -170,7 +170,7 @@ export default function AdminSystemScreen() {
           className="flex-row items-center gap-2 rounded-full bg-[#E8F1FB] px-3 py-2"
         >
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[12px] font-bold text-[#006397]">Them dong</Text>
+          <Text className="text-[12px] font-bold text-[#006397]">Thêm dòng</Text>
         </Pressable>
       </View>
 
@@ -179,7 +179,7 @@ export default function AdminSystemScreen() {
           <View key={`${title}-${index}`} className="rounded-[12px] bg-[#F8F9FB] p-3">
             <TextInput
               className="h-11 rounded-[10px] bg-white px-3 text-[14px] text-[#191C1F]"
-              placeholder="Nhap ID..."
+              placeholder="Nhập ID..."
               placeholderTextColor="#97a0aa"
               keyboardType="numeric"
               value={item.id}
@@ -214,7 +214,7 @@ export default function AdminSystemScreen() {
               className="mt-3 flex-row items-center justify-center gap-2 rounded-[10px] border border-[#E7E8EC] py-2"
             >
               <Feather name="trash-2" size={14} color="#9A6400" />
-              <Text className="text-[12px] font-bold text-[#9A6400]">Xoa dong</Text>
+              <Text className="text-[12px] font-bold text-[#9A6400]">Xóa dòng</Text>
             </Pressable>
           </View>
         ))}
@@ -245,9 +245,9 @@ export default function AdminSystemScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quan ly he thong</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý hệ thống</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Xem dashboard he thong va cap nhat nhanh voucher, payment method, category config.
+          Xem dashboard hệ thống và cập nhật nhanh voucher, payment method, category config.
         </Text>
 
         {loading && (
@@ -319,9 +319,9 @@ export default function AdminSystemScreen() {
 
             <View className="mt-4 gap-4">
               <View className="rounded-[16px] bg-white p-4 shadow-sm">
-                <Text className="text-[15px] font-bold text-[#191C1F]">Tra nhanh ID de thao tac</Text>
+                <Text className="text-[15px] font-bold text-[#191C1F]">Trả nhanh ID để thao tác</Text>
                 <Text className="mt-1 text-[13px] leading-[20px] text-[#5b6470]">
-                  Mo danh sach category, voucher va payment method de xem ID truoc khi cap nhat config.
+                  Mở danh sách category, voucher và payment method để xem ID trước khi cập nhật config.
                 </Text>
 
                 <View className="mt-4 gap-3">
@@ -428,7 +428,7 @@ export default function AdminSystemScreen() {
 
                 {!catalogItems.length && (
                   <View className="items-center rounded-[14px] bg-[#F8F9FB] p-6">
-                    <Text className="text-[14px] text-[#5b6470]">Khong co du lieu de hien thi.</Text>
+                    <Text className="text-[14px] text-[#5b6470]">Không có dữ liệu để hiển thị.</Text>
                   </View>
                 )}
               </View>

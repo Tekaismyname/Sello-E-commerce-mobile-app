@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+﻿import { Feather } from "@expo/vector-icons";
 import { Pressable, Text, TextInput, View } from "react-native";
 
 export function AdminSearchFilter({ searchQuery, onSearchQueryChange }: any) {

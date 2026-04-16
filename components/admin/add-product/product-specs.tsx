@@ -1,4 +1,4 @@
-import { Text, TextInput, View } from "react-native";
+﻿import { Text, TextInput, View } from "react-native";
 
 type ProductSpecsProps = {
   sku: string;
@@ -19,7 +19,7 @@ export function ProductSpecs({
 }: ProductSpecsProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
-      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">Thong so ky thuat</Text>
+      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">Thông số kỹ thuật</Text>
 
       <View className="gap-4">
         <View className="flex-row gap-4">
@@ -48,7 +48,7 @@ export function ProductSpecs({
         </View>
 
         <View>
-          <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">BAO HANH (THANG)</Text>
+          <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">BẢO HÀNH (THÁNG)</Text>
           <TextInput
             className="h-12 rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7] px-4 text-[14px] text-[#191C1F]"
             placeholder="VD: 12"

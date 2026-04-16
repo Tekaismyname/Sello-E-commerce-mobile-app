@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+﻿import { Feather } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
@@ -42,14 +42,14 @@ export function ProductBasicForm({
 
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
-      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">2. Thong tin co ban</Text>
+      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">2. Thông tin cơ bản</Text>
 
       <View className="gap-4">
         <View>
-          <Text className="mb-2 text-[13px] font-bold text-[#3F4850]">Ten san pham *</Text>
+          <Text className="mb-2 text-[13px] font-bold text-[#3F4850]">Tên sản phẩm *</Text>
           <TextInput
             className="h-12 rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7] px-4 text-[14px] text-[#191C1F]"
-            placeholder="Nhap ten san pham..."
+            placeholder="Nhập tên sản phẩm..."
             placeholderTextColor="#97A0AB"
             value={name}
             onChangeText={onNameChange}
@@ -57,7 +57,7 @@ export function ProductBasicForm({
         </View>
 
         <View>
-          <Text className="mb-2 text-[13px] font-bold text-[#3F4850]">Danh muc san pham *</Text>
+          <Text className="mb-2 text-[13px] font-bold text-[#3F4850]">Danh mục sản phẩm *</Text>
           <Pressable
             className="h-12 flex-row items-center justify-between gap-2 rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7] px-4"
             onPress={() => setPickerVisible(true)}
@@ -69,15 +69,15 @@ export function ProductBasicForm({
               >
                 {selectedCategory
                   ? `${selectedCategory.name} (#${selectedCategory.id})`
-                  : "Chon category theo ten..."}
+                  : "Chọn category theo tên..."}
               </Text>
             </View>
             <Feather name="chevron-down" size={20} color="#6B7682" />
           </Pressable>
           <Text className="mt-2 text-[12px] leading-[18px] text-[#97A0AB]">
             {selectedCategory
-              ? `Dang chon ID ${selectedCategory.id}`
-              : "Tim theo ten hoac ID de chon nhanh category."}
+              ? `Đang chọn ID ${selectedCategory.id}`
+              : "Tìm theo tên hoặc ID để chọn nhanh category."}
           </Text>
         </View>
       </View>
@@ -92,9 +92,9 @@ export function ProductBasicForm({
           <View className="max-h-[82%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
               <View className="flex-1 pr-4">
-                <Text className="text-[18px] font-extrabold text-[#191C1F]">Chon category</Text>
+                <Text className="text-[18px] font-extrabold text-[#191C1F]">Chọn category</Text>
                 <Text className="mt-1 text-[13px] text-[#5b6470]">
-                  Tim theo ten hoac ID, chi hien category dang active.
+                  Tìm theo tên hoặc ID, chỉ hiển thị category đang active.
                 </Text>
               </View>
               <Pressable
@@ -109,7 +109,7 @@ export function ProductBasicForm({
               <Feather name="search" size={16} color="#6B7682" />
               <TextInput
                 className="flex-1 text-[14px] text-[#191C1F]"
-                placeholder="Nhap ten category..."
+                placeholder="Nhập tên category..."
                 placeholderTextColor="#97A0AB"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -153,7 +153,7 @@ export function ProductBasicForm({
                 {filteredCategories.length === 0 && (
                   <View className="items-center rounded-[14px] bg-[#F8F9FB] p-6">
                     <Text className="text-[14px] text-[#5b6470]">
-                      Khong tim thay category phu hop.
+                      Không tìm thấy category phù hợp.
                     </Text>
                   </View>
                 )}

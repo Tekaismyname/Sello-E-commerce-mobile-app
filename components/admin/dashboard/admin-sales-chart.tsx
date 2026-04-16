@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+﻿import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
 export function AdminSalesChart() {
@@ -28,8 +28,8 @@ export function AdminSalesChart() {
       <View className="flex-row items-end justify-between h-[150px] pb-6 relative">
         {chartData.map((item, index) => (
           <View key={index} className="items-center w-10">
-            <View 
-              className={`w-8 rounded-t-[6px] ${item.active ? "bg-[#006397]" : "bg-[#F2F3F7]"}`} 
+            <View
+              className={`w-8 rounded-t-[6px] ${item.active ? "bg-[#006397]" : "bg-[#F2F3F7]"}`}
               style={{ height: `${item.height}%` }}
             />
             <Text className={`absolute -bottom-6 text-[11px] font-bold ${item.active ? "text-[#006397]" : "text-[#6b7682]"}`}>
