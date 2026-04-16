@@ -9,11 +9,13 @@ import {
   CheckoutPreview,
   CheckoutPreviewPayload,
   CreateAddressPayload,
+  CreateOrderResult,
   CreateOrderPayload,
   CreateReviewPayload,
   MockPaymentCallbackPayload,
   Notification,
-  Order,
+  OrderDetail,
+  OrderSummary,
   OrderTracking,
   ProductDetail,
   SelectCartItemPayload,
@@ -125,6 +127,184 @@ async function requestPublic<T>(path: string): Promise<T> {
 
   return payload as T;
 }
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+const ensureArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+
+const toNumber = (value: unknown, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const toOptionalNumber = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const toText = (value: unknown, fallback = "") =>
+  typeof value === "string" ? value : fallback;
+
+const toOptionalText = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value : undefined;
+
+const normalizeOrderStatus = (value: unknown): OrderSummary["status"] => {
+  switch (value) {
+    case "pending":
+    case "confirmed":
+    case "packed":
+    case "shipping":
+    case "delivered":
+    case "cancelled":
+    case "returned":
+      return value;
+    default:
+      return "pending";
+  }
+};
+
+const mapCart = (payload: unknown): Cart => {
+  const data = asRecord(payload);
+  const summary = asRecord(data.summary);
+  const items = ensureArray<Record<string, unknown>>(data.items).map((item) => {
+    const product = asRecord(item.product);
+    const variant = asRecord(item.variant);
+    const color = toOptionalText(variant.color);
+    const size = toOptionalText(variant.size);
+    const variantLabel = [color, size].filter(Boolean).join(" / ");
+
+    return {
+      id: toNumber(item.id),
+      cartId: toOptionalNumber(item.cartId ?? item.cart_id),
+      productId: toNumber(item.productId ?? item.product_id),
+      variantId:
+        item.variantId === null || item.variant_id === null
+          ? null
+          : toOptionalNumber(item.variantId ?? item.variant_id) ?? null,
+      productName: toText(item.productName ?? product.name, "San pham"),
+      productImage: toText(item.productImage ?? product.primaryImageUrl),
+      price: toNumber(item.price ?? item.unitPrice ?? item.unit_price ?? product.basePrice),
+      quantity: toNumber(item.quantity, 1),
+      selected: Boolean(item.selected),
+      variantLabel: variantLabel || undefined,
+      availableStock: toOptionalNumber(variant.stockQty ?? variant.stock_qty),
+    };
+  });
+
+  return {
+    cartId: toOptionalNumber(data.cartId ?? data.cart_id),
+    items,
+    totalItems: toNumber(summary.itemsCount ?? summary.totalItems ?? data.totalItems, items.length),
+    selectedItems: toNumber(
+      summary.selectedItemsCount ?? summary.selectedItems ?? data.selectedItems,
+      items.filter((item) => item.selected).length,
+    ),
+    subtotal: toNumber(summary.subtotal),
+    total: toNumber(summary.totalAmount ?? summary.total ?? summary.subtotal),
+  };
+};
+
+const mapOrderItem = (payload: Record<string, unknown>) => ({
+  id: toNumber(payload.id),
+  productId: toNumber(payload.productId ?? payload.product_id),
+  variantId:
+    payload.variantId === null || payload.variant_id === null
+      ? null
+      : toOptionalNumber(payload.variantId ?? payload.variant_id) ?? null,
+  productName: toText(payload.productName ?? payload.product_name_snapshot, "San pham"),
+  productImage: toOptionalText(payload.productImage ?? payload.product_image),
+  variantLabel: toOptionalText(payload.variantLabel ?? payload.variantSnapshot ?? payload.variant_snapshot) ?? null,
+  quantity: toNumber(payload.quantity, 1),
+  price: toNumber(payload.price ?? payload.unitPrice ?? payload.unit_price),
+  lineTotal: toOptionalNumber(payload.lineTotal ?? payload.line_total),
+});
+
+const mapOrderSummary = (payload: Record<string, unknown>): OrderSummary => ({
+  id: toNumber(payload.id),
+  orderCode: toText(payload.orderCode ?? payload.order_code, `ORD-${toNumber(payload.id)}`),
+  status: normalizeOrderStatus(payload.status ?? payload.orderStatus ?? payload.order_status),
+  totalAmount: toNumber(payload.totalAmount ?? payload.total_amount),
+  subtotal: toOptionalNumber(payload.subtotal),
+  shippingFee: toOptionalNumber(payload.shippingFee ?? payload.shipping_fee),
+  discount: toOptionalNumber(payload.discount ?? payload.product_discount),
+  paymentStatus: toOptionalText(payload.paymentStatus ?? payload.payment_status),
+  createdAt: toText(payload.createdAt ?? payload.placedAt ?? payload.placed_at, new Date().toISOString()),
+});
+
+const mapOrderDetail = (payload: unknown): OrderDetail => {
+  const data = asRecord(payload);
+  const payment = asRecord(data.payment);
+  const shipment = asRecord(data.shipment);
+
+  return {
+    ...mapOrderSummary(data),
+    note: toOptionalText(data.note) ?? null,
+    items: ensureArray<Record<string, unknown>>(data.items).map(mapOrderItem),
+    payment:
+      Object.keys(payment).length > 0
+        ? {
+            id: toNumber(payment.id),
+            paymentMethodId: toNumber(payment.paymentMethodId ?? payment.payment_method_id),
+            amount: toNumber(payment.amount),
+            transactionCode: toOptionalText(payment.transactionCode ?? payment.transaction_code) ?? null,
+            paymentStatus: toText(payment.paymentStatus ?? payment.payment_status, "pending"),
+            paidAt: toOptionalText(payment.paidAt ?? payment.paid_at) ?? null,
+            failReason: toOptionalText(payment.failReason ?? payment.fail_reason) ?? null,
+          }
+        : null,
+    shipment:
+      Object.keys(shipment).length > 0
+        ? {
+            id: toNumber(shipment.id),
+            carrierName: toOptionalText(shipment.carrierName ?? shipment.carrier_name) ?? null,
+            trackingCode: toOptionalText(shipment.trackingCode ?? shipment.tracking_code) ?? null,
+            shippingType: toOptionalText(shipment.shippingType ?? shipment.shipping_type) ?? null,
+            shipmentStatus: toOptionalText(shipment.shipmentStatus ?? shipment.shipment_status) ?? null,
+            shippedAt: toOptionalText(shipment.shippedAt ?? shipment.shipped_at) ?? null,
+            deliveredAt: toOptionalText(shipment.deliveredAt ?? shipment.delivered_at) ?? null,
+          }
+        : null,
+    statusHistory: ensureArray<Record<string, unknown>>(data.statusHistory).map((event) => ({
+      id: toOptionalNumber(event.id ?? event.history_id),
+      status: toText(event.status, "pending"),
+      description: toText(event.description),
+      updatedBy: toOptionalNumber(event.updatedBy ?? event.updated_by) ?? null,
+      timestamp: toText(event.timestamp ?? event.createdAt ?? event.created_at, new Date().toISOString()),
+    })),
+  };
+};
+
+const mapOrderTracking = (payload: unknown): OrderTracking => {
+  const data = asRecord(payload);
+  const shipment = asRecord(data.shipment);
+
+  return {
+    shipment:
+      Object.keys(shipment).length > 0
+        ? {
+            id: toNumber(shipment.id),
+            carrierName: toOptionalText(shipment.carrierName ?? shipment.carrier_name) ?? null,
+            trackingCode: toOptionalText(shipment.trackingCode ?? shipment.tracking_code) ?? null,
+            shippingType: toOptionalText(shipment.shippingType ?? shipment.shipping_type) ?? null,
+            shipmentStatus: toOptionalText(shipment.shipmentStatus ?? shipment.shipment_status) ?? null,
+            estimatedDeliveryAt:
+              toOptionalText(shipment.estimatedDeliveryAt ?? shipment.estimated_delivery_at) ?? null,
+            shippedAt: toOptionalText(shipment.shippedAt ?? shipment.shipped_at) ?? null,
+            deliveredAt: toOptionalText(shipment.deliveredAt ?? shipment.delivered_at) ?? null,
+          }
+        : null,
+    timeline: ensureArray<Record<string, unknown>>(data.timeline ?? data.events).map((event) => ({
+      id: toOptionalNumber(event.id ?? event.history_id),
+      status: toText(event.status, "pending"),
+      description: toText(event.description),
+      updatedBy: toOptionalNumber(event.updatedBy ?? event.updated_by) ?? null,
+      timestamp: toText(event.timestamp ?? event.createdAt ?? event.created_at, new Date().toISOString()),
+    })),
+  };
+};
 
 // ─── Product (Public) ─────────────────────────────────────
 
@@ -275,35 +455,39 @@ export const reviewService = {
 // ─── Cart ─────────────────────────────────────────────────
 
 export const cartService = {
-  getCart(token: string) {
-    return requestAuth<ApiResponse<Cart>>(API_ENDPOINTS.cart.get, token);
+  async getCart(token: string) {
+    const response = await requestAuth<ApiResponse<unknown>>(API_ENDPOINTS.cart.get, token);
+    return { ...response, data: mapCart(response.data) };
   },
 
-  addCartItem(token: string, payload: AddCartItemPayload) {
-    return requestAuth<ApiResponse<Cart>>(API_ENDPOINTS.cart.addItem, token, {
+  async addCartItem(token: string, payload: AddCartItemPayload) {
+    const response = await requestAuth<ApiResponse<unknown>>(API_ENDPOINTS.cart.addItem, token, {
       method: "POST",
       body: JSON.stringify(payload),
     });
+    return { ...response, data: mapCart(response.data) };
   },
 
-  updateCartItem(token: string, cartItemId: number, payload: UpdateCartItemPayload) {
-    return requestAuth<ApiResponse<Cart>>(
+  async updateCartItem(token: string, cartItemId: number, payload: UpdateCartItemPayload) {
+    const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.cart.updateItem(cartItemId),
       token,
       { method: "PUT", body: JSON.stringify(payload) },
     );
+    return { ...response, data: mapCart(response.data) };
   },
 
-  selectCartItem(token: string, cartItemId: number, payload: SelectCartItemPayload) {
-    return requestAuth<ApiResponse<Cart>>(
+  async selectCartItem(token: string, cartItemId: number, payload: SelectCartItemPayload) {
+    const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.cart.selectItem(cartItemId),
       token,
       { method: "PATCH", body: JSON.stringify(payload) },
     );
+    return { ...response, data: mapCart(response.data) };
   },
 
   deleteCartItem(token: string, cartItemId: number) {
-    return requestAuth<ApiResponse<Cart>>(
+    return requestAuth<{ message: string }>(
       API_ENDPOINTS.cart.deleteItem(cartItemId),
       token,
       { method: "DELETE" },
@@ -338,7 +522,7 @@ export const checkoutService = {
   },
 
   createOrder(token: string, payload: CreateOrderPayload) {
-    return requestAuth<ApiResponse<Order>>(
+    return requestAuth<ApiResponse<CreateOrderResult>>(
       API_ENDPOINTS.checkout.createOrder,
       token,
       { method: "POST", body: JSON.stringify(payload) },
@@ -349,33 +533,40 @@ export const checkoutService = {
 // ─── Orders ───────────────────────────────────────────────
 
 export const orderService = {
-  getMyOrders(token: string) {
-    return requestAuth<ApiResponse<Order[]>>(
+  async getMyOrders(token: string) {
+    const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.orders.myOrders,
       token,
     );
+    return {
+      ...response,
+      data: ensureArray<Record<string, unknown>>(response.data).map(mapOrderSummary),
+    };
   },
 
-  getOrderDetail(token: string, orderId: number) {
-    return requestAuth<ApiResponse<Order>>(
+  async getOrderDetail(token: string, orderId: number) {
+    const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.orders.detail(orderId),
       token,
     );
+    return { ...response, data: mapOrderDetail(response.data) };
   },
 
-  cancelOrder(token: string, orderId: number) {
-    return requestAuth<ApiResponse<Order>>(
+  async cancelOrder(token: string, orderId: number) {
+    const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.orders.cancel(orderId),
       token,
       { method: "POST" },
     );
+    return { ...response, data: mapOrderDetail(response.data) };
   },
 
-  getOrderTracking(token: string, orderId: number) {
-    return requestAuth<ApiResponse<OrderTracking>>(
+  async getOrderTracking(token: string, orderId: number) {
+    const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.orders.tracking(orderId),
       token,
     );
+    return { ...response, data: mapOrderTracking(response.data) };
   },
 
   mockPaymentCallback(paymentId: number, payload: MockPaymentCallbackPayload) {

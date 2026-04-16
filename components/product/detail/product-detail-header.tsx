@@ -15,7 +15,10 @@ export function ProductDetailHeader() {
         <Pressable className="h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm">
           <Feather name="share-2" size={20} color="#1a232d" />
         </Pressable>
-        <Pressable className="h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm">
+        <Pressable
+          className="h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-sm"
+          onPress={() => router.push("/main/cart" as Href)}
+        >
           <Feather name="shopping-cart" size={20} color="#1a232d" />
         </Pressable>
       </View>

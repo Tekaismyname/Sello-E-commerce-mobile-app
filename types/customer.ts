@@ -91,24 +91,31 @@ export interface CreateReviewPayload {
   rating: number;
   title?: string;
   comment?: string;
-  media?: Array<{ mediaUrl: string; mediaType?: "image" | "video" }>;
+  media?: { mediaUrl: string; mediaType?: "image" | "video" }[];
 }
 
 // ─── Cart ─────────────────────────────────────────────────
 export interface CartItem {
   id: number;
+  cartId?: number;
   productId: number;
-  variantId?: number | null;
+  variantId: number | null;
   productName: string;
   productImage: string;
   price: number;
   quantity: number;
   selected: boolean;
+  variantLabel?: string | null;
+  availableStock?: number;
 }
 
 export interface Cart {
+  cartId?: number;
   items: CartItem[];
   totalItems: number;
+  selectedItems: number;
+  subtotal: number;
+  total: number;
 }
 
 export interface CartSummary {
@@ -158,6 +165,16 @@ export interface CreateOrderPayload {
   note?: string;
 }
 
+export interface CreateOrderResult {
+  orderId: number;
+  orderCode: string;
+  paymentId: number;
+  paymentType: "cod" | "online";
+  paymentStatus: string;
+  orderStatus: OrderStatus;
+  paymentUrl?: string;
+}
+
 // ─── Order ────────────────────────────────────────────────
 export type OrderStatus =
   | "pending"
@@ -171,28 +188,71 @@ export type OrderStatus =
 export interface OrderItem {
   id: number;
   productId: number;
+  variantId?: number | null;
   productName: string;
-  productImage: string;
+  productImage?: string;
+  variantLabel?: string | null;
   quantity: number;
   price: number;
+  lineTotal?: number;
 }
 
-export interface Order {
+export interface OrderSummary {
   id: number;
+  orderCode: string;
   status: OrderStatus;
   totalAmount: number;
+  subtotal?: number;
+  shippingFee?: number;
+  discount?: number;
+  paymentStatus?: string;
   createdAt: string;
-  items: OrderItem[];
+}
+
+export interface OrderTimelineEvent {
+  id?: number;
+  status: string;
+  description: string;
+  updatedBy?: number | null;
+  timestamp: string;
 }
 
 export interface OrderTracking {
-  orderId: number;
-  status: OrderStatus;
-  events: Array<{
-    status: string;
-    description: string;
-    timestamp: string;
-  }>;
+  shipment: {
+    id: number;
+    carrierName?: string | null;
+    trackingCode?: string | null;
+    shippingType?: string | null;
+    shipmentStatus?: string | null;
+    estimatedDeliveryAt?: string | null;
+    shippedAt?: string | null;
+    deliveredAt?: string | null;
+  } | null;
+  timeline: OrderTimelineEvent[];
+}
+
+export interface OrderDetail extends OrderSummary {
+  note?: string | null;
+  items: OrderItem[];
+  payment?: {
+    id: number;
+    paymentMethodId: number;
+    amount: number;
+    transactionCode?: string | null;
+    paymentStatus: string;
+    paidAt?: string | null;
+    failReason?: string | null;
+  } | null;
+  shipment?: {
+    id: number;
+    carrierName?: string | null;
+    trackingCode?: string | null;
+    shippingType?: string | null;
+    shipmentStatus?: string | null;
+    shippedAt?: string | null;
+    deliveredAt?: string | null;
+  } | null;
+  statusHistory?: OrderTimelineEvent[];
 }
 
 export interface MockPaymentCallbackPayload {

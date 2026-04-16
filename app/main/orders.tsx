@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { Href, router } from "expo-router";
 import { SelloHeader } from "@/components/main/sello-header";
-import { orderService } from "@/services/customer.service";
-import { Order, OrderStatus } from "@/types/customer";
 import { useAuth } from "@/contexts/auth-context";
+import { orderService } from "@/services/customer.service";
+import { OrderStatus, OrderSummary } from "@/types/customer";
 
 const statusLabels: Record<OrderStatus, string> = {
   pending: "Cho xu ly",
@@ -27,9 +28,11 @@ const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
   returned: { bg: "bg-[#FFF8E1]", text: "text-[#F57F17]" },
 };
 
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
+
 export default function OrdersScreen() {
   const { token } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,10 +47,10 @@ export default function OrdersScreen() {
     }
 
     try {
-      const res = await orderService.getMyOrders(token);
-      setOrders(res.data);
-    } catch (err: any) {
-      setError(err.message);
+      const response = await orderService.getMyOrders(token);
+      setOrders(response.data);
+    } catch (nextError: any) {
+      setError(nextError.message);
     } finally {
       setLoading(false);
     }
@@ -57,10 +60,12 @@ export default function OrdersScreen() {
     fetchOrders();
   }, [fetchOrders]);
 
-  const handleCancel = (order: Order) => {
-    if (order.status !== "pending") return;
+  const handleCancel = (order: OrderSummary) => {
+    if (!["pending", "confirmed"].includes(order.status)) {
+      return;
+    }
 
-    Alert.alert("Huy don hang", `Ban co chac muon huy don #${order.id}?`, [
+    Alert.alert("Huy don hang", `Ban co chac muon huy don #${order.orderCode}?`, [
       { text: "Khong", style: "cancel" },
       {
         text: "Huy don",
@@ -73,80 +78,101 @@ export default function OrdersScreen() {
 
           try {
             await orderService.cancelOrder(token, order.id);
-            fetchOrders();
-          } catch (err: any) {
-            Alert.alert("Loi", err.message);
+            await fetchOrders();
+          } catch (nextError: any) {
+            Alert.alert("Loi", nextError.message);
           }
         },
       },
     ]);
   };
 
-  const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
-
   return (
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
       <SelloHeader />
+
       <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
         <Text className="text-[30px] font-extrabold text-[#1f2934]">Don hang</Text>
 
-        {loading && (
+        {loading ? (
           <View className="mt-10 items-center">
             <ActivityIndicator size="large" color="#006397" />
             <Text className="mt-3 text-[13px] text-[#7d8896]">Dang tai don hang...</Text>
           </View>
-        )}
+        ) : null}
 
-        {!loading && error && (
+        {!loading && error ? (
           <View className="mt-6 rounded-[14px] bg-white p-4">
             <Text className="text-[14px] font-semibold text-[#465362]">{error}</Text>
           </View>
-        )}
+        ) : null}
 
-        {!loading && !error && orders.length === 0 && (
-          <View className="mt-6 rounded-[14px] bg-white p-6 items-center">
+        {!loading && !error && orders.length === 0 ? (
+          <View className="mt-6 items-center rounded-[14px] bg-white p-6">
             <Feather name="package" size={48} color="#c5cdd6" />
             <Text className="mt-3 text-[15px] font-semibold text-[#465362]">Chua co don hang</Text>
             <Text className="mt-1 text-[12px] text-[#7d8896]">Don hang cua ban se hien thi tai day.</Text>
           </View>
-        )}
+        ) : null}
 
-        {!loading && !error && orders.length > 0 && (
+        {!loading && !error && orders.length > 0 ? (
           <View className="mt-4 gap-3">
             {orders.map((order) => {
-              const colors = statusColors[order.status] || statusColors.pending;
+              const colors = statusColors[order.status] ?? statusColors.pending;
+              const canCancel = order.status === "pending" || order.status === "confirmed";
+
               return (
-                <View key={order.id} className="rounded-[14px] bg-white p-4">
+                <Pressable
+                  key={order.id}
+                  className="rounded-[14px] bg-white p-4"
+                  onPress={() =>
+                    router.push(`/order/${order.id}` as Href)
+                  }
+                >
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-[15px] font-bold text-[#1f2934]">Don #{order.id}</Text>
-                    <View className={`px-3 py-1 rounded-full ${colors.bg}`}>
+                    <View>
+                      <Text className="text-[15px] font-bold text-[#1f2934]">#{order.orderCode}</Text>
+                      <Text className="mt-1 text-[12px] text-[#7d8896]">
+                        {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                      </Text>
+                    </View>
+
+                    <View className={`rounded-full px-3 py-1 ${colors.bg}`}>
                       <Text className={`text-[11px] font-bold ${colors.text}`}>
                         {statusLabels[order.status] || order.status}
                       </Text>
                     </View>
                   </View>
 
-                  <Text className="mt-2 text-[12px] text-[#7d8896]">
-                    {new Date(order.createdAt).toLocaleDateString("vi-VN")} · {order.items?.length || 0} san pham
-                  </Text>
+                  <View className="mt-3 flex-row items-center justify-between">
+                    <View>
+                      <Text className="text-[16px] font-bold text-[#006397]">{formatPrice(order.totalAmount)}</Text>
+                      <Text className="mt-1 text-[12px] text-[#607080]">
+                        Thanh toan: {order.paymentStatus ?? "pending"}
+                      </Text>
+                    </View>
 
-                  <View className="mt-2 flex-row items-center justify-between">
-                    <Text className="text-[16px] font-bold text-[#006397]">{formatPrice(order.totalAmount)}</Text>
+                    <View className="items-end">
+                      {canCancel ? (
+                        <Pressable
+                          className="rounded-[8px] border border-[#BA1A1A] px-4 py-2"
+                          onPress={(event) => {
+                            event.stopPropagation();
+                            handleCancel(order);
+                          }}
+                        >
+                          <Text className="text-[12px] font-bold text-[#BA1A1A]">Huy don</Text>
+                        </Pressable>
+                      ) : null}
 
-                    {order.status === "pending" && (
-                      <Pressable
-                        className="px-4 py-2 rounded-[8px] border border-[#BA1A1A]"
-                        onPress={() => handleCancel(order)}
-                      >
-                        <Text className="text-[12px] font-bold text-[#BA1A1A]">Huy don</Text>
-                      </Pressable>
-                    )}
+                      <Text className="mt-3 text-[12px] font-semibold text-[#607080]">Xem chi tiet</Text>
+                    </View>
                   </View>
-                </View>
+                </Pressable>
               );
             })}
           </View>
-        )}
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

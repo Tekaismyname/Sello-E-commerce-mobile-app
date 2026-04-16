@@ -3,6 +3,7 @@ export * from "./product-image-gallery";
 export * from "./product-basic-info";
 export * from "./product-color-selector";
 export * from "./product-size-selector";
+export * from "./product-quantity-selector";
 export * from "./product-description";
 export * from "./product-review-overview";
 export * from "./product-bottom-action-bar";
