@@ -8,6 +8,7 @@ import {
   CartSummary,
   CheckoutPreview,
   CheckoutPreviewPayload,
+  ContactAdminPayload,
   CreateAddressPayload,
   CreateOrderResult,
   CreateOrderPayload,
@@ -339,6 +340,14 @@ export const profileService = {
       API_ENDPOINTS.customer.updatePassword,
       token,
       { method: "PUT", body: JSON.stringify(payload) },
+    );
+  },
+
+  contactAdmin(token: string, payload: ContactAdminPayload) {
+    return requestAuth<ApiResponse<{ insertedCount: number; targetScope: string }>>(
+      API_ENDPOINTS.customer.contactAdmin,
+      token,
+      { method: "POST", body: JSON.stringify(payload) },
     );
   },
 };

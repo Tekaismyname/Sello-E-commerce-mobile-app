@@ -40,6 +40,7 @@ export type AuthUser = {
   email: string;
   phone: string;
   role: string;
+  adminLevel?: number | null;
   status: string;
   isVerified: boolean;
   permissions?: string[];

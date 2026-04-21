@@ -64,7 +64,7 @@ export default function AddProductScreen() {
   const [sku, setSku] = useState("");
   const [brandId, setBrandId] = useState("");
   const [warrantyMonths, setWarrantyMonths] = useState("");
-  const [categories, setCategories] = useState<Array<{ id: number; name: string; status?: string }>>(
+  const [categories, setCategories] = useState<{ id: number; name: string; status?: string }[]>(
     [],
   );
   const [images, setImages] = useState<AdminProductImage[]>([createDefaultImage()]);
@@ -271,6 +271,16 @@ export default function AddProductScreen() {
     }
   };
 
+  const handleStockQtyChange = (value: string) => {
+    const nextStock = onlyDigits(value);
+    setStockQty(nextStock);
+    setVariants((current) =>
+      current.length === 1
+        ? [{ ...current[0], stockQty: Number(nextStock || "0") }]
+        : current,
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
       <View className="flex-row items-center border-b border-[#F2F3F7] bg-white px-4 py-3">
@@ -313,7 +323,7 @@ export default function AddProductScreen() {
               stockQty={stockQty}
               onBasePriceChange={(value) => setBasePrice(onlyDigits(value))}
               onComparePriceChange={(value) => setComparePrice(onlyDigits(value))}
-              onStockQtyChange={(value) => setStockQty(onlyDigits(value))}
+              onStockQtyChange={handleStockQtyChange}
             />
             <ProductSpecs
               sku={sku}

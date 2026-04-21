@@ -70,10 +70,19 @@ export interface UpdateAddressPayload {
 // ─── Notification ─────────────────────────────────────────
 export interface Notification {
   id: number;
+  userId?: number;
   title: string;
-  message: string;
+  content?: string | null;
+  message?: string;
+  notificationType?: "promotion" | "order" | "system";
+  imageUrl?: string | null;
   isRead: boolean;
   createdAt: string;
+}
+
+export interface ContactAdminPayload {
+  subject: string;
+  message: string;
 }
 
 // ─── Wishlist ─────────────────────────────────────────────

@@ -6,16 +6,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type TabMeta = {
   key: string;
   label: string;
-  icon: "home" | "grid" | "users" | "truck" | "bar-chart-2" | "settings";
+  icon: "home" | "grid" | "truck" | "bar-chart-2" | "menu";
 };
 
 const tabs: TabMeta[] = [
   { key: "dashboard", label: "Home", icon: "home" },
   { key: "products", label: "Products", icon: "grid" },
-  { key: "users", label: "Users", icon: "users" },
   { key: "orders", label: "Orders", icon: "truck" },
   { key: "reports", label: "Reports", icon: "bar-chart-2" },
-  { key: "system", label: "System", icon: "settings" },
+  { key: "menu", label: "Menu", icon: "menu" },
 ];
 
 export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProps) {

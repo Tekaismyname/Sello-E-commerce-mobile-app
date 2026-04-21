@@ -1,5 +1,5 @@
-import { Tabs } from "expo-router";
 import { SelloTabBar } from "@/components/main/sello-tab-bar";
+import { Tabs } from "expo-router";
 
 export default function MainLayout() {
   return (
@@ -18,6 +18,7 @@ export default function MainLayout() {
       <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
       <Tabs.Screen name="search" options={{ href: null }} />
       <Tabs.Screen name="product-list" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
   );
 }

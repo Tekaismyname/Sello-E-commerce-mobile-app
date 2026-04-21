@@ -20,15 +20,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const PRODUCT_STATUS_OPTIONS = [
-  "all",
-  "active",
-  "draft",
-  "out_of_stock",
-  "inactive",
-] as const;
+const PRODUCT_STATUS_OPTIONS = ["all", "active", "draft", "out_of_stock", "inactive"] as const;
 
 type ProductStatusFilter = (typeof PRODUCT_STATUS_OPTIONS)[number];
+
+const formatMoney = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
 
 export default function AdminProductsScreen() {
   const { token } = useAuth();
@@ -46,7 +42,7 @@ export default function AdminProductsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap tai khoan admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
       setLoading(false);
       return;
     }
@@ -78,8 +74,7 @@ export default function AdminProductsScreen() {
         product.category.toLowerCase().includes(normalizedQuery) ||
         String(product.id).toLowerCase().includes(normalizedQuery) ||
         (product.sku ?? "").toLowerCase().includes(normalizedQuery);
-      const matchesStatus =
-        statusFilter === "all" || (product.status ?? "active") === statusFilter;
+      const matchesStatus = statusFilter === "all" || (product.status ?? "active") === statusFilter;
 
       return matchesQuery && matchesStatus;
     });
@@ -89,10 +84,6 @@ export default function AdminProductsScreen() {
     () => filteredProducts.filter((product) => Number(product.stockQty ?? product.stock) <= 5).length,
     [filteredProducts],
   );
-
-  const handleAddProduct = () => {
-    router.push("/admin/add-product");
-  };
 
   const handleEditProduct = (product: AdminProduct) => {
     const params = new URLSearchParams({
@@ -113,7 +104,7 @@ export default function AdminProductsScreen() {
     nextStatus: "draft" | "active" | "out_of_stock" | "inactive",
   ) => {
     if (!token || !product.productId) {
-      Alert.alert("Khong the cap nhat", "Thieu product id hop le.");
+      Alert.alert("Không thể cập nhật", "Thiếu product id hợp lệ.");
       return;
     }
 
@@ -121,11 +112,9 @@ export default function AdminProductsScreen() {
       setUpdating(true);
       await adminService.updateProductStatus(token, product.productId, nextStatus);
       await fetchProducts();
-      setSelectedProduct((current) =>
-        current ? { ...current, status: nextStatus } : current,
-      );
+      setSelectedProduct((current) => (current ? { ...current, status: nextStatus } : current));
     } catch (err: any) {
-      Alert.alert("Loi", err.message);
+      Alert.alert("Lỗi", err.message);
     } finally {
       setUpdating(false);
     }
@@ -133,20 +122,13 @@ export default function AdminProductsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="San pham" />
+      <AdminHeader title="Sản phẩm" />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="relative flex-1"
-      >
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerClassName="p-4 pb-24"
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="relative flex-1">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4 pb-24">
           <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý sản phẩm</Text>
           <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-            Tìm kiếm, lọc theo trạng thái, xem nhanh và điều chỉnh thông tin/trạng thái sản phẩm.
+            Tìm kiếm, lọc theo trạng thái, xem nhanh tồn kho và chỉnh sửa sản phẩm.
           </Text>
 
           <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
@@ -154,16 +136,16 @@ export default function AdminProductsScreen() {
               <Feather name="search" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[14px] text-[#191C1F]"
-                placeholder="Tim theo ten, SKU, danh muc..."
+                placeholder="Tìm theo tên, SKU, danh mục..."
                 placeholderTextColor="#97a0aa"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
+                autoCorrect={false}
+                textContentType="none"
               />
             </View>
 
-            <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-              Trạng thái
-            </Text>
+            <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Trạng thái</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
               {PRODUCT_STATUS_OPTIONS.map((status) => {
                 const isSelected = statusFilter === status;
@@ -171,15 +153,9 @@ export default function AdminProductsScreen() {
                   <Pressable
                     key={status}
                     onPress={() => setStatusFilter(status)}
-                    className={`mr-2 rounded-full px-4 py-2 ${
-                      isSelected ? "bg-[#006397]" : "bg-[#E8EDF2]"
-                    }`}
+                    className={`mr-2 rounded-full px-4 py-2 ${isSelected ? "bg-[#006397]" : "bg-[#E8EDF2]"}`}
                   >
-                    <Text
-                      className={`text-[12px] font-bold ${
-                        isSelected ? "text-white" : "text-[#44515F]"
-                      }`}
-                    >
+                    <Text className={`text-[12px] font-bold ${isSelected ? "text-white" : "text-[#44515F]"}`}>
                       {status.toUpperCase()}
                     </Text>
                   </Pressable>
@@ -188,46 +164,34 @@ export default function AdminProductsScreen() {
             </ScrollView>
           </View>
 
-          {loading && (
+          {loading ? (
             <View className="mt-10 flex-1 items-center justify-center">
               <ActivityIndicator size="large" color="#006397" />
             </View>
-          )}
+          ) : null}
 
-          {!loading && error && (
+          {!loading && error ? (
             <View className="mt-4 rounded-[12px] bg-white p-4">
               <Text className="text-[14px] font-medium text-[#b3261e]">{error}</Text>
             </View>
-          )}
+          ) : null}
 
-          {!loading && !error && (
+          {!loading && !error ? (
             <>
               <View className="mt-4 flex-row gap-3">
                 <View className="flex-1 rounded-[16px] bg-white p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Tổng số sản phẩm
-                  </Text>
-                  <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
-                    {data?.totalCount ?? 0}
-                  </Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Tổng sản phẩm</Text>
+                  <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">{data?.totalCount ?? 0}</Text>
                 </View>
                 <View className="flex-1 rounded-[16px] bg-white p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Tồn kho thấp
-                  </Text>
-                  <Text className="mt-2 text-[22px] font-extrabold text-[#C66400]">
-                    {lowStockCount}
-                  </Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Tồn kho thấp</Text>
+                  <Text className="mt-2 text-[22px] font-extrabold text-[#C66400]">{lowStockCount}</Text>
                 </View>
               </View>
 
               <View className="mt-4 gap-3">
                 {filteredProducts.map((product) => (
-                  <Pressable
-                    key={product.id}
-                    onPress={() => setSelectedProduct(product)}
-                    className="rounded-[14px] bg-white p-4"
-                  >
+                  <Pressable key={product.id} onPress={() => setSelectedProduct(product)} className="rounded-[14px] bg-white p-4">
                     <View className="flex-row items-start justify-between">
                       <View className="flex-1 pr-4">
                         <Text className="text-[15px] font-bold text-[#191C1F]">{product.name}</Text>
@@ -236,16 +200,12 @@ export default function AdminProductsScreen() {
                         </Text>
                       </View>
                       <View className="rounded-full bg-[#EEF5FA] px-3 py-1">
-                        <Text className="text-[11px] font-bold text-[#006397]">
-                          {product.status ?? "active"}
-                        </Text>
+                        <Text className="text-[11px] font-bold text-[#006397]">{product.status ?? "active"}</Text>
                       </View>
                     </View>
 
                     <View className="mt-3 flex-row items-center justify-between">
-                      <Text className="text-[12px] text-[#5b6470]">
-                        Gia: {new Intl.NumberFormat("vi-VN").format(product.basePrice ?? 0)} d
-                      </Text>
+                      <Text className="text-[12px] text-[#5b6470]">Giá: {formatMoney(product.basePrice ?? 0)}</Text>
                       <Text className="text-[12px] font-bold text-[#191C1F]">
                         Kho: {product.stockQty ?? product.stock}
                       </Text>
@@ -253,18 +213,16 @@ export default function AdminProductsScreen() {
                   </Pressable>
                 ))}
 
-                {filteredProducts.length === 0 && (
+                {filteredProducts.length === 0 ? (
                   <View className="items-center rounded-[14px] bg-white p-6">
-                    <Text className="text-[14px] text-[#5b6470]">
-                      Không có sản phẩm phù hợp với bộ lọc hiện tại.
-                    </Text>
+                    <Text className="text-[14px] text-[#5b6470]">Không có sản phẩm phù hợp với bộ lọc hiện tại.</Text>
                   </View>
-                )}
+                ) : null}
               </View>
             </>
-          )}
+          ) : null}
         </ScrollView>
-        <AdminFab onPress={handleAddProduct} />
+        <AdminFab onPress={() => router.push("/admin/add-product")} />
       </KeyboardAvoidingView>
 
       <Modal visible={!!selectedProduct} animationType="slide" transparent onRequestClose={() => setSelectedProduct(null)}>
@@ -277,7 +235,7 @@ export default function AdminProductsScreen() {
               </Pressable>
             </View>
 
-            {selectedProduct && (
+            {selectedProduct ? (
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View className="rounded-[16px] bg-[#F8F9FB] p-4">
                   <Text className="text-[17px] font-bold text-[#191C1F]">{selectedProduct.name}</Text>
@@ -287,10 +245,7 @@ export default function AdminProductsScreen() {
                       Product ID: <Text className="font-bold">{selectedProduct.productId ?? selectedProduct.id}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Giá cơ bản:{" "}
-                      <Text className="font-bold">
-                        {new Intl.NumberFormat("vi-VN").format(selectedProduct.basePrice ?? 0)} d
-                      </Text>
+                      Giá cơ bản: <Text className="font-bold">{formatMoney(selectedProduct.basePrice ?? 0)}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
                       Tồn kho: <Text className="font-bold">{selectedProduct.stockQty ?? selectedProduct.stock}</Text>
@@ -302,31 +257,23 @@ export default function AdminProductsScreen() {
                 </View>
 
                 <View className="mt-5 flex-row gap-3">
-                  <Pressable
-                    onPress={() => handleEditProduct(selectedProduct)}
-                    className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
-                  >
+                  <Pressable onPress={() => handleEditProduct(selectedProduct)} className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3">
                     <Text className="text-[13px] font-bold text-white">Sửa thông tin</Text>
                   </Pressable>
                   <Pressable
                     onPress={() =>
-                      handleUpdateStatus(
-                        selectedProduct,
-                        selectedProduct.status === "inactive" ? "active" : "inactive",
-                      )
+                      handleUpdateStatus(selectedProduct, selectedProduct.status === "inactive" ? "active" : "inactive")
                     }
                     disabled={updating}
                     className="flex-1 items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3"
                   >
                     <Text className="text-[13px] font-bold text-[#344252]">
-                      {selectedProduct.status === "inactive" ? "Mo khoa" : "Tam khoa"}
+                      {selectedProduct.status === "inactive" ? "Mở khóa" : "Tạm khóa"}
                     </Text>
                   </Pressable>
                 </View>
 
-                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Chuyen trang thai
-                </Text>
+                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Chuyển trạng thái</Text>
                 <View className="mt-3 flex-row flex-wrap gap-2">
                   {PRODUCT_STATUS_OPTIONS.filter((status) => status !== "all").map((status) => {
                     const typedStatus = status as Exclude<ProductStatusFilter, "all">;
@@ -336,15 +283,9 @@ export default function AdminProductsScreen() {
                         key={typedStatus}
                         disabled={updating || isActive}
                         onPress={() => handleUpdateStatus(selectedProduct, typedStatus)}
-                        className={`rounded-full px-4 py-2 ${
-                          isActive ? "bg-[#006397]" : "bg-[#E8EDF2]"
-                        }`}
+                        className={`rounded-full px-4 py-2 ${isActive ? "bg-[#006397]" : "bg-[#E8EDF2]"}`}
                       >
-                        <Text
-                          className={`text-[12px] font-bold ${
-                            isActive ? "text-white" : "text-[#44515F]"
-                          }`}
-                        >
+                        <Text className={`text-[12px] font-bold ${isActive ? "text-white" : "text-[#44515F]"}`}>
                           {typedStatus}
                         </Text>
                       </Pressable>
@@ -352,7 +293,7 @@ export default function AdminProductsScreen() {
                   })}
                 </View>
               </ScrollView>
-            )}
+            ) : null}
           </View>
         </View>
       </Modal>

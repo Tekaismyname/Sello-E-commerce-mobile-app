@@ -32,7 +32,7 @@ export function SelloHeader({
       <View className="flex-row items-center gap-1">
         <Pressable
           className="h-8 w-8 items-center justify-center rounded-full active:bg-[#f0f2f5]"
-          onPress={onNotificationPress}
+          onPress={onNotificationPress ?? (() => router.push("/main/notifications" as Href))}
         >
           <Feather name="bell" size={17} color="#2d3640" />
         </Pressable>

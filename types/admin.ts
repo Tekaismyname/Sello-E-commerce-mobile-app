@@ -32,6 +32,67 @@ export interface AdminDashboardData {
   systemSummary?: AdminSystemSummary;
 }
 
+export interface AdminCategory {
+  id: number;
+  name: string;
+  slug?: string | null;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status: "active" | "inactive";
+  productCount: number;
+  childCount: number;
+}
+
+export interface AdminVoucher {
+  id: number;
+  code: string;
+  name: string;
+  description?: string | null;
+  voucherType: "product" | "shipping" | "cashback";
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  maxDiscountValue?: number | null;
+  minOrderValue: number;
+  usageLimit: number;
+  usedCount: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive: boolean;
+}
+
+export interface AdminNotification {
+  id: number;
+  userId: number;
+  userName?: string;
+  userEmail?: string;
+  title: string;
+  content?: string | null;
+  notificationType: "promotion" | "order" | "system";
+  imageUrl?: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface AdminReview {
+  id: number;
+  productId: number;
+  productName: string;
+  userId: number;
+  userName: string;
+  userEmail?: string;
+  rating: number;
+  title?: string | null;
+  comment?: string | null;
+  isVerifiedPurchase: boolean;
+  moderationStatus: "visible" | "hidden" | "deleted";
+  moderationNote?: string | null;
+  moderatedBy?: number | null;
+  moderatedAt?: string | null;
+  mediaUrls: string[];
+  createdAt: string;
+}
+
 export interface AdminProductVariant {
   id?: number;
   skuVariant?: string;
@@ -121,12 +182,12 @@ export interface AdminOrder {
   paymentStatus: string;
   placedAt: string;
   shippingAddress?: string;
-  items?: Array<{
+  items?: {
     id?: number;
     productName: string;
     quantity: number;
     price: number;
-  }>;
+  }[];
   statusHistory?: AdminOrderStatusHistory[];
 }
 
