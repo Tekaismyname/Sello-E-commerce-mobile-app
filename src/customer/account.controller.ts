@@ -17,6 +17,7 @@ import { JwtPayload } from '../auth/types/auth.types';
 import { CustomerService } from './customer.service';
 import {
   AddWishlistItemDto,
+  ContactAdminDto,
   CreateAddressDto,
   CreateReviewDto,
   SetDefaultAddressDto,
@@ -51,6 +52,14 @@ export class AccountController {
     @Body() payload: UpdatePasswordDto,
   ) {
     return this.customerService.updatePassword(request.user!.sub, payload);
+  }
+
+  @Post('me/contact-admin')
+  contactAdmin(
+    @Req() request: AuthenticatedRequest,
+    @Body() payload: ContactAdminDto,
+  ) {
+    return this.customerService.contactAdmin(request.user!.sub, payload);
   }
 
   @Get('addresses')

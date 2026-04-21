@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -20,13 +21,21 @@ import { JwtPayload } from '../auth/types/auth.types';
 import { AdminService } from './admin.service';
 import {
   CreateProductDto,
+  CreateAdminNotificationDto,
+  CreateCategoryDto,
+  CreateVoucherDto,
   ExportReportDto,
+  ModerateReviewDto,
   UpdateOrderStatusDto,
+  UpdateCategoryDto,
+  UpdateCategoryStatusDto,
   UpdateProductDto,
   UpdateProductStatusDto,
   UpdateSystemConfigDto,
   UpdateUserRoleDto,
   UpdateUserStatusDto,
+  UpdateVoucherDto,
+  UpdateVoucherStatusDto,
 } from './dto/admin.dto';
 
 type AuthenticatedRequest = Request & {
@@ -55,6 +64,110 @@ export class AdminController {
   @Permissions('system:config:update')
   updateSystemConfig(@Body() payload: UpdateSystemConfigDto) {
     return this.adminService.updateSystemConfig(payload);
+  }
+
+  @Get('categories')
+  @Permissions('categories:read')
+  listCategories() {
+    return this.adminService.listCategories();
+  }
+
+  @Post('categories')
+  @Permissions('categories:create')
+  createCategory(@Body() payload: CreateCategoryDto) {
+    return this.adminService.createCategory(payload);
+  }
+
+  @Put('categories/:categoryId')
+  @Permissions('categories:update')
+  updateCategory(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Body() payload: UpdateCategoryDto,
+  ) {
+    return this.adminService.updateCategory(categoryId, payload);
+  }
+
+  @Patch('categories/:categoryId/status')
+  @Permissions('categories:update')
+  updateCategoryStatus(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Body() payload: UpdateCategoryStatusDto,
+  ) {
+    return this.adminService.updateCategoryStatus(categoryId, payload);
+  }
+
+  @Delete('categories/:categoryId')
+  @Permissions('categories:delete')
+  deleteCategory(@Param('categoryId', ParseIntPipe) categoryId: number) {
+    return this.adminService.deleteCategory(categoryId);
+  }
+
+  @Get('vouchers')
+  @Permissions('vouchers:read')
+  listVouchers() {
+    return this.adminService.listVouchers();
+  }
+
+  @Post('vouchers')
+  @Permissions('vouchers:create')
+  createVoucher(@Body() payload: CreateVoucherDto) {
+    return this.adminService.createVoucher(payload);
+  }
+
+  @Put('vouchers/:voucherId')
+  @Permissions('vouchers:update')
+  updateVoucher(
+    @Param('voucherId', ParseIntPipe) voucherId: number,
+    @Body() payload: UpdateVoucherDto,
+  ) {
+    return this.adminService.updateVoucher(voucherId, payload);
+  }
+
+  @Patch('vouchers/:voucherId/status')
+  @Permissions('vouchers:update')
+  updateVoucherStatus(
+    @Param('voucherId', ParseIntPipe) voucherId: number,
+    @Body() payload: UpdateVoucherStatusDto,
+  ) {
+    return this.adminService.updateVoucherStatus(voucherId, payload);
+  }
+
+  @Delete('vouchers/:voucherId')
+  @Permissions('vouchers:delete')
+  deleteVoucher(@Param('voucherId', ParseIntPipe) voucherId: number) {
+    return this.adminService.deleteVoucher(voucherId);
+  }
+
+  @Get('notifications')
+  @Permissions('notifications:read')
+  listNotifications() {
+    return this.adminService.listNotifications();
+  }
+
+  @Post('notifications')
+  @Permissions('notifications:create')
+  createNotification(@Body() payload: CreateAdminNotificationDto) {
+    return this.adminService.createNotification(payload);
+  }
+
+  @Get('reviews')
+  @Permissions('reviews:read')
+  listReviews() {
+    return this.adminService.listReviews();
+  }
+
+  @Patch('reviews/:reviewId/moderation')
+  @Permissions('reviews:moderate')
+  moderateReview(
+    @Param('reviewId', ParseIntPipe) reviewId: number,
+    @Body() payload: ModerateReviewDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.moderateReview(
+      reviewId,
+      payload,
+      request.user!.sub,
+    );
   }
 
   @Get('users')

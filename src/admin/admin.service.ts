@@ -8,13 +8,21 @@ import { join } from 'node:path';
 import { MySqlDatabaseService } from '../auth/services/mysql-database.service';
 import {
   CreateProductDto,
+  CreateAdminNotificationDto,
+  CreateCategoryDto,
+  CreateVoucherDto,
   ExportReportDto,
+  ModerateReviewDto,
   UpdateOrderStatusDto,
+  UpdateCategoryDto,
+  UpdateCategoryStatusDto,
   UpdateProductDto,
   UpdateProductStatusDto,
   UpdateSystemConfigDto,
   UpdateUserRoleDto,
   UpdateUserStatusDto,
+  UpdateVoucherDto,
+  UpdateVoucherStatusDto,
 } from './dto/admin.dto';
 
 @Injectable()
@@ -39,6 +47,175 @@ export class AdminService {
     return {
       message: 'System configuration updated successfully',
       data: await this.database.updateSystemConfig(payload),
+    };
+  }
+
+  async listCategories() {
+    return {
+      message: 'Categories fetched successfully',
+      data: await this.database.listAdminCategories(),
+    };
+  }
+
+  async createCategory(payload: CreateCategoryDto) {
+    const category = await this.database.createAdminCategory(payload);
+
+    return {
+      message: 'Category created successfully',
+      data: category,
+    };
+  }
+
+  async updateCategory(categoryId: number, payload: UpdateCategoryDto) {
+    const category = await this.database.updateAdminCategory(categoryId, payload);
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return {
+      message: 'Category updated successfully',
+      data: category,
+    };
+  }
+
+  async updateCategoryStatus(
+    categoryId: number,
+    payload: UpdateCategoryStatusDto,
+  ) {
+    const category = await this.database.updateAdminCategoryStatus(
+      categoryId,
+      payload.status,
+    );
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return {
+      message: 'Category status updated successfully',
+      data: category,
+    };
+  }
+
+  async deleteCategory(categoryId: number) {
+    const category = await this.database.updateAdminCategoryStatus(
+      categoryId,
+      'inactive',
+    );
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return {
+      message: 'Category deleted successfully',
+      data: category,
+    };
+  }
+
+  async listVouchers() {
+    return {
+      message: 'Vouchers fetched successfully',
+      data: await this.database.listAdminVouchers(),
+    };
+  }
+
+  async createVoucher(payload: CreateVoucherDto) {
+    const voucher = await this.database.createAdminVoucher(payload);
+
+    return {
+      message: 'Voucher created successfully',
+      data: voucher,
+    };
+  }
+
+  async updateVoucher(voucherId: number, payload: UpdateVoucherDto) {
+    const voucher = await this.database.updateAdminVoucher(voucherId, payload);
+
+    if (!voucher) {
+      throw new NotFoundException('Voucher not found');
+    }
+
+    return {
+      message: 'Voucher updated successfully',
+      data: voucher,
+    };
+  }
+
+  async updateVoucherStatus(
+    voucherId: number,
+    payload: UpdateVoucherStatusDto,
+  ) {
+    const voucher = await this.database.updateAdminVoucherStatus(
+      voucherId,
+      payload.isActive,
+    );
+
+    if (!voucher) {
+      throw new NotFoundException('Voucher not found');
+    }
+
+    return {
+      message: 'Voucher status updated successfully',
+      data: voucher,
+    };
+  }
+
+  async deleteVoucher(voucherId: number) {
+    const voucher = await this.database.updateAdminVoucherStatus(voucherId, false);
+
+    if (!voucher) {
+      throw new NotFoundException('Voucher not found');
+    }
+
+    return {
+      message: 'Voucher deleted successfully',
+      data: voucher,
+    };
+  }
+
+  async listNotifications() {
+    return {
+      message: 'Notifications fetched successfully',
+      data: await this.database.listAdminNotifications(),
+    };
+  }
+
+  async createNotification(payload: CreateAdminNotificationDto) {
+    const result = await this.database.createAdminNotification(payload);
+
+    return {
+      message: 'Notification sent successfully',
+      data: result,
+    };
+  }
+
+  async listReviews() {
+    return {
+      message: 'Reviews fetched successfully',
+      data: await this.database.listAdminReviews(),
+    };
+  }
+
+  async moderateReview(
+    reviewId: number,
+    payload: ModerateReviewDto,
+    adminUserId: number,
+  ) {
+    const review = await this.database.moderateAdminReview(
+      reviewId,
+      payload,
+      adminUserId,
+    );
+
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
+
+    return {
+      message: 'Review moderation updated successfully',
+      data: review,
     };
   }
 

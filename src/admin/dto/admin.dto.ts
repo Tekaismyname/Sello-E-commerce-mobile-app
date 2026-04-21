@@ -9,6 +9,75 @@ export class UpdateSystemConfigDto {
   voucherStatuses?: Array<{ voucherId: number; isActive: boolean }>;
 }
 
+export class CreateCategoryDto {
+  name!: string;
+  slug?: string;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status?: 'active' | 'inactive';
+}
+
+export class UpdateCategoryDto {
+  name?: string;
+  slug?: string | null;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status?: 'active' | 'inactive';
+}
+
+export class UpdateCategoryStatusDto {
+  status!: 'active' | 'inactive';
+}
+
+export class CreateVoucherDto {
+  code!: string;
+  name!: string;
+  description?: string | null;
+  voucherType!: 'product' | 'shipping' | 'cashback';
+  discountType!: 'percent' | 'fixed';
+  discountValue!: number;
+  maxDiscountValue?: number | null;
+  minOrderValue?: number;
+  usageLimit?: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+}
+
+export class UpdateVoucherDto {
+  code?: string;
+  name?: string;
+  description?: string | null;
+  voucherType?: 'product' | 'shipping' | 'cashback';
+  discountType?: 'percent' | 'fixed';
+  discountValue?: number;
+  maxDiscountValue?: number | null;
+  minOrderValue?: number;
+  usageLimit?: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+}
+
+export class UpdateVoucherStatusDto {
+  isActive!: boolean;
+}
+
+export class CreateAdminNotificationDto {
+  title!: string;
+  content!: string;
+  targetScope!: 'all_users' | 'customer_only' | 'admin_only';
+  notificationType?: 'promotion' | 'order' | 'system';
+  imageUrl?: string | null;
+}
+
+export class ModerateReviewDto {
+  status!: 'visible' | 'hidden' | 'deleted';
+  note?: string | null;
+}
+
 export class UpdateUserStatusDto {
   status!: 'active' | 'blocked';
 }

@@ -57,6 +57,13 @@ interface RefreshTokenRow extends RowDataPacket {
 interface CategoryRow extends RowDataPacket {
   category_id: number;
   name: string;
+  slug?: string | null;
+  image_url?: string | null;
+  parent_id?: number | null;
+  description?: string | null;
+  status?: string | null;
+  product_count?: number | string;
+  child_count?: number | string;
 }
 
 interface BrandRow extends RowDataPacket {
@@ -223,9 +230,12 @@ interface VoucherRow extends RowDataPacket {
 interface NotificationRow extends RowDataPacket {
   notification_id: number;
   user_id: number;
+  full_name?: string;
+  email?: string;
   title: string;
   content: string | null;
   notification_type: string;
+  image_url?: string | null;
   is_read: number | boolean;
   created_at: Date | string;
 }
@@ -249,13 +259,21 @@ interface WishlistItemRow extends RowDataPacket {
 
 interface ReviewListRow extends RowDataPacket {
   review_id: number;
+  product_id?: number;
+  product_name?: string;
   user_id: number;
   full_name: string;
+  email?: string;
   rating: number;
   title: string | null;
   comment: string | null;
   is_verified_purchase: number | boolean;
+  moderation_status?: string | null;
+  moderation_note?: string | null;
+  moderated_by?: number | null;
+  moderated_at?: Date | string | null;
   created_at: Date | string;
+  media_urls?: string | null;
 }
 
 @Injectable()
@@ -281,6 +299,18 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       'reports:read',
       'reports:export',
       'system:config:update',
+      'categories:read',
+      'categories:create',
+      'categories:update',
+      'categories:delete',
+      'vouchers:read',
+      'vouchers:create',
+      'vouchers:update',
+      'vouchers:delete',
+      'notifications:read',
+      'notifications:create',
+      'reviews:read',
+      'reviews:moderate',
     ],
     customer: [
       'profile:read',
@@ -297,7 +327,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
   async checkConnection() {
     await this.pool.query('SELECT 1');
+    await this.pool.query(`SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci`);
     await this.ensureRefreshTokenTable();
+    await this.ensureAdminFeatureColumns();
     this.logger.log('Connected to MySQL successfully');
   }
 
@@ -577,6 +609,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         FROM product_reviews pr
         INNER JOIN users u ON u.user_id = pr.user_id
         WHERE pr.product_id = ?
+          AND COALESCE(pr.moderation_status, 'visible') = 'visible'
         ORDER BY pr.review_id DESC
       `,
       [productId],
@@ -1656,7 +1689,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   async getUserNotifications(userId: number) {
     const [rows] = await this.pool.query<NotificationRow[]>(
       `
-        SELECT notification_id, user_id, title, content, notification_type, is_read, created_at
+        SELECT notification_id, user_id, title, content, notification_type, image_url, is_read, created_at
         FROM notifications
         WHERE user_id = ?
         ORDER BY notification_id DESC
@@ -1670,6 +1703,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       title: row.title,
       content: row.content,
       notificationType: row.notification_type,
+      imageUrl: row.image_url ?? null,
       isRead: Boolean(row.is_read),
       createdAt: new Date(row.created_at),
     }));
@@ -1691,7 +1725,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
     const [rows] = await this.pool.query<NotificationRow[]>(
       `
-        SELECT notification_id, user_id, title, content, notification_type, is_read, created_at
+        SELECT notification_id, user_id, title, content, notification_type, image_url, is_read, created_at
         FROM notifications
         WHERE notification_id = ? AND user_id = ?
         LIMIT 1
@@ -1707,6 +1741,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           title: row.title,
           content: row.content,
           notificationType: row.notification_type,
+          imageUrl: row.image_url ?? null,
           isRead: Boolean(row.is_read),
           createdAt: new Date(row.created_at),
         }
@@ -1722,6 +1757,78 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       `,
       [userId],
     );
+  }
+
+  async createAdminContactNotification(
+    userId: number,
+    input: { subject?: string; message?: string },
+  ) {
+    if (!input.subject?.trim()) {
+      throw new BadRequestException('Contact subject is required');
+    }
+
+    if (!input.message?.trim()) {
+      throw new BadRequestException('Contact message is required');
+    }
+
+    const [userRows] = await this.pool.query<UserRow[]>(
+      `
+        SELECT user_id, full_name, email, phone, password_hash, role, admin_level, status, is_verified, created_at, updated_at
+        FROM users
+        WHERE user_id = ?
+        LIMIT 1
+      `,
+      [userId],
+    );
+    const sender = userRows[0];
+
+    if (!sender) {
+      throw new BadRequestException('User not found');
+    }
+
+    const [adminRows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT user_id
+        FROM users
+        WHERE role = 'admin' AND status = 'active'
+      `,
+    );
+
+    if (!adminRows.length) {
+      return { insertedCount: 0, targetScope: 'admin_only' };
+    }
+
+    const title = `[Lien he admin] ${input.subject.trim()}`;
+    const content = [
+      `Nguoi gui: ${sender.full_name}`,
+      `Email: ${sender.email}`,
+      sender.phone ? `Phone: ${sender.phone}` : null,
+      '',
+      input.message.trim(),
+    ]
+      .filter((line) => line !== null)
+      .join('\n');
+
+    const values = adminRows.map((admin) => [
+      admin.user_id,
+      title,
+      content,
+      'system',
+      null,
+    ]);
+
+    await this.pool.query(
+      `
+        INSERT INTO notifications (user_id, title, content, notification_type, image_url)
+        VALUES ?
+      `,
+      [values],
+    );
+
+    return {
+      insertedCount: adminRows.length,
+      targetScope: 'admin_only',
+    };
   }
 
   async addWishlistItem(userId: number, productId: number) {
@@ -1898,6 +2005,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
             SELECT COALESCE(AVG(rating), 0)
             FROM product_reviews
             WHERE product_id = ?
+              AND COALESCE(moderation_status, 'visible') = 'visible'
           )
           WHERE product_id = ?
         `,
@@ -2011,6 +2119,504 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         },
       },
     };
+  }
+
+  async listAdminCategories() {
+    const [rows] = await this.pool.query<CategoryRow[]>(
+      `
+        SELECT
+          c.category_id,
+          c.name,
+          c.slug,
+          c.image_url,
+          c.parent_id,
+          c.description,
+          c.status,
+          COUNT(DISTINCT p.product_id) AS product_count,
+          COUNT(DISTINCT child.category_id) AS child_count
+        FROM categories c
+        LEFT JOIN products p ON p.category_id = c.category_id
+        LEFT JOIN categories child ON child.parent_id = c.category_id
+        GROUP BY c.category_id
+        ORDER BY c.category_id DESC
+      `,
+    );
+
+    return rows.map((row) => this.mapAdminCategory(row));
+  }
+
+  async getAdminCategory(categoryId: number) {
+    const [rows] = await this.pool.query<CategoryRow[]>(
+      `
+        SELECT
+          c.category_id,
+          c.name,
+          c.slug,
+          c.image_url,
+          c.parent_id,
+          c.description,
+          c.status,
+          COUNT(DISTINCT p.product_id) AS product_count,
+          COUNT(DISTINCT child.category_id) AS child_count
+        FROM categories c
+        LEFT JOIN products p ON p.category_id = c.category_id
+        LEFT JOIN categories child ON child.parent_id = c.category_id
+        WHERE c.category_id = ?
+        GROUP BY c.category_id
+        LIMIT 1
+      `,
+      [categoryId],
+    );
+
+    return rows[0] ? this.mapAdminCategory(rows[0]) : undefined;
+  }
+
+  async createAdminCategory(input: {
+    name: string;
+    slug?: string;
+    imageUrl?: string | null;
+    parentId?: number | null;
+    description?: string | null;
+    status?: 'active' | 'inactive';
+  }) {
+    if (!input.name?.trim()) {
+      throw new BadRequestException('Category name is required');
+    }
+
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `
+        INSERT INTO categories (name, slug, image_url, parent_id, description, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [
+        input.name.trim(),
+        input.slug?.trim() || this.slugify(input.name),
+        input.imageUrl ?? null,
+        input.parentId && input.parentId > 0 ? input.parentId : null,
+        input.description ?? null,
+        input.status ?? 'active',
+      ],
+    );
+
+    return this.getAdminCategory(result.insertId);
+  }
+
+  async updateAdminCategory(
+    categoryId: number,
+    input: {
+      name?: string;
+      slug?: string | null;
+      imageUrl?: string | null;
+      parentId?: number | null;
+      description?: string | null;
+      status?: 'active' | 'inactive';
+    },
+  ) {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+
+    if (input.name !== undefined) {
+      if (!input.name.trim()) {
+        throw new BadRequestException('Category name is required');
+      }
+      fields.push('name = ?');
+      values.push(input.name.trim());
+    }
+    if (input.slug !== undefined) {
+      fields.push('slug = ?');
+      values.push(input.slug?.trim() || null);
+    }
+    if (input.imageUrl !== undefined) {
+      fields.push('image_url = ?');
+      values.push(input.imageUrl);
+    }
+    if (input.parentId !== undefined) {
+      if (input.parentId === categoryId) {
+        throw new BadRequestException('Category cannot be its own parent');
+      }
+      fields.push('parent_id = ?');
+      values.push(input.parentId && input.parentId > 0 ? input.parentId : null);
+    }
+    if (input.description !== undefined) {
+      fields.push('description = ?');
+      values.push(input.description);
+    }
+    if (input.status !== undefined) {
+      fields.push('status = ?');
+      values.push(input.status);
+    }
+
+    if (!fields.length) {
+      return this.getAdminCategory(categoryId);
+    }
+
+    const [result] = await this.pool.query(
+      `UPDATE categories SET ${fields.join(', ')} WHERE category_id = ?`,
+      [...values, categoryId] as any[],
+    );
+
+    return (result as ResultSetHeader).affectedRows > 0
+      ? this.getAdminCategory(categoryId)
+      : undefined;
+  }
+
+  async updateAdminCategoryStatus(
+    categoryId: number,
+    status: 'active' | 'inactive',
+  ) {
+    return this.updateAdminCategory(categoryId, { status });
+  }
+
+  async listAdminVouchers() {
+    const [rows] = await this.pool.query<VoucherRow[]>(
+      `
+        SELECT
+          voucher_id,
+          code,
+          name,
+          description,
+          voucher_type,
+          discount_type,
+          discount_value,
+          max_discount_value,
+          min_order_value,
+          usage_limit,
+          used_count,
+          start_at,
+          end_at,
+          is_active
+        FROM vouchers
+        ORDER BY voucher_id DESC
+      `,
+    );
+
+    return rows.map((row) => this.mapAdminVoucher(row));
+  }
+
+  async getAdminVoucher(voucherId: number) {
+    const [rows] = await this.pool.query<VoucherRow[]>(
+      `
+        SELECT
+          voucher_id,
+          code,
+          name,
+          description,
+          voucher_type,
+          discount_type,
+          discount_value,
+          max_discount_value,
+          min_order_value,
+          usage_limit,
+          used_count,
+          start_at,
+          end_at,
+          is_active
+        FROM vouchers
+        WHERE voucher_id = ?
+        LIMIT 1
+      `,
+      [voucherId],
+    );
+
+    return rows[0] ? this.mapAdminVoucher(rows[0]) : undefined;
+  }
+
+  async createAdminVoucher(input: {
+    code: string;
+    name: string;
+    description?: string | null;
+    voucherType: 'product' | 'shipping' | 'cashback';
+    discountType: 'percent' | 'fixed';
+    discountValue: number;
+    maxDiscountValue?: number | null;
+    minOrderValue?: number;
+    usageLimit?: number;
+    startAt?: string | null;
+    endAt?: string | null;
+    isActive?: boolean;
+  }) {
+    this.validateAdminVoucher(input);
+    const startAt = this.normalizeAdminVoucherDateTime(
+      input.startAt,
+      'startAt',
+    );
+    const endAt = this.normalizeAdminVoucherDateTime(input.endAt, 'endAt');
+    this.validateAdminVoucherDateRange(startAt, endAt);
+
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `
+        INSERT INTO vouchers (
+          code, name, description, voucher_type, discount_type, discount_value,
+          max_discount_value, min_order_value, usage_limit, start_at, end_at, is_active
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        input.code.trim().toUpperCase(),
+        input.name.trim(),
+        input.description ?? null,
+        input.voucherType,
+        input.discountType,
+        input.discountValue,
+        input.maxDiscountValue ?? null,
+        input.minOrderValue ?? 0,
+        input.usageLimit ?? 0,
+        startAt,
+        endAt,
+        input.isActive ?? true,
+      ],
+    );
+
+    return this.getAdminVoucher(result.insertId);
+  }
+
+  async updateAdminVoucher(
+    voucherId: number,
+    input: {
+      code?: string;
+      name?: string;
+      description?: string | null;
+      voucherType?: 'product' | 'shipping' | 'cashback';
+      discountType?: 'percent' | 'fixed';
+      discountValue?: number;
+      maxDiscountValue?: number | null;
+      minOrderValue?: number;
+      usageLimit?: number;
+      startAt?: string | null;
+      endAt?: string | null;
+      isActive?: boolean;
+    },
+  ) {
+    this.validateAdminVoucher(input, true);
+
+    const fields: string[] = [];
+    const values: unknown[] = [];
+
+    const push = (field: string, value: unknown) => {
+      fields.push(`${field} = ?`);
+      values.push(value);
+    };
+
+    if (input.code !== undefined) push('code', input.code.trim().toUpperCase());
+    if (input.name !== undefined) push('name', input.name.trim());
+    if (input.description !== undefined) push('description', input.description);
+    if (input.voucherType !== undefined) push('voucher_type', input.voucherType);
+    if (input.discountType !== undefined) push('discount_type', input.discountType);
+    if (input.discountValue !== undefined) push('discount_value', input.discountValue);
+    if (input.maxDiscountValue !== undefined) push('max_discount_value', input.maxDiscountValue);
+    if (input.minOrderValue !== undefined) push('min_order_value', input.minOrderValue);
+    if (input.usageLimit !== undefined) push('usage_limit', input.usageLimit);
+    const startAt =
+      input.startAt !== undefined
+        ? this.normalizeAdminVoucherDateTime(input.startAt, 'startAt')
+        : undefined;
+    const endAt =
+      input.endAt !== undefined
+        ? this.normalizeAdminVoucherDateTime(input.endAt, 'endAt')
+        : undefined;
+    if (startAt !== undefined) push('start_at', startAt);
+    if (endAt !== undefined) push('end_at', endAt);
+    if (startAt !== undefined && endAt !== undefined) {
+      this.validateAdminVoucherDateRange(startAt, endAt);
+    }
+    if (input.isActive !== undefined) push('is_active', input.isActive);
+
+    if (!fields.length) {
+      return this.getAdminVoucher(voucherId);
+    }
+
+    const [result] = await this.pool.query(
+      `UPDATE vouchers SET ${fields.join(', ')} WHERE voucher_id = ?`,
+      [...values, voucherId] as any[],
+    );
+
+    return (result as ResultSetHeader).affectedRows > 0
+      ? this.getAdminVoucher(voucherId)
+      : undefined;
+  }
+
+  async updateAdminVoucherStatus(voucherId: number, isActive: boolean) {
+    return this.updateAdminVoucher(voucherId, { isActive });
+  }
+
+  async listAdminNotifications() {
+    const [rows] = await this.pool.query<NotificationRow[]>(
+      `
+        SELECT
+          n.notification_id,
+          n.user_id,
+          u.full_name,
+          u.email,
+          n.title,
+          n.content,
+          n.notification_type,
+          n.image_url,
+          n.is_read,
+          n.created_at
+        FROM notifications n
+        INNER JOIN users u ON u.user_id = n.user_id
+        ORDER BY n.notification_id DESC
+        LIMIT 200
+      `,
+    );
+
+    return rows.map((row) => ({
+      id: row.notification_id,
+      userId: row.user_id,
+      userName: row.full_name,
+      userEmail: row.email,
+      title: row.title,
+      content: row.content,
+      notificationType: row.notification_type,
+      imageUrl: row.image_url ?? null,
+      isRead: Boolean(row.is_read),
+      createdAt: new Date(row.created_at),
+    }));
+  }
+
+  async createAdminNotification(input: {
+    title: string;
+    content: string;
+    targetScope: 'all_users' | 'customer_only' | 'admin_only';
+    notificationType?: 'promotion' | 'order' | 'system';
+    imageUrl?: string | null;
+  }) {
+    if (!input.title?.trim()) {
+      throw new BadRequestException('Notification title is required');
+    }
+
+    if (!input.content?.trim()) {
+      throw new BadRequestException('Notification content is required');
+    }
+
+    const targetWhere =
+      input.targetScope === 'customer_only'
+        ? "role = 'customer' AND status = 'active'"
+        : input.targetScope === 'admin_only'
+          ? "role = 'admin' AND status = 'active'"
+          : "status = 'active'";
+
+    const [users] = await this.pool.query<RowDataPacket[]>(
+      `SELECT user_id FROM users WHERE ${targetWhere}`,
+    );
+
+    if (!users.length) {
+      return { insertedCount: 0, targetScope: input.targetScope };
+    }
+
+    const values = users.map((user) => [
+      user.user_id,
+      input.title.trim(),
+      input.content.trim(),
+      input.notificationType ?? 'system',
+      input.imageUrl ?? null,
+    ]);
+
+    await this.pool.query(
+      `
+        INSERT INTO notifications (user_id, title, content, notification_type, image_url)
+        VALUES ?
+      `,
+      [values],
+    );
+
+    return {
+      insertedCount: users.length,
+      targetScope: input.targetScope,
+    };
+  }
+
+  async listAdminReviews() {
+    const [rows] = await this.pool.query<ReviewListRow[]>(
+      `
+        SELECT
+          pr.review_id,
+          pr.product_id,
+          p.name AS product_name,
+          pr.user_id,
+          u.full_name,
+          u.email,
+          pr.rating,
+          pr.title,
+          pr.comment,
+          pr.is_verified_purchase,
+          COALESCE(pr.moderation_status, 'visible') AS moderation_status,
+          pr.moderation_note,
+          pr.moderated_by,
+          pr.moderated_at,
+          pr.created_at,
+          GROUP_CONCAT(rm.media_url ORDER BY rm.media_id ASC SEPARATOR '||') AS media_urls
+        FROM product_reviews pr
+        INNER JOIN users u ON u.user_id = pr.user_id
+        INNER JOIN products p ON p.product_id = pr.product_id
+        LEFT JOIN review_media rm ON rm.review_id = pr.review_id
+        GROUP BY pr.review_id
+        ORDER BY pr.review_id DESC
+      `,
+    );
+
+    return rows.map((row) => this.mapAdminReview(row));
+  }
+
+  async getAdminReview(reviewId: number) {
+    const [rows] = await this.pool.query<ReviewListRow[]>(
+      `
+        SELECT
+          pr.review_id,
+          pr.product_id,
+          p.name AS product_name,
+          pr.user_id,
+          u.full_name,
+          u.email,
+          pr.rating,
+          pr.title,
+          pr.comment,
+          pr.is_verified_purchase,
+          COALESCE(pr.moderation_status, 'visible') AS moderation_status,
+          pr.moderation_note,
+          pr.moderated_by,
+          pr.moderated_at,
+          pr.created_at,
+          GROUP_CONCAT(rm.media_url ORDER BY rm.media_id ASC SEPARATOR '||') AS media_urls
+        FROM product_reviews pr
+        INNER JOIN users u ON u.user_id = pr.user_id
+        INNER JOIN products p ON p.product_id = pr.product_id
+        LEFT JOIN review_media rm ON rm.review_id = pr.review_id
+        WHERE pr.review_id = ?
+        GROUP BY pr.review_id
+        LIMIT 1
+      `,
+      [reviewId],
+    );
+
+    return rows[0] ? this.mapAdminReview(rows[0]) : undefined;
+  }
+
+  async moderateAdminReview(
+    reviewId: number,
+    input: { status: 'visible' | 'hidden' | 'deleted'; note?: string | null },
+    adminUserId: number,
+  ) {
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `
+        UPDATE product_reviews
+        SET moderation_status = ?, moderation_note = ?, moderated_by = ?, moderated_at = CURRENT_TIMESTAMP
+        WHERE review_id = ?
+      `,
+      [input.status, input.note ?? null, adminUserId, reviewId],
+    );
+
+    if (result.affectedRows < 1) {
+      return undefined;
+    }
+
+    const review = await this.getAdminReview(reviewId);
+
+    if (review) {
+      await this.recalculateProductRating(review.productId);
+    }
+
+    return review;
   }
 
   async updateSystemConfig(input: {
@@ -2346,19 +2952,33 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         SELECT
           p.product_id,
           p.name,
+          p.sku,
           p.base_price,
           p.status,
           c.category_id,
           c.name AS category_name,
           b.brand_id,
           b.name AS brand_name,
-          pi.image_url AS primary_image_url
+          pi.image_url AS primary_image_url,
+          COALESCE(SUM(CASE WHEN pv.status = 'active' THEN pv.stock_qty ELSE 0 END), 0) AS stock_qty
         FROM products p
         INNER JOIN categories c ON c.category_id = p.category_id
         LEFT JOIN brands b ON b.brand_id = p.brand_id
         LEFT JOIN product_images pi
           ON pi.product_id = p.product_id
          AND pi.is_primary = TRUE
+        LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+        GROUP BY
+          p.product_id,
+          p.name,
+          p.sku,
+          p.base_price,
+          p.status,
+          c.category_id,
+          c.name,
+          b.brand_id,
+          b.name,
+          pi.image_url
         ORDER BY p.product_id DESC
       `,
     );
@@ -2366,8 +2986,10 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     return rows.map((row) => ({
       id: row.product_id,
       name: row.name,
+      sku: row.sku,
       basePrice: Number(row.base_price),
       status: row.status,
+      stockQty: Number(row.stock_qty ?? 0),
       category: {
         id: row.category_id,
         name: row.category_name,
@@ -2711,6 +3333,11 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       status: product.status,
       categoryName: product.category_name,
       brandName: product.brand_name,
+      stockQty: variantRows[0].reduce(
+        (total, row) =>
+          row.status === 'active' ? total + Number(row.stock_qty ?? 0) : total,
+        0,
+      ),
       images: imageRows[0].map((row) => ({
         id: row.image_id,
         imageUrl: row.image_url,
@@ -2956,6 +3583,16 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         'products:update',
         'products:status:update',
         'reports:read',
+        'categories:read',
+        'categories:create',
+        'categories:update',
+        'vouchers:read',
+        'vouchers:create',
+        'vouchers:update',
+        'notifications:read',
+        'notifications:create',
+        'reviews:read',
+        'reviews:moderate',
       ];
     }
 
@@ -2966,6 +3603,10 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       'orders:update',
       'products:read',
       'reports:read',
+      'categories:read',
+      'vouchers:read',
+      'notifications:read',
+      'reviews:read',
     ];
   }
 
@@ -3418,6 +4059,253 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     `);
   }
 
+  private async ensureAdminFeatureColumns() {
+    if (!(await this.hasColumn('categories', 'description'))) {
+      await this.pool.execute(`
+        ALTER TABLE categories
+        ADD COLUMN description TEXT NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('notifications', 'image_url'))) {
+      await this.pool.execute(`
+        ALTER TABLE notifications
+        ADD COLUMN image_url VARCHAR(255) NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('product_reviews', 'moderation_status'))) {
+      await this.pool.execute(`
+        ALTER TABLE product_reviews
+        ADD COLUMN moderation_status ENUM('visible','hidden','deleted') NOT NULL DEFAULT 'visible'
+      `);
+    }
+
+    if (!(await this.hasColumn('product_reviews', 'moderated_by'))) {
+      await this.pool.execute(`
+        ALTER TABLE product_reviews
+        ADD COLUMN moderated_by BIGINT NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('product_reviews', 'moderated_at'))) {
+      await this.pool.execute(`
+        ALTER TABLE product_reviews
+        ADD COLUMN moderated_at DATETIME NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('product_reviews', 'moderation_note'))) {
+      await this.pool.execute(`
+        ALTER TABLE product_reviews
+        ADD COLUMN moderation_note VARCHAR(255) NULL
+      `);
+    }
+  }
+
+  private mapAdminCategory(row: CategoryRow) {
+    return {
+      id: row.category_id,
+      name: row.name,
+      slug: row.slug ?? null,
+      imageUrl: row.image_url ?? null,
+      parentId: row.parent_id ?? null,
+      description: row.description ?? null,
+      status: row.status ?? 'active',
+      productCount: Number(row.product_count ?? 0),
+      childCount: Number(row.child_count ?? 0),
+    };
+  }
+
+  private mapAdminVoucher(row: VoucherRow) {
+    return {
+      id: row.voucher_id,
+      code: row.code,
+      name: row.name,
+      description: row.description,
+      voucherType: row.voucher_type,
+      discountType: row.discount_type,
+      discountValue: Number(row.discount_value ?? 0),
+      maxDiscountValue:
+        row.max_discount_value === null ? null : Number(row.max_discount_value),
+      minOrderValue: Number(row.min_order_value ?? 0),
+      usageLimit: Number(row.usage_limit ?? 0),
+      usedCount: Number(row.used_count ?? 0),
+      startAt: row.start_at ? new Date(row.start_at) : null,
+      endAt: row.end_at ? new Date(row.end_at) : null,
+      isActive: Boolean(row.is_active),
+    };
+  }
+
+  private mapAdminReview(row: ReviewListRow) {
+    return {
+      id: row.review_id,
+      productId: row.product_id ?? 0,
+      productName: row.product_name ?? 'Product',
+      userId: row.user_id,
+      userName: row.full_name,
+      userEmail: row.email ?? '',
+      rating: row.rating,
+      title: row.title,
+      comment: row.comment,
+      isVerifiedPurchase: Boolean(row.is_verified_purchase),
+      moderationStatus: row.moderation_status ?? 'visible',
+      moderationNote: row.moderation_note ?? null,
+      moderatedBy: row.moderated_by ?? null,
+      moderatedAt: row.moderated_at ? new Date(row.moderated_at) : null,
+      mediaUrls: row.media_urls ? row.media_urls.split('||').filter(Boolean) : [],
+      createdAt: new Date(row.created_at),
+    };
+  }
+
+  private slugify(value: string) {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  private validateAdminVoucher(
+    input: {
+      code?: string;
+      name?: string;
+      voucherType?: string;
+      discountType?: string;
+      discountValue?: number;
+      minOrderValue?: number;
+      usageLimit?: number;
+      maxDiscountValue?: number | null;
+    },
+    partial = false,
+  ) {
+    if (!partial && !input.code?.trim()) {
+      throw new BadRequestException('Voucher code is required');
+    }
+    if (!partial && !input.name?.trim()) {
+      throw new BadRequestException('Voucher name is required');
+    }
+    if (input.code !== undefined && !input.code.trim()) {
+      throw new BadRequestException('Voucher code is required');
+    }
+    if (input.name !== undefined && !input.name.trim()) {
+      throw new BadRequestException('Voucher name is required');
+    }
+    if (
+      input.voucherType !== undefined &&
+      !['product', 'shipping', 'cashback'].includes(input.voucherType)
+    ) {
+      throw new BadRequestException('Voucher type is invalid');
+    }
+    if (
+      input.discountType !== undefined &&
+      !['percent', 'fixed'].includes(input.discountType)
+    ) {
+      throw new BadRequestException('Discount type is invalid');
+    }
+    if (input.discountValue !== undefined && input.discountValue <= 0) {
+      throw new BadRequestException('Discount value must be greater than 0');
+    }
+    if (
+      input.discountType === 'percent' &&
+      input.discountValue !== undefined &&
+      input.discountValue > 100
+    ) {
+      throw new BadRequestException('Percent discount cannot exceed 100');
+    }
+    if (input.minOrderValue !== undefined && input.minOrderValue < 0) {
+      throw new BadRequestException('Minimum order value cannot be negative');
+    }
+    if (input.usageLimit !== undefined && input.usageLimit < 0) {
+      throw new BadRequestException('Usage limit cannot be negative');
+    }
+    if (
+      input.maxDiscountValue !== undefined &&
+      input.maxDiscountValue !== null &&
+      input.maxDiscountValue < 0
+    ) {
+      throw new BadRequestException('Max discount cannot be negative');
+    }
+  }
+
+  private normalizeAdminVoucherDateTime(
+    value: string | null | undefined,
+    fieldName: string,
+  ) {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const match = value
+      .trim()
+      .match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2}))?$/,
+      );
+    if (!match) {
+      throw new BadRequestException(`${fieldName} must be a valid date/time`);
+    }
+
+    const [, yearText, monthText, dayText, hourText, minuteText, secondText] =
+      match;
+    const year = Number(yearText);
+    const month = Number(monthText);
+    const day = Number(dayText);
+    const hour = Number(hourText ?? '0');
+    const minute = Number(minuteText ?? '0');
+    const second = Number(secondText ?? '0');
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    if (
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > daysInMonth ||
+      hour < 0 ||
+      hour > 23 ||
+      minute < 0 ||
+      minute > 59 ||
+      second < 0 ||
+      second > 59
+    ) {
+      throw new BadRequestException(`${fieldName} must be a real date/time`);
+    }
+
+    return `${yearText}-${monthText}-${dayText} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+  }
+
+  private validateAdminVoucherDateRange(
+    startAt: string | null,
+    endAt: string | null,
+  ) {
+    if (!startAt || !endAt) {
+      return;
+    }
+
+    const startTime = new Date(startAt.replace(' ', 'T')).getTime();
+    const endTime = new Date(endAt.replace(' ', 'T')).getTime();
+    if (startTime > endTime) {
+      throw new BadRequestException('Voucher start date must be before end date');
+    }
+  }
+
+  private async recalculateProductRating(productId: number) {
+    await this.pool.execute(
+      `
+        UPDATE products
+        SET avg_rating = (
+          SELECT COALESCE(AVG(rating), 0)
+          FROM product_reviews
+          WHERE product_id = ?
+            AND COALESCE(moderation_status, 'visible') = 'visible'
+        )
+        WHERE product_id = ?
+      `,
+      [productId, productId],
+    );
+  }
+
   private async hasColumn(tableName: string, columnName: string) {
     const [rows] = await this.pool.query<RowDataPacket[]>(
       `
@@ -3490,6 +4378,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT ?? 10),
       queueLimit: 0,
       timezone: process.env.MYSQL_TIMEZONE ?? 'Z',
+      charset: 'utf8mb4',
     };
   }
 

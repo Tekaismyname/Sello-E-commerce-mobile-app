@@ -1,33 +1,32 @@
-# Sello Ecommerce API
+# Sello E-commerce Backend
 
-Backend NestJS cho Sello Ecommerce, hien dang co:
-- Auth flow: register, verify OTP, login, logout, forgot password, reset password
-- Social login: Google (OAuth2), iCloud (Apple)
-- Role-based access: `customer`, `admin`
-- Admin hierarchy via `admin_level` (`1`, `2`, `3`)
-- Homepage API: `GET /home`
-- Public product detail: `GET /products/:productId`
-- Customer flows: cart, checkout, orders, address, profile, wishlist, notifications, reviews
-- MySQL integration
-- OTP delivery qua `email` hoac `phone`
+Backend NestJS cho Sello E-commerce, dùng MySQL và JWT. API hiện phục vụ cả customer app và admin app.
 
-## Run
+## Tính Năng Chính
+
+- Auth: register, verify OTP, login, logout, forgot password, reset password.
+- Social login: Google OAuth2 và iCloud/Apple placeholder flow.
+- Role-based access: `customer`, `admin`.
+- Admin hierarchy: `admin_level` 1, 2, 3.
+- Permission-based admin API qua `@Permissions`.
+- Public catalog: home, product detail, product reviews.
+- Customer flows: cart, checkout, voucher apply, order, order cancel/tracking, payment mock callback.
+- Customer account: profile, password, addresses, wishlist, notifications, contact admin, reviews.
+- Admin flows: dashboard, users, orders, products, reports, categories, vouchers, notifications, review moderation.
+- MySQL UTF-8/UTF-8MB4 support for Vietnamese text.
+
+## Cài Đặt
 
 ```bash
 npm install
-npm run start:dev
 ```
 
-API mac dinh chay tai `http://localhost:3000`.
-Khi app boot thanh cong, terminal se in ra base URL va nhom auth endpoints.
-
-## Environment
-
-Tao file `.env` tu `.env.example`.
-
-### MySQL
+Tạo `.env` từ `.env.example`:
 
 ```env
+PORT=3000
+JWT_SECRET=sello-local-secret
+
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
 MYSQL_USER=root
@@ -35,53 +34,68 @@ MYSQL_PASSWORD=your_mysql_password
 MYSQL_DATABASE=Sello_commerce
 MYSQL_CONNECTION_LIMIT=10
 MYSQL_TIMEZONE=Z
-```
 
-Backend auth hien dang dung du lieu MySQL, dac biet la cac bang:
-- `users`
-- `user_otps`
-- `auth_refresh_tokens`  
-Bang `auth_refresh_tokens` se duoc tao tu dong neu chua ton tai.
-
-### JWT
-
-```env
-JWT_SECRET=sello-local-secret
-```
-
-### SMTP
-
-```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_email_app_password
 SMTP_FROM=Sello Ecommerce <your_email@gmail.com>
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+APP_AUTH_REDIRECT_URI=selloecommerce://auth/callback
 ```
 
-Neu chua cau hinh SMTP:
-- OTP qua email se khong gui that
-- backend van tra `otpCodePreview` de test local
+Chạy development:
+
+```bash
+npm run start:dev
+```
+
+API mặc định chạy tại:
+
+```txt
+http://localhost:3000
+```
 
 ## Scripts
 
 ```bash
 npm run start
 npm run start:dev
+npm run start:debug
 npm run start:prod
 npm run build
+npm run lint
 npm run test
 npm run test:e2e
 ```
+
+## Database Notes
+
+Backend dùng MySQL qua `mysql2/promise`. Khi boot, service sẽ kiểm tra kết nối và tự bổ sung một số cột admin nếu thiếu:
+
+- `categories.description`
+- `notifications.image_url`
+- `product_reviews.moderation_status`
+- `product_reviews.moderated_by`
+- `product_reviews.moderated_at`
+- `product_reviews.moderation_note`
+
+Connection pool cấu hình `charset: utf8mb4` và chạy `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci` khi kiểm tra kết nối để hỗ trợ tiếng Việt tốt hơn.
+
+Nếu dữ liệu cũ đã bị vỡ encoding, cần sửa/convert dữ liệu cũ trong database; cấu hình UTF-8 chỉ đảm bảo dữ liệu mới lưu đúng.
 
 ## Main Endpoints
 
 ### Public
 
 ```http
-GET /home
 GET /
+GET /home
 GET /products/:productId
+GET /products/:productId/reviews
 POST /auth/register
 POST /auth/verify-otp
 POST /auth/login
@@ -92,13 +106,10 @@ GET /auth/google
 GET /auth/icloud
 ```
 
-### Protected
+### Customer Protected
 
 ```http
 GET /auth/me
-GET /auth/admin/ping
-GET /auth/admin/operations/ping
-DELETE /auth/users/:userId
 GET /cart
 POST /cart/items
 PUT /cart/items/:cartItemId
@@ -116,6 +127,7 @@ POST /payments/mock/:paymentId/callback
 GET /me
 PUT /me
 PUT /me/password
+POST /me/contact-admin
 GET /addresses
 POST /addresses
 PUT /addresses/:addressId
@@ -128,150 +140,189 @@ POST /wishlist/items
 GET /wishlist
 DELETE /wishlist/items/:wishlistItemId
 POST /reviews
+```
+
+### Admin
+
+```http
+GET /auth/admin/ping
+GET /auth/admin/operations/ping
+DELETE /auth/users/:userId
+
 GET /admin/system/dashboard
 PUT /admin/system/config
+
 GET /admin/users
 GET /admin/users/:userId
 PATCH /admin/users/:userId/status
 PATCH /admin/users/:userId/role
+
 GET /admin/orders
 GET /admin/orders/:orderId
 PATCH /admin/orders/:orderId/status
+
 GET /admin/products
 POST /admin/products
+GET /admin/products/:productId
 PUT /admin/products/:productId
 PATCH /admin/products/:productId/status
+
+GET /admin/categories
+POST /admin/categories
+PUT /admin/categories/:categoryId
+PATCH /admin/categories/:categoryId/status
+DELETE /admin/categories/:categoryId
+
+GET /admin/vouchers
+POST /admin/vouchers
+PUT /admin/vouchers/:voucherId
+PATCH /admin/vouchers/:voucherId/status
+DELETE /admin/vouchers/:voucherId
+
+GET /admin/notifications
+POST /admin/notifications
+
+GET /admin/reviews
+PATCH /admin/reviews/:reviewId/moderation
+
 GET /admin/reports/overview
 POST /admin/reports/export
 ```
 
-## Auth Notes
+## Auth Và Permissions
 
-- `POST /auth/login` la endpoint chung cho ca `customer` va `admin`
-- Sau khi login thanh cong, backend tra ve:
-  - `accessToken`
-  - `refreshToken`
-  - `role`
-  - `adminLevel`
-  - `permissions`
-- Endpoint admin duoc bao ve bang `JwtAuthGuard` va `RolesGuard`
-- Endpoint theo cap admin duoc bao ve them bang `AdminLevelGuard`
-- Quy uoc admin level hien tai:
-  - `admin_level = 1`: toan quyen, co the xoa user va quan ly admin khac
-  - `admin_level = 2`: van hanh, vao duoc route admin va operations
-  - `admin_level = 3`: chi vao duoc route admin co ban
-- Route mau theo admin level:
-  - `GET /auth/admin/ping`: cho `admin_level` `1`, `2`, `3`
-  - `GET /auth/admin/operations/ping`: cho `admin_level` `1`, `2`
-  - `DELETE /auth/users/:userId`: chi cho `admin_level = 1`
+`POST /auth/login` dùng chung cho customer và admin. Sau khi login thành công, backend trả:
+
+- `accessToken`
+- `refreshToken`
+- `role`
+- `adminLevel`
+- `permissions`
+
+Admin API được bảo vệ bằng JWT guard, role/admin guard và permission guard. Frontend nên dựa vào `permissions`, không hard-code theo role string.
 
 ## Admin Permission Matrix
 
 | Capability | Level 1 | Level 2 | Level 3 |
-|---|---|---|---|
-| `GET /admin/system/dashboard` | Co | Co | Co |
-| `PUT /admin/system/config` | Co | Khong | Khong |
-| `GET /admin/users` / `GET /admin/users/:id` | Co | Co | Co |
-| `PATCH /admin/users/:id/status` | Co | Co | Khong |
-| `PATCH /admin/users/:id/role` | Co | Khong | Khong |
-| `GET /admin/orders` / `GET /admin/orders/:id` | Co | Co | Co |
-| `PATCH /admin/orders/:id/status` | Co | Co | Co |
-| `GET /admin/products` | Co | Co | Co |
-| `POST /admin/products` | Co | Co | Khong |
-| `PUT /admin/products/:id` | Co | Co | Khong |
-| `PATCH /admin/products/:id/status` | Co | Co | Khong |
-| `GET /admin/reports/overview` | Co | Co | Co |
-| `POST /admin/reports/export` | Co | Khong | Khong |
+|---|---:|---:|---:|
+| System dashboard | Có | Có | Có |
+| System config | Có | Không | Không |
+| Users read | Có | Có | Có |
+| Users status update | Có | Có | Không |
+| Users role update | Có | Không | Không |
+| Orders read/update | Có | Có | Có |
+| Products read | Có | Có | Có |
+| Products create/update/status | Có | Có | Không |
+| Categories read | Có | Có | Có |
+| Categories create/update/status | Có | Có | Không |
+| Categories delete/soft-delete | Có | Không | Không |
+| Vouchers read | Có | Có | Có |
+| Vouchers create/update/status | Có | Có | Không |
+| Vouchers delete/soft-delete | Có | Không | Không |
+| Notifications read/create | Có | Có | Có đọc, không tạo |
+| Reviews read/moderate | Có | Có | Có đọc, không duyệt |
+| Reports overview | Có | Có | Có |
+| Reports export | Có | Không | Không |
 
-API admin moi duoc to chuc theo sequence:
-- System dashboard va config
-- User management
-- Order management
-- Product management
-- Report overview va export
+## Admin Behavior Notes
+
+- Category delete là soft delete bằng `status = inactive`.
+- Voucher delete là soft delete bằng `is_active = false`.
+- Voucher date được validate trước khi lưu; ngày không tồn tại sẽ trả `BadRequestException`, không để MySQL trả lỗi `ER_TRUNCATED_WRONG_VALUE`.
+- Product list trả `stockQty` tổng từ active variants để frontend hiển thị tồn kho đúng.
+- Notification target hiện hỗ trợ `all_users`, `customer_only`, `admin_only`.
+- Khi admin gọi `POST /admin/notifications`, backend tạo một notification row cho từng user khớp target ngay trong request.
+- `POST /me/contact-admin` tạo notification cho toàn bộ admin `active`, giúp user liên hệ admin từ profile.
+- Review moderation hỗ trợ `visible`, `hidden`, `deleted`; public review chỉ trả review `visible`.
 
 ## Customer Flow Notes
 
-- `GET /products/:productId`: lay chi tiet san pham cong khai kem variants va reviews
-- `POST /cart/items`: them san pham/variant vao gio, neu trung item thi cong don quantity
-- `PATCH /cart/items/:cartItemId/select`: danh dau item duoc checkout
-- `POST /checkout/preview`: tinh tam subtotal, shipping fee, voucher discount va tra ve dia chi + payment methods
-- `POST /checkout/apply-voucher`: validate ma giam gia tren cac selected cart items
-- `POST /orders`: tao don hang tu selected cart items
-- `POST /payments/mock/:paymentId/callback`: callback mock cho online payment de test local
-- `GET /orders/me` va `GET /orders/:orderId`: xem lich su va chi tiet don
-- `POST /orders/:orderId/cancel`: chi cho phep huy don o trang thai `pending` hoac `confirmed`
-- `GET /orders/:orderId/tracking`: doc shipment + timeline trang thai
-- `GET /me`, `PUT /me`, `PUT /me/password`: thong tin ho so va doi mat khau
-- `GET /addresses`, `POST /addresses`, `PUT /addresses/:id`, `PATCH /addresses/:id/default`, `DELETE /addresses/:id`: CRUD dia chi giao hang
-- `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`: thong bao cua user
-- `POST /wishlist/items`, `GET /wishlist`, `DELETE /wishlist/items/:id`: wishlist co check trung item
-- `POST /reviews`: chi cho review khi user da mua san pham va don da `delivered`
+- `GET /products/:productId`: trả detail, variants, images, stock và review summary.
+- `POST /cart/items`: thêm sản phẩm/variant vào giỏ; nếu trùng item thì cộng quantity.
+- `PATCH /cart/items/:cartItemId/select`: chọn item để checkout.
+- `POST /checkout/preview`: tính subtotal, shipping, voucher discount.
+- `POST /checkout/apply-voucher`: validate voucher theo selected cart items.
+- `POST /orders`: tạo đơn từ selected cart items.
+- `POST /orders/:orderId/cancel`: chỉ hủy đơn `pending` hoặc `confirmed`, hoàn kho và hoàn voucher/payment nếu phù hợp.
+- `GET /orders/me`, `GET /orders/:orderId`, `GET /orders/:orderId/tracking`: lịch sử, chi tiết và tracking.
+- `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`: đọc và cập nhật thông báo user.
+- `POST /me/contact-admin`: user gửi nội dung hỗ trợ tới admin dưới dạng notification.
+- `POST /reviews`: chỉ cho review khi user đã mua sản phẩm và đơn đã `delivered`.
 
-`POST /admin/reports/export` hien tai se ghi file that vao thu muc `exports/` tai root cua project va tra ve:
+## Reports
+
+`POST /admin/reports/export` ghi file vào thư mục `exports/` tại root backend và trả:
+
 - `fileName`
 - `filePath`
 - `mimeType`
 
-## OTP Notes
+## Code Structure
 
-`register` va `forgot-password` ho tro:
-- `deliveryMethod = email`
-- `deliveryMethod = phone`
+```txt
+src/main.ts                         # Bootstrap app, CORS, health logs
+src/app.module.ts                   # Root module
+src/auth/                           # Auth, JWT, guards, permissions
+src/auth/services/mysql-database.service.ts
+src/admin/                          # Admin controller/service/dto
+src/catalog/                        # Home/catalog API
+src/customer/                       # Customer cart/order/profile APIs
+```
 
-`verify-otp` xac thuc theo:
-- `targetValue`
-- `purpose`
-- `otpCode`
+## Kiểm Tra
 
-Voi reset password, client can gui dung `targetValue` da dung de nhan OTP.
+```bash
+npm run build
+npm run test
+```
+
+Lint backend hiện dùng `--fix`:
+
+```bash
+npm run lint
+```
+
+Nếu repo đang có khác biệt line-ending/Prettier cũ, nên kiểm tra diff kỹ trước khi commit sau khi chạy lint.
 
 ## Postman
 
-Collection da duoc tao san tai:
+Collection hiện nằm tại frontend repo:
 
-[Sello-Auth.postman_collection.json](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/Sello-Auth.postman_collection.json)
+```txt
+../Sello-Ecommerce/Sello-Auth.postman_collection.json
+```
 
-Collection hien co:
-- Home Page
-- Public Product
-- Register Flow
-- Login Flow
-- Forgot Password Flow
-- Logout
-- Get Me
-- Admin Ping
-- Admin Operations Ping
-- Admin Management
-- Customer Cart & Checkout
-- Customer Orders
-- Customer Account
-- Delete Registered User
+Thứ tự test nhanh:
 
-Thu tu test nhanh khuyen nghi:
-1. `Login Customer`
-2. `Public Product -> Get Product Detail`
-3. `Customer Account -> Create Address`
-4. `Customer Cart & Checkout -> Add Cart Item`
-5. `Customer Cart & Checkout -> Select Cart Item`
-6. `Customer Cart & Checkout -> Checkout Preview`
-7. `Customer Cart & Checkout -> Create Order`
-8. Neu don online: `Customer Orders -> Mock Payment Callback Success`
-9. `Customer Orders -> Get My Orders`
-10. `Customer Orders -> Get Order Detail`
-11. `Customer Orders -> Get Order Tracking`
+1. Login Customer.
+2. Get Product Detail.
+3. Create Address.
+4. Add Cart Item.
+5. Select Cart Item.
+6. Checkout Preview.
+7. Create Order.
+8. Mock Payment Callback nếu đơn online.
+9. Get My Orders.
+10. Get Order Detail.
+11. Get Order Tracking.
 
-Luu y Postman:
-- Collection se tu luu cac bien `cartItemId`, `addressId`, `orderId`, `paymentId`, `notificationId`, `wishlistItemId` tu response gan nhat khi co the.
-- Cac request `Create Review` chi thanh cong khi user da co don `delivered` chua san pham do.
-- Cac request `Cancel Order` chi thanh cong khi don van o trang thai `pending` hoac `confirmed`.
+## Android Emulator Note
 
-## Code Structure
+Khi frontend chạy trên Android Emulator và backend chạy local, có thể dùng ADB reverse:
 
-- [main.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/main.ts): boot app va kiem tra ket noi MySQL
-- [app.module.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/app.module.ts): module goc
-- [auth.controller.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/auth/auth.controller.ts): auth endpoints
-- [auth.service.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/auth/auth.service.ts): auth business logic
-- [mysql-database.service.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/auth/services/mysql-database.service.ts): truy van MySQL
-- [catalog.controller.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/catalog/catalog.controller.ts): homepage endpoint
-- [catalog.service.ts](c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce/src/catalog/catalog.service.ts): homepage data aggregation
+```powershell
+& "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" devices
+& "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse tcp:3000 tcp:3000
+```
+
+Kiểm tra mapping:
+
+```powershell
+& "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse --list
+```
+
+Xóa mapping:
+
+```powershell
+& "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse --remove tcp:3000
+```

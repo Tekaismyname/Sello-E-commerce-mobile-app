@@ -86,3 +86,8 @@ export class CreateReviewDto {
 export class AddWishlistItemDto {
   productId!: number;
 }
+
+export class ContactAdminDto {
+  subject!: string;
+  message!: string;
+}

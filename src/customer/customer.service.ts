@@ -9,6 +9,7 @@ import {
   AddCartItemDto,
   ApplyVoucherDto,
   CheckoutPreviewDto,
+  ContactAdminDto,
   CreateAddressDto,
   CreateOrderDto,
   CreateReviewDto,
@@ -353,6 +354,18 @@ export class CustomerService {
 
     return {
       message: 'All notifications marked as read',
+    };
+  }
+
+  async contactAdmin(userId: number, payload: ContactAdminDto) {
+    const result = await this.database.createAdminContactNotification(
+      userId,
+      payload,
+    );
+
+    return {
+      message: 'Contact request sent to admin successfully',
+      data: result,
     };
   }
 
