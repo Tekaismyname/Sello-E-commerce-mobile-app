@@ -77,6 +77,12 @@ export default function ProductDetailScreen() {
   const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 
   const variants = product.variants ?? [];
+  const selectedVariant =
+    variants.find(
+      (variant) =>
+        (!selectedColor || variant.color === selectedColor) &&
+        (!selectedSize || variant.size === selectedSize),
+    ) ?? variants[0];
   const sizes = [...new Set(variants.map((v) => v.size).filter(Boolean))] as string[];
   const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))].map((colorName) => {
     const variant = variants.find((v) => v.color === colorName);
@@ -147,7 +153,7 @@ export default function ProductDetailScreen() {
         <View className="h-[80px]" />
       </ScrollView>
 
-      <ProductBottomActionBar />
+      <ProductBottomActionBar productId={product.id} variantId={selectedVariant?.id ?? null} />
     </SafeAreaView>
   );
 }

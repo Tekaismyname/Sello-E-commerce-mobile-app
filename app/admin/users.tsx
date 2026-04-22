@@ -1,5 +1,6 @@
 import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminUser } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
@@ -24,6 +25,11 @@ type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 export default function AdminUsersScreen() {
   const { token } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canReadUsers = hasPermission("users:read");
+  const canUpdateUserStatus = hasPermission("users:status:update");
+  const canUpdateUserRole = hasPermission("users:role:update");
+
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,6 +49,12 @@ export default function AdminUsersScreen() {
       return;
     }
 
+    if (!canReadUsers) {
+      setError("Ban khong co quyen xem danh sach nguoi dung.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await adminService.listUsers(token);
       setUsers(res.data ?? []);
@@ -51,7 +63,7 @@ export default function AdminUsersScreen() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [canReadUsers, token]);
 
   useEffect(() => {
     fetchUsers();
@@ -74,7 +86,7 @@ export default function AdminUsersScreen() {
   }, [roleFilter, searchQuery, statusFilter, users]);
 
   const openUserDetail = async (userId: number) => {
-    if (!token) {
+    if (!token || !canReadUsers) {
       return;
     }
 
@@ -90,7 +102,7 @@ export default function AdminUsersScreen() {
   };
 
   const handleToggleStatus = async (user: AdminUser) => {
-    if (!token) return;
+    if (!token || !canUpdateUserStatus) return;
 
     const nextStatus = user.status === "blocked" ? "active" : "blocked";
 
@@ -106,7 +118,7 @@ export default function AdminUsersScreen() {
   };
 
   const handleSetRole = async (user: AdminUser, nextRole: "admin" | "customer") => {
-    if (!token) return;
+    if (!token || !canUpdateUserRole) return;
 
     try {
       await adminService.updateUserRole(token, user.id, nextRole, nextRole === "admin" ? 3 : null);
@@ -151,9 +163,9 @@ export default function AdminUsersScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý người dùng</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quan ly nguoi dung</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Xem danh sách, tìm kiếm, lọc, xem chi tiết và cập nhật role/trạng thái tài khoản.
+          Tim kiem, loc, xem chi tiet va cap nhat role/trang thai tai khoan.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
@@ -161,7 +173,7 @@ export default function AdminUsersScreen() {
             <Feather name="search" size={18} color="#6b7682" />
             <TextInput
               className="ml-3 flex-1 text-[14px] text-[#191C1F]"
-              placeholder="Tìm theo tên, email, số điện thoại..."
+              placeholder="Tim theo ten, email, so dien thoai..."
               placeholderTextColor="#97a0aa"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -169,7 +181,7 @@ export default function AdminUsersScreen() {
           </View>
 
           <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Lọc theo vai trò
+            Loc theo vai tro
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {ROLE_FILTERS.map((value) =>
@@ -178,7 +190,7 @@ export default function AdminUsersScreen() {
           </ScrollView>
 
           <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Lọc theo trạng thái
+            Loc theo trang thai
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {STATUS_FILTERS.map((value) =>
@@ -208,7 +220,7 @@ export default function AdminUsersScreen() {
           <View className="mt-4 gap-3">
             <View className="rounded-[14px] bg-[#E8F1FB] px-4 py-3">
               <Text className="text-[13px] font-semibold text-[#0f4d75]">
-                Hien co {filteredUsers.length}/{users.length} người dùng phù hợp bộ lọc.
+                Hien co {filteredUsers.length}/{users.length} nguoi dung phu hop bo loc.
               </Text>
             </View>
 
@@ -231,9 +243,7 @@ export default function AdminUsersScreen() {
 
                 <View className="mt-3 flex-row flex-wrap gap-2">
                   <View className="rounded-full bg-[#E8F1F8] px-3 py-1">
-                    <Text className="text-[11px] font-bold text-[#0f4d75]">
-                      Role: {user.role}
-                    </Text>
+                    <Text className="text-[11px] font-bold text-[#0f4d75]">Role: {user.role}</Text>
                   </View>
                   <View
                     className={`rounded-full px-3 py-1 ${
@@ -263,7 +273,7 @@ export default function AdminUsersScreen() {
             {filteredUsers.length === 0 && (
               <View className="items-center rounded-[14px] bg-white p-6">
                 <Text className="text-[14px] text-[#5b6470]">
-                  Không có người dùng phù hợp với tìm kiếm/bộ lọc hiện tại.
+                  Khong co nguoi dung phu hop voi tim kiem/bo loc hien tai.
                 </Text>
               </View>
             )}
@@ -275,7 +285,7 @@ export default function AdminUsersScreen() {
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[85%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiết người dùng</Text>
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiet nguoi dung</Text>
               <Pressable onPress={() => setSelectedUser(null)} className="h-10 w-10 items-center justify-center">
                 <Feather name="x" size={20} color="#1a232d" />
               </Pressable>
@@ -301,44 +311,54 @@ export default function AdminUsersScreen() {
                       Role: <Text className="font-bold">{selectedUser.role}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Trạng thái: <Text className="font-bold">{selectedUser.status}</Text>
+                      Trang thai: <Text className="font-bold">{selectedUser.status}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
                       Admin level: <Text className="font-bold">{selectedUser.adminLevel ?? "-"}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Đã xác minh: <Text className="font-bold">{selectedUser.isVerified ? "Có" : "Chưa"}</Text>
+                      Da xac minh: <Text className="font-bold">{selectedUser.isVerified ? "Co" : "Chua"}</Text>
                     </Text>
                   </View>
                 </View>
 
                 <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Hành động nhanh
+                  Hanh dong nhanh
                 </Text>
                 <View className="mt-3 gap-3">
-                  <Pressable
-                    onPress={() => handleToggleStatus(selectedUser)}
-                    className="items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3"
-                  >
-                    <Text className="text-[13px] font-bold text-[#344252]">
-                      {selectedUser.status === "blocked" ? "Mở khóa tài khoản" : "Khóa tài khoản"}
-                    </Text>
-                  </Pressable>
+                  {canUpdateUserStatus ? (
+                    <Pressable
+                      onPress={() => handleToggleStatus(selectedUser)}
+                      className="items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3"
+                    >
+                      <Text className="text-[13px] font-bold text-[#344252]">
+                        {selectedUser.status === "blocked" ? "Mo khoa tai khoan" : "Khoa tai khoan"}
+                      </Text>
+                    </Pressable>
+                  ) : null}
 
-                  <View className="flex-row gap-3">
-                    <Pressable
-                      onPress={() => handleSetRole(selectedUser, "customer")}
-                      className="flex-1 items-center justify-center rounded-[12px] bg-[#EEF2F6] py-3"
-                    >
-                      <Text className="text-[13px] font-bold text-[#344252]">Đặt role customer</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleSetRole(selectedUser, "admin")}
-                      className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
-                    >
-                      <Text className="text-[13px] font-bold text-white">Đặt role admin</Text>
-                    </Pressable>
-                  </View>
+                  {canUpdateUserRole ? (
+                    <View className="flex-row gap-3">
+                      <Pressable
+                        onPress={() => handleSetRole(selectedUser, "customer")}
+                        className="flex-1 items-center justify-center rounded-[12px] bg-[#EEF2F6] py-3"
+                      >
+                        <Text className="text-[13px] font-bold text-[#344252]">Dat role customer</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => handleSetRole(selectedUser, "admin")}
+                        className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
+                      >
+                        <Text className="text-[13px] font-bold text-white">Dat role admin</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+
+                  {!canUpdateUserRole && !canUpdateUserStatus ? (
+                    <Text className="text-[12px] text-[#9A6400]">
+                      Ban khong co quyen cap nhat user.
+                    </Text>
+                  ) : null}
                 </View>
               </ScrollView>
             )}

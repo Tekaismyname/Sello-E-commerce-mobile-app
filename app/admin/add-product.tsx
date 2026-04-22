@@ -6,6 +6,7 @@ import { ProductPriceStock } from "@/components/admin/add-product/product-price-
 import { ProductSpecs } from "@/components/admin/add-product/product-specs";
 import { ProductVariants } from "@/components/admin/add-product/product-variants";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminProductImage, AdminProductVariant } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
@@ -25,7 +26,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const onlyDigits = (value: string) => value.replace(/[^0-9]/g, "");
 
-const createEmptyVariant = (basePrice = 0, stockQty = 0): AdminProductVariant => ({
+const createEmptyVariant = (
+  basePrice = 0,
+  stockQty = 0,
+): AdminProductVariant => ({
   skuVariant: "",
   color: "",
   size: "",
@@ -49,11 +53,16 @@ const parseFeatures = (value?: string) =>
 export default function AddProductScreen() {
   const router = useRouter();
   const { token } = useAuth();
+  const { hasPermission } = usePermissions();
   const params = useLocalSearchParams<{ productId?: string }>();
   const editingProductId = useMemo(() => {
     const productId = Number(params.productId);
     return Number.isFinite(productId) && productId > 0 ? productId : null;
   }, [params.productId]);
+  const canCreateProduct = hasPermission("products:create");
+  const canUpdateProduct = hasPermission("products:update");
+  const canReadProduct = hasPermission("products:read");
+  const hasWritePermission = editingProductId ? canUpdateProduct : canCreateProduct;
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("1");
@@ -64,18 +73,27 @@ export default function AddProductScreen() {
   const [sku, setSku] = useState("");
   const [brandId, setBrandId] = useState("");
   const [warrantyMonths, setWarrantyMonths] = useState("");
-  const [categories, setCategories] = useState<Array<{ id: number; name: string; status?: string }>>(
-    [],
-  );
-  const [images, setImages] = useState<AdminProductImage[]>([createDefaultImage()]);
+  const [categories, setCategories] = useState<
+    Array<{ id: number; name: string; status?: string }>
+  >([]);
+  const [images, setImages] = useState<AdminProductImage[]>([
+    createDefaultImage(),
+  ]);
   const [features, setFeatures] = useState<string[]>([]);
   const [variants, setVariants] = useState<AdminProductVariant[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
+    if (!hasWritePermission) {
+      Alert.alert("Khong co quyen", "Ban khong co quyen thao tac voi san pham nay.");
+      router.back();
+    }
+  }, [hasWritePermission, router]);
+
+  useEffect(() => {
     const fetchCategories = async () => {
-      if (!token) {
+      if (!token || !hasWritePermission) {
         return;
       }
 
@@ -83,32 +101,39 @@ export default function AddProductScreen() {
         const response = await adminService.getSystemConfigOptions(token);
         setCategories(response.data.categories ?? []);
       } catch (error) {
-        console.warn("Khong the tai categories cho form san pham", error);
+        console.warn("Không thể tải categories cho form sản phẩm", error);
       }
     };
 
     fetchCategories();
-  }, [token]);
+  }, [hasWritePermission, token]);
 
   useEffect(() => {
     const hydrateProduct = async () => {
-      if (!editingProductId || !token) {
+      if (!editingProductId || !token || !canReadProduct || !canUpdateProduct) {
         return;
       }
 
       try {
         setLoadingDetail(true);
-        const response = await adminService.getProductDetail(token, editingProductId);
+        const response = await adminService.getProductDetail(
+          token,
+          editingProductId,
+        );
         const product = response.data;
         const detailVariants =
-          product.variants?.length && product.variants.some((variant) => Number(variant.price) > 0)
+          product.variants?.length &&
+          product.variants.some((variant) => Number(variant.price) > 0)
             ? product.variants
             : [];
-        const fallbackStock = product.stockQty ?? detailVariants[0]?.stockQty ?? 0;
+        const fallbackStock =
+          product.stockQty ?? detailVariants[0]?.stockQty ?? 0;
 
         setName(product.name ?? "");
         setCategoryId(String(product.categoryId ?? 1));
-        setBasePrice(product.basePrice !== undefined ? String(product.basePrice) : "");
+        setBasePrice(
+          product.basePrice !== undefined ? String(product.basePrice) : "",
+        );
         setComparePrice(
           product.comparePrice !== null && product.comparePrice !== undefined
             ? String(product.comparePrice)
@@ -118,10 +143,13 @@ export default function AddProductScreen() {
         setDescription(product.description ?? "");
         setSku(product.sku ?? "");
         setBrandId(
-          product.brandId !== null && product.brandId !== undefined ? String(product.brandId) : "",
+          product.brandId !== null && product.brandId !== undefined
+            ? String(product.brandId)
+            : "",
         );
         setWarrantyMonths(
-          product.warrantyMonths !== null && product.warrantyMonths !== undefined
+          product.warrantyMonths !== null &&
+            product.warrantyMonths !== undefined
             ? String(product.warrantyMonths)
             : "",
         );
@@ -150,18 +178,26 @@ export default function AddProductScreen() {
           })),
         );
       } catch (error: any) {
-        Alert.alert("Khong the tai san pham", error?.message ?? "Da co loi xay ra.");
+        Alert.alert(
+          "Không thể tải sản phẩm",
+          error?.message ?? "Đã có lỗi xảy ra.",
+        );
       } finally {
         setLoadingDetail(false);
       }
     };
 
     hydrateProduct();
-  }, [editingProductId, token]);
+  }, [canReadProduct, canUpdateProduct, editingProductId, token]);
 
   const handleSave = async () => {
     if (!token) {
-      Alert.alert("Thong bao", "Vui long dang nhap tai khoan admin.");
+      Alert.alert("Thông báo", "Vui lòng đăng nhập tài khoản admin.");
+      return;
+    }
+
+    if (!hasWritePermission) {
+      Alert.alert("Khong co quyen", "Ban khong co quyen luu san pham.");
       return;
     }
 
@@ -170,22 +206,23 @@ export default function AddProductScreen() {
     const comparePriceNumber =
       comparePrice.trim().length > 0 ? Number(comparePrice) : undefined;
     const stockQtyNumber = Number(stockQty || "0");
-    const brandIdNumber = brandId.trim().length > 0 ? Number(brandId) : undefined;
+    const brandIdNumber =
+      brandId.trim().length > 0 ? Number(brandId) : undefined;
     const warrantyMonthsNumber =
       warrantyMonths.trim().length > 0 ? Number(warrantyMonths) : undefined;
 
     if (!name.trim()) {
-      Alert.alert("Thieu du lieu", "Vui long nhap ten san pham.");
+      Alert.alert("Thiếu dữ liệu", "Vui lòng nhập tên sản phẩm.");
       return;
     }
 
     if (!Number.isInteger(categoryIdNumber) || categoryIdNumber <= 0) {
-      Alert.alert("Thieu du lieu", "Category ID phai la so nguyen duong.");
+      Alert.alert("Thiếu dữ liệu", "Category ID phải là số nguyên dương.");
       return;
     }
 
     if (!Number.isFinite(basePriceNumber) || basePriceNumber <= 0) {
-      Alert.alert("Thieu du lieu", "Gia ban phai lon hon 0.");
+      Alert.alert("Thiếu dữ liệu", "Giá bán phải lớn hơn 0.");
       return;
     }
 
@@ -198,14 +235,17 @@ export default function AddProductScreen() {
       .filter((image) => image.imageUrl.length > 0);
 
     const normalizedImages =
-      sanitizedImages.length > 0 && !sanitizedImages.some((image) => image.isPrimary)
+      sanitizedImages.length > 0 &&
+      !sanitizedImages.some((image) => image.isPrimary)
         ? sanitizedImages.map((image, index) => ({
             ...image,
             isPrimary: index === 0,
           }))
         : sanitizedImages;
 
-    const normalizedFeatures = features.map((item) => item.trim()).filter(Boolean);
+    const normalizedFeatures = features
+      .map((item) => item.trim())
+      .filter(Boolean);
     const normalizedVariants = variants
       .map((variant) => ({
         skuVariant: variant.skuVariant?.trim() || undefined,
@@ -220,7 +260,9 @@ export default function AddProductScreen() {
             ? Number(variant.stockQty)
             : stockQtyNumber,
         weight:
-          variant.weight !== undefined && variant.weight !== null ? Number(variant.weight) : null,
+          variant.weight !== undefined && variant.weight !== null
+            ? Number(variant.weight)
+            : null,
         imageUrl: variant.imageUrl?.trim() || undefined,
         status: variant.status ?? "active",
       }))
@@ -228,10 +270,16 @@ export default function AddProductScreen() {
 
     const payload = {
       categoryId: categoryIdNumber,
-      brandId: brandIdNumber !== undefined && Number.isFinite(brandIdNumber) ? brandIdNumber : null,
+      brandId:
+        brandIdNumber !== undefined && Number.isFinite(brandIdNumber)
+          ? brandIdNumber
+          : null,
       name: name.trim(),
       sku: sku.trim() || undefined,
-      shortDescription: normalizedFeatures.length > 0 ? normalizedFeatures.join("\n") : undefined,
+      shortDescription:
+        normalizedFeatures.length > 0
+          ? normalizedFeatures.join("\n")
+          : undefined,
       description: description.trim() || undefined,
       basePrice: basePriceNumber,
       comparePrice:
@@ -239,7 +287,8 @@ export default function AddProductScreen() {
           ? comparePriceNumber
           : null,
       warrantyMonths:
-        warrantyMonthsNumber !== undefined && Number.isFinite(warrantyMonthsNumber)
+        warrantyMonthsNumber !== undefined &&
+        Number.isFinite(warrantyMonthsNumber)
           ? warrantyMonthsNumber
           : undefined,
       status: "active" as const,
@@ -261,11 +310,11 @@ export default function AddProductScreen() {
 
       Alert.alert(
         "Thanh cong",
-        editingProductId ? "Da cap nhat san pham." : "Da tao san pham moi.",
+        editingProductId ? "Đã cập nhật san pham." : "Đã tạo san pham moi.",
       );
       router.back();
     } catch (error: any) {
-      Alert.alert("Khong the luu", error?.message ?? "Da co loi xay ra.");
+      Alert.alert("Không thể lưu", error?.message ?? "Đã có lỗi xảy ra.");
     } finally {
       setSubmitting(false);
     }
@@ -281,7 +330,7 @@ export default function AddProductScreen() {
           <Feather name="arrow-left" size={20} color="#006397" />
         </Pressable>
         <Text className="ml-2 text-[16px] font-bold text-[#191C1F]">
-          {editingProductId ? "Chinh sua san pham" : "Them san pham moi"}
+          {editingProductId ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
         </Text>
       </View>
 
@@ -312,7 +361,9 @@ export default function AddProductScreen() {
               comparePrice={comparePrice}
               stockQty={stockQty}
               onBasePriceChange={(value) => setBasePrice(onlyDigits(value))}
-              onComparePriceChange={(value) => setComparePrice(onlyDigits(value))}
+              onComparePriceChange={(value) =>
+                setComparePrice(onlyDigits(value))
+              }
               onStockQtyChange={(value) => setStockQty(onlyDigits(value))}
             />
             <ProductSpecs
@@ -321,11 +372,16 @@ export default function AddProductScreen() {
               warrantyMonths={warrantyMonths}
               onSkuChange={setSku}
               onBrandIdChange={(value) => setBrandId(onlyDigits(value))}
-              onWarrantyMonthsChange={(value) => setWarrantyMonths(onlyDigits(value))}
+              onWarrantyMonthsChange={(value) =>
+                setWarrantyMonths(onlyDigits(value))
+              }
             />
             <ProductFeatures features={features} onChange={setFeatures} />
             <ProductVariants variants={variants} onChange={setVariants} />
-            <ProductDescription description={description} onDescriptionChange={setDescription} />
+            <ProductDescription
+              description={description}
+              onDescriptionChange={setDescription}
+            />
           </ScrollView>
         )}
 
@@ -333,7 +389,7 @@ export default function AddProductScreen() {
           <Pressable
             className="h-12 w-full flex-row items-center justify-center gap-2 rounded-[12px] bg-[#006397] shadow-sm disabled:opacity-60"
             onPress={handleSave}
-            disabled={submitting || loadingDetail}
+            disabled={submitting || loadingDetail || !hasWritePermission}
           >
             {submitting ? (
               <ActivityIndicator size="small" color="white" />
@@ -341,7 +397,7 @@ export default function AddProductScreen() {
               <Feather name="save" size={18} color="white" />
             )}
             <Text className="text-[16px] font-bold text-white">
-              {editingProductId ? "Luu cap nhat" : "Luu san pham"}
+              {editingProductId ? "Lưu cập nhật" : "ưu sản phẩm"}
             </Text>
           </Pressable>
         </View>
@@ -349,3 +405,4 @@ export default function AddProductScreen() {
     </SafeAreaView>
   );
 }
+

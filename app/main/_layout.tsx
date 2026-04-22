@@ -18,6 +18,14 @@ export default function MainLayout() {
       <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
       <Tabs.Screen name="search" options={{ href: null }} />
       <Tabs.Screen name="product-list" options={{ href: null }} />
+      <Tabs.Screen name="checkout" options={{ href: null }} />
+      <Tabs.Screen name="order-detail" options={{ href: null }} />
+      <Tabs.Screen name="order-tracking" options={{ href: null }} />
+      <Tabs.Screen name="addresses" options={{ href: null }} />
+      <Tabs.Screen name="address-form" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
+      <Tabs.Screen name="wishlist" options={{ href: null }} />
+      <Tabs.Screen name="change-password" options={{ href: null }} />
     </Tabs>
   );
 }

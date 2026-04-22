@@ -110,14 +110,7 @@ export interface AdminOrder {
   user: AdminOrderUser;
   paymentMethodName: string;
   totalAmount: number;
-  orderStatus:
-    | "pending"
-    | "confirmed"
-    | "packed"
-    | "shipping"
-    | "delivered"
-    | "cancelled"
-    | "returned";
+  orderStatus: AdminOrderStatus;
   paymentStatus: string;
   placedAt: string;
   shippingAddress?: string;
@@ -128,6 +121,36 @@ export interface AdminOrder {
     price: number;
   }>;
   statusHistory?: AdminOrderStatusHistory[];
+}
+
+export type AdminOrderStatus =
+  | "pending"
+  | "confirmed"
+  | "packed"
+  | "shipping"
+  | "delivered"
+  | "cancelled"
+  | "returned";
+
+export type AdminReviewModerationStatus = "visible" | "hidden" | "deleted";
+
+export interface AdminReview {
+  id: number;
+  productId: number;
+  productName: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  rating: number;
+  title?: string | null;
+  comment?: string | null;
+  isVerifiedPurchase: boolean;
+  moderationStatus: AdminReviewModerationStatus;
+  moderationNote?: string | null;
+  moderatedBy?: number | null;
+  moderatedAt?: string | null;
+  mediaUrls: string[];
+  createdAt: string;
 }
 
 export interface AdminReportOverview {
@@ -142,4 +165,99 @@ export interface AdminExportedReport {
   fileName: string;
   filePath: string;
   mimeType: string;
+}
+
+export interface AdminCategory {
+  id: number;
+  name: string;
+  slug?: string | null;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  parentName?: string | null;
+  description?: string | null;
+  status: "active" | "inactive";
+}
+
+export interface AdminVoucher {
+  id: number;
+  code: string;
+  name: string;
+  description?: string | null;
+  voucherType: "product" | "shipping" | "cashback";
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  maxDiscountValue?: number | null;
+  minOrderValue: number;
+  usageLimit: number;
+  usedCount: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive: boolean;
+}
+
+export interface AdminNotification {
+  id: number;
+  userId?: number | null;
+  userName?: string | null;
+  title: string;
+  content: string;
+  notificationType: "promotion" | "order" | "system";
+  imageUrl?: string | null;
+  createdAt?: string;
+}
+
+export interface CreateAdminCategoryPayload {
+  name: string;
+  slug?: string;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface UpdateAdminCategoryPayload {
+  name?: string;
+  slug?: string | null;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface CreateAdminVoucherPayload {
+  code: string;
+  name: string;
+  description?: string | null;
+  voucherType: "product" | "shipping" | "cashback";
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  maxDiscountValue?: number | null;
+  minOrderValue?: number;
+  usageLimit?: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+}
+
+export interface UpdateAdminVoucherPayload {
+  code?: string;
+  name?: string;
+  description?: string | null;
+  voucherType?: "product" | "shipping" | "cashback";
+  discountType?: "percent" | "fixed";
+  discountValue?: number;
+  maxDiscountValue?: number | null;
+  minOrderValue?: number;
+  usageLimit?: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+}
+
+export interface CreateAdminNotificationPayload {
+  title: string;
+  content: string;
+  targetScope: "all_users" | "customer_only" | "admin_only";
+  notificationType?: "promotion" | "order" | "system";
+  imageUrl?: string | null;
 }

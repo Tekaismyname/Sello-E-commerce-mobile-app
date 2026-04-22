@@ -9,38 +9,52 @@ import {
   WriteReviewHeader,
 } from "@/components/product";
 import { ReviewImageUploader } from "@/components/product/review/review-image-uploader";
+import { useAuth } from "@/contexts/auth-context";
 import { reviewService } from "@/services/customer.service";
 
 export default function WriteReviewScreen() {
-  const { productId, token } = useLocalSearchParams();
+  const params = useLocalSearchParams<{ productId?: string; id?: string }>();
+  const { token } = useAuth();
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const rawProductId =
+    (typeof params.productId === "string" ? params.productId : undefined) ??
+    (typeof params.id === "string" ? params.id : undefined);
+  const parsedProductId = Number(rawProductId);
+  const productId = Number.isFinite(parsedProductId) && parsedProductId > 0 ? parsedProductId : null;
+
   const submitReview = async () => {
-    if (rating === 0) return;
+    if (!productId) {
+      Alert.alert("Loi", "San pham khong hop le. Vui long quay lai trang chi tiet.");
+      return;
+    }
 
-    const authToken = typeof token === "string" ? token : "";
+    if (rating === 0) {
+      Alert.alert("Thong bao", "Vui long chon so sao danh gia.");
+      return;
+    }
 
-    if (!authToken) {
-      Alert.alert("Lỗi", "Vui lòng đăng nhập để viết đánh giá.");
+    if (!token) {
+      Alert.alert("Loi", "Vui long dang nhap de viet danh gia.");
       return;
     }
 
     setSubmitting(true);
 
     try {
-      await reviewService.createReview(authToken, {
-        productId: Number(productId) || 0,
+      await reviewService.createReview(token, {
+        productId,
         rating,
         comment: reviewText || undefined,
       });
 
-      Alert.alert("Thành công", "Đánh giá đã được gửi!", [
+      Alert.alert("Thanh cong", "Danh gia da duoc gui!", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message || "Không thể gửi đánh giá.");
+      Alert.alert("Loi", err.message || "Khong the gui danh gia.");
     } finally {
       setSubmitting(false);
     }
@@ -56,13 +70,13 @@ export default function WriteReviewScreen() {
       >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4">
           <View className="mb-6 flex-row items-center gap-4 rounded-[16px] bg-white p-4 shadow-sm">
-            <Image 
-              source={{ uri: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80" }} 
-              className="h-16 w-16 rounded-[8px]" 
+            <Image
+              source={{ uri: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80" }}
+              className="h-16 w-16 rounded-[8px]"
             />
             <View className="flex-1">
-              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]">Giày Chạy Bộ Performance Red</Text>
-              <Text className="mt-1 text-[12px] text-[#6b7682]">Giao hàng thành công ngày 12/10/2023</Text>
+              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]">San pham</Text>
+              <Text className="mt-1 text-[12px] text-[#6b7682]">Hay de lai danh gia cua ban</Text>
             </View>
           </View>
 
@@ -74,8 +88,7 @@ export default function WriteReviewScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <ReviewSubmitBar onSubmit={submitReview} disabled={rating === 0 || submitting} />
+      <ReviewSubmitBar onSubmit={submitReview} disabled={!productId || rating === 0 || submitting} />
     </SafeAreaView>
   );
 }
-

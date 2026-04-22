@@ -1,9 +1,14 @@
+import { AdminOrderActions } from "@/components/admin/orders/admin-order-actions";
+import { AdminOrderFilters } from "@/components/admin/orders/admin-order-filters";
+import { AdminOrderStats } from "@/components/admin/orders/admin-order-stats";
+import { AdminOrderTable } from "@/components/admin/orders/admin-order-table";
 import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/auth/use-permissions";
+import { useAdminOrdersView } from "@/hooks/admin/use-admin-orders-view";
 import { adminService } from "@/services/admin.service";
-import { AdminOrder } from "@/types/admin";
-import { Feather } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminOrder, AdminOrderStatus } from "@/types/admin";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,7 +21,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const ORDER_STATUS_OPTIONS: AdminOrder["orderStatus"][] = [
+const ORDER_STATUSES: AdminOrderStatus[] = [
   "pending",
   "confirmed",
   "packed",
@@ -28,301 +33,259 @@ const ORDER_STATUS_OPTIONS: AdminOrder["orderStatus"][] = [
 
 export default function AdminOrdersScreen() {
   const { token } = useAuth();
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const { hasPermission } = usePermissions();
+  const canReadOrders = hasPermission("orders:read");
+  const canUpdateOrders = hasPermission("orders:update");
+  const canExportReport = hasPermission("reports:export");
+
+  const {
+    pagedOrders,
+    filter,
+    search,
+    page,
+    pageCount,
+    pageSize,
+    loading,
+    error,
+    metrics,
+    setFilter,
+    setSearch,
+    setPage,
+    fetchOrders,
+  } = useAdminOrdersView(token, canReadOrders);
+
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | AdminOrder["orderStatus"]>("all");
-  const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    if (!token) {
-      setError("Vui long dang nhap tai khoan admin.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await adminService.listOrders(token);
-      setOrders(res.data ?? []);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [statusDraft, setStatusDraft] = useState<AdminOrderStatus>("pending");
+  const [statusNote, setStatusNote] = useState("");
+  const [savingStatus, setSavingStatus] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    if (selectedOrder) {
+      setStatusDraft(selectedOrder.orderStatus);
+      setStatusNote("");
+    }
+  }, [selectedOrder]);
 
-  const filteredOrders = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+  const handleExport = async () => {
+    if (!token || !canExportReport) return;
 
-    return orders.filter((order) => {
-      const matchesQuery =
-        !normalizedQuery ||
-        order.orderCode.toLowerCase().includes(normalizedQuery) ||
-        order.user.fullName.toLowerCase().includes(normalizedQuery) ||
-        order.user.email.toLowerCase().includes(normalizedQuery);
-      const matchesStatus = statusFilter === "all" || order.orderStatus === statusFilter;
+    try {
+      const response = await adminService.exportReport(token, "overview", "csv");
+      Alert.alert("Xuat bao cao thanh cong", response.data.fileName);
+    } catch (err: any) {
+      Alert.alert("Loi", err.message ?? "Khong the xuat bao cao");
+    }
+  };
 
-      return matchesQuery && matchesStatus;
-    });
-  }, [orders, searchQuery, statusFilter]);
+  const handleCreateOrder = () => {
+    Alert.alert("Thong bao", "Backend hien tai chua ho tro tao don moi tu admin.");
+  };
 
-  const openOrderDetail = async (orderId: number) => {
-    if (!token) return;
+  const openOrderDetail = async (order: AdminOrder) => {
+    if (!token || !canReadOrders) return;
 
     try {
       setLoadingDetail(true);
-      const res = await adminService.getOrderDetail(token, orderId);
-      setSelectedOrder(res.data);
+      const response = await adminService.getOrderDetail(token, order.id);
+      setSelectedOrder(response.data);
     } catch (err: any) {
-      Alert.alert("Khong the tai chi tiet don", err.message);
+      Alert.alert("Loi", err.message ?? "Khong the tai chi tiet don hang.");
     } finally {
       setLoadingDetail(false);
     }
   };
 
-  const handleUpdateStatus = async (orderId: number, nextStatus: AdminOrder["orderStatus"]) => {
-    if (!token) return;
+  const handleUpdateStatus = async () => {
+    if (!token || !selectedOrder || !canUpdateOrders) return;
 
     try {
-      setUpdating(true);
-      await adminService.updateOrderStatus(
+      setSavingStatus(true);
+      const response = await adminService.updateOrderStatus(
         token,
-        orderId,
-        nextStatus,
-        `Cap nhat trang thai sang ${nextStatus}`,
+        selectedOrder.id,
+        statusDraft,
+        statusNote.trim() || undefined,
       );
+      setSelectedOrder(response.data);
       await fetchOrders();
-      await openOrderDetail(orderId);
+      Alert.alert("Thanh cong", "Da cap nhat trang thai don hang.");
     } catch (err: any) {
-      Alert.alert("Loi", err.message);
+      Alert.alert("Loi", err.message ?? "Khong the cap nhat trang thai.");
     } finally {
-      setUpdating(false);
+      setSavingStatus(false);
     }
   };
 
-  const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)} d`;
-
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
       <AdminHeader title="Don hang" />
 
       <ScrollView
         className="flex-1"
+        contentContainerClassName="px-4 pb-24 pt-2"
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý đơn hàng</Text>
-        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Theo dõi danh sách đơn, tìm kiếm, lọc và cập nhật trạng thái giao nhận.
+        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">
+          Quan ly Don hang
+        </Text>
+        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
+          Theo doi va cap nhat trang thai van chuyen cua khach hang.
         </Text>
 
-        <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
-          <View className="h-12 flex-row items-center rounded-[12px] bg-[#F4F6F8] px-4">
-            <Feather name="search" size={18} color="#6b7682" />
-            <TextInput
-              className="ml-3 flex-1 text-[14px] text-[#191C1F]"
-              placeholder="Tim theo ma don, ten khach, email..."
-              placeholderTextColor="#97a0aa"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-
-          <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Trạng thái đơn hàng
+        <AdminOrderActions
+          onExport={handleExport}
+          onCreate={handleCreateOrder}
+          disableExport={!canExportReport}
+          disableCreate
+        />
+        {!canExportReport ? (
+          <Text className="mt-2 text-[12px] text-[#9A6400]">
+            Ban khong co quyen export report.
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
-            {(["all", ...ORDER_STATUS_OPTIONS] as const).map((status) => {
-              const isSelected = statusFilter === status;
-              return (
-                <Pressable
-                  key={status}
-                  onPress={() => setStatusFilter(status)}
-                  className={`mr-2 rounded-full px-4 py-2 ${
-                    isSelected ? "bg-[#006397]" : "bg-[#E8EDF2]"
-                  }`}
-                >
-                  <Text
-                    className={`text-[12px] font-bold ${
-                      isSelected ? "text-white" : "text-[#44515F]"
-                    }`}
-                  >
-                    {status.toUpperCase()}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+        ) : null}
 
-        {loading && (
-          <View className="mt-10 items-center">
-            <ActivityIndicator size="large" color="#006397" />
+        {loading ? (
+          <View className="mt-8 items-center">
+            <ActivityIndicator size="large" color="#0369A1" />
           </View>
-        )}
-
-        {!loading && error && (
-          <View className="mt-4 rounded-[12px] bg-white p-4">
-            <Text className="text-[14px] font-medium text-[#b3261e]">{error}</Text>
+        ) : error ? (
+          <View className="mt-4 rounded-[14px] bg-white p-4">
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">{error}</Text>
           </View>
-        )}
+        ) : (
+          <>
+            <AdminOrderStats
+              total={metrics.total}
+              pending={metrics.pending}
+              shipping={metrics.shipping}
+              monthlyRevenue={metrics.monthlyRevenue}
+            />
 
-        {!loading && !error && (
-          <View className="mt-4 gap-3">
-            <View className="rounded-[14px] bg-[#E8F1FB] px-4 py-3">
-              <Text className="text-[13px] font-semibold text-[#0f4d75]">
-                Đang hiển thị {filteredOrders.length}/{orders.length} đơn hàng.
-              </Text>
+            <View className="mt-3">
+              <AdminOrderFilters
+                search={search}
+                filter={filter}
+                onSearchChange={setSearch}
+                onFilterChange={setFilter}
+              />
             </View>
 
-            {filteredOrders.map((order) => (
-              <Pressable
-                key={order.id}
-                onPress={() => openOrderDetail(order.id)}
-                className="rounded-[14px] bg-white p-4"
-              >
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-[15px] font-bold text-[#191C1F]">#{order.orderCode}</Text>
-                  <View className="rounded-full bg-[#EEF5FA] px-3 py-1">
-                    <Text className="text-[11px] font-bold text-[#006397]">{order.orderStatus}</Text>
-                  </View>
-                </View>
-
-                <Text className="mt-2 text-[13px] text-[#3d4651]">{order.user.fullName}</Text>
-                <Text className="text-[12px] text-[#6b7682]">{order.user.email}</Text>
-                <Text className="mt-1 text-[12px] text-[#6b7682]">
-                  Thanh toán: {order.paymentStatus} - {order.paymentMethodName}
-                </Text>
-                <Text className="mt-2 text-[16px] font-bold text-[#1f2934]">
-                  {formatPrice(order.totalAmount)}
-                </Text>
-              </Pressable>
-            ))}
-
-            {filteredOrders.length === 0 && (
-              <View className="items-center rounded-[14px] bg-white p-6">
-                <Text className="text-[14px] text-[#5b6470]">
-                  Không có đơn hàng phù hợp với bộ lọc hiện tại.
-                </Text>
-              </View>
-            )}
-          </View>
+            <View className="mt-3">
+              <AdminOrderTable
+                orders={pagedOrders}
+                page={page}
+                pageCount={pageCount}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onSelectOrder={canReadOrders ? openOrderDetail : undefined}
+              />
+            </View>
+          </>
         )}
       </ScrollView>
 
-      <Modal visible={!!selectedOrder} animationType="slide" transparent onRequestClose={() => setSelectedOrder(null)}>
+      <Modal
+        visible={!!selectedOrder}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedOrder(null)}
+      >
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[88%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiet don hang</Text>
-              <Pressable onPress={() => setSelectedOrder(null)} className="h-10 w-10 items-center justify-center">
-                <Feather name="x" size={20} color="#1a232d" />
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">
+                Chi tiet don hang
+              </Text>
+              <Pressable
+                className="h-10 w-10 items-center justify-center"
+                onPress={() => setSelectedOrder(null)}
+              >
+                <Text className="text-[20px] font-bold text-[#334155]">x</Text>
               </Pressable>
             </View>
 
-            {loadingDetail && !selectedOrder && (
-              <View className="items-center py-6">
-                <ActivityIndicator color="#006397" />
+            {loadingDetail ? (
+              <View className="py-8 items-center">
+                <ActivityIndicator color="#0369A1" />
               </View>
-            )}
-
-            {selectedOrder && (
+            ) : selectedOrder ? (
               <ScrollView showsVerticalScrollIndicator={false}>
-                <View className="rounded-[16px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[17px] font-bold text-[#191C1F]">#{selectedOrder.orderCode}</Text>
-                  <Text className="mt-2 text-[13px] text-[#3f4850]">
-                    Khách hàng: <Text className="font-bold">{selectedOrder.user.fullName}</Text>
+                <View className="rounded-[14px] bg-[#F8F9FB] p-4">
+                  <Text className="text-[16px] font-bold text-[#191C1F]">
+                    #{selectedOrder.orderCode}
                   </Text>
-                  <Text className="text-[13px] text-[#3f4850]">{selectedOrder.user.email}</Text>
-                  <Text className="mt-2 text-[13px] text-[#3f4850]">
-                    Thanh toán: <Text className="font-bold">{selectedOrder.paymentStatus}</Text>
+                  <Text className="mt-1 text-[13px] text-[#4B5563]">
+                    {selectedOrder.user.fullName} - {selectedOrder.user.email}
                   </Text>
-                  <Text className="text-[13px] text-[#3f4850]">
-                    Phương thức: <Text className="font-bold">{selectedOrder.paymentMethodName}</Text>
+                  <Text className="mt-1 text-[13px] text-[#4B5563]">
+                    Tong tien: {new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)} d
                   </Text>
-                  <Text className="text-[13px] text-[#3f4850]">
-                    Tổng tiền: <Text className="font-bold">{formatPrice(selectedOrder.totalAmount)}</Text>
+                  <Text className="mt-1 text-[13px] text-[#4B5563]">
+                    Trang thai hien tai: {selectedOrder.orderStatus}
                   </Text>
-                  {!!selectedOrder.shippingAddress && (
-                    <Text className="mt-2 text-[13px] text-[#3f4850]">
-                      Địa chỉ: <Text className="font-bold">{selectedOrder.shippingAddress}</Text>
-                    </Text>
-                  )}
                 </View>
 
-                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Chọn trạng thái mới
-                </Text>
-                <View className="mt-3 flex-row flex-wrap gap-2">
-                  {ORDER_STATUS_OPTIONS.map((status) => {
-                    const isActive = selectedOrder.orderStatus === status;
-                    return (
-                      <Pressable
-                        key={status}
-                        disabled={updating || isActive}
-                        onPress={() => handleUpdateStatus(selectedOrder.id, status)}
-                        className={`rounded-full px-4 py-2 ${
-                          isActive ? "bg-[#006397]" : "bg-[#E8EDF2]"
-                        }`}
-                      >
-                        <Text
-                          className={`text-[12px] font-bold ${
-                            isActive ? "text-white" : "text-[#44515F]"
+                {!!selectedOrder.shippingAddress && (
+                  <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
+                    <Text className="text-[13px] font-bold text-[#191C1F]">Dia chi giao</Text>
+                    <Text className="mt-1 text-[13px] text-[#4B5563]">
+                      {selectedOrder.shippingAddress}
+                    </Text>
+                  </View>
+                )}
+
+                {canUpdateOrders ? (
+                  <View className="mt-4 rounded-[14px] bg-white">
+                    <Text className="text-[13px] font-bold text-[#191C1F]">
+                      Cap nhat trang thai
+                    </Text>
+                    <View className="mt-3 flex-row flex-wrap gap-2">
+                      {ORDER_STATUSES.map((status) => (
+                        <Pressable
+                          key={status}
+                          onPress={() => setStatusDraft(status)}
+                          className={`rounded-full px-3 py-2 ${
+                            statusDraft === status ? "bg-[#0369A1]" : "bg-[#E8EDF2]"
                           }`}
                         >
-                          {status}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-
-                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Mat hang
-                </Text>
-                <View className="mt-3 gap-2">
-                  {(selectedOrder.items ?? []).map((item, index) => (
-                    <View key={`${item.productName}-${index}`} className="rounded-[14px] bg-[#F8F9FB] p-4">
-                      <Text className="text-[14px] font-bold text-[#191C1F]">{item.productName}</Text>
-                      <Text className="mt-1 text-[12px] text-[#5b6470]">
-                        Số lượng: {item.quantity} - Giá bán: {formatPrice(item.price)}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-
-                {!!selectedOrder.statusHistory?.length && (
-                  <>
-                    <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                      Lịch sử trạng thái
-                    </Text>
-                    <View className="mt-3 gap-2">
-                      {selectedOrder.statusHistory.map((history, index) => (
-                        <View key={`${history.status}-${index}`} className="rounded-[14px] bg-[#F8F9FB] p-4">
-                          <Text className="text-[13px] font-bold text-[#191C1F]">{history.status}</Text>
-                          {!!history.changedAt && (
-                            <Text className="mt-1 text-[12px] text-[#5b6470]">{history.changedAt}</Text>
-                          )}
-                          {!!history.description && (
-                            <Text className="mt-1 text-[12px] text-[#5b6470]">{history.description}</Text>
-                          )}
-                        </View>
+                          <Text
+                            className={`text-[12px] font-bold ${
+                              statusDraft === status ? "text-white" : "text-[#334155]"
+                            }`}
+                          >
+                            {status}
+                          </Text>
+                        </Pressable>
                       ))}
                     </View>
-                  </>
+
+                    <TextInput
+                      className="mt-3 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3"
+                      multiline
+                      placeholder="Ghi chu cap nhat (tuy chon)"
+                      placeholderTextColor="#97a0aa"
+                      value={statusNote}
+                      onChangeText={setStatusNote}
+                    />
+
+                    <Pressable
+                      className="mt-3 h-11 items-center justify-center rounded-[12px] bg-[#0369A1] disabled:opacity-60"
+                      disabled={savingStatus || statusDraft === selectedOrder.orderStatus}
+                      onPress={handleUpdateStatus}
+                    >
+                      <Text className="text-[13px] font-bold text-white">
+                        {savingStatus ? "Dang luu..." : "Luu trang thai"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Text className="mt-4 text-[12px] text-[#9A6400]">
+                    Ban khong co quyen cap nhat trang thai don hang.
+                  </Text>
                 )}
               </ScrollView>
-            )}
+            ) : null}
           </View>
         </View>
       </Modal>

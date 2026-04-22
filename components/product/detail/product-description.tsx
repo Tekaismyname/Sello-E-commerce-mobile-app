@@ -5,23 +5,26 @@ type ProductDescriptionProps = {
 };
 
 export function ProductDescription({ description }: ProductDescriptionProps) {
+  const fallbackDescription =
+    "Air Jordan 1 High OG mang den thiet ke kinh dien voi chat lieu cao cap va cam giac mang em ai. Phien ban nay phu hop cho ca di chuyen hang ngay lan phong cach streetwear.";
+
   return (
     <View className="bg-white px-4 py-5">
-      <Text className="mb-3 text-[20px] font-extrabold text-[#191C1F]">Mô Tả Chi Tiết</Text>
+      <Text className="mb-3 text-[20px] font-extrabold text-[#191C1F]">Mo Ta Chi Tiet</Text>
       <Text className="text-[14px] leading-[24px] text-[#3F4850]">
-        Huyền thoại bắt đầu từ đây. Air Jordan 1 High OG mang đến thiết kế kinh điển với chất liệu da cao cấp và lớp đệm Air-Sole êm ái. Phiên bản phối màu 'Chicago Red' tái hiện lại những bước chân đầu tiên của Michael Jordan trên sân đấu chuyên nghiệp, mang đến vẻ đẹp hoài cổ nhưng vẫn đậm chất hiện đại cho phong cách thời trang đường phố của bạn.
+        {description?.trim() ? description : fallbackDescription}
       </Text>
 
       <View className="mt-6 rounded-[12px] bg-[#F2F3F7] p-5">
         <Text className="text-[14px] italic leading-[24px] text-[#191C1F]">
-          "Đôi giày này đã thay đổi hoàn toàn phong cách của tôi. Độ hoàn thiện cực cao và cảm giác mang rất êm ái, xứng đáng với từng đồng bỏ ra."
+          Doi giay nay da thay doi hoan toan phong cach cua toi. Do hoan thien cao va cam giac mang rat em ai.
         </Text>
         <View className="mt-4 flex-row items-center gap-3">
           <View className="h-10 w-10 items-center justify-center rounded-full bg-[#CCE5FF]">
             <Text className="text-[14px] font-bold text-[#006397]">TN</Text>
           </View>
           <View>
-            <Text className="text-[14px] font-bold text-[#191C1F]">Thành Nam</Text>
+            <Text className="text-[14px] font-bold text-[#191C1F]">Thanh Nam</Text>
             <Text className="text-[12px] text-[#6b7682]">Sneaker Enthusiast</Text>
           </View>
         </View>

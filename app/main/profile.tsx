@@ -67,20 +67,45 @@ export default function ProfileScreen() {
         </View>
 
         <View className="mt-4 gap-2">
-          {[
-            "Thong tin tai khoan",
-            "Dia chi giao hang",
-            "Phuong thuc thanh toan",
-            "Thong bao",
-          ].map((item) => (
-            <Pressable
-              key={item}
-              className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
-            >
-              <Text className="text-[14px] font-semibold text-[#364150]">{item}</Text>
-              <Feather name="chevron-right" size={16} color="#7e8997" />
-            </Pressable>
-          ))}
+          <Pressable
+            className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
+            onPress={() => router.push("/auth/account-completion" as Href)}
+          >
+            <Text className="text-[14px] font-semibold text-[#364150]">Thong tin tai khoan</Text>
+            <Feather name="chevron-right" size={16} color="#7e8997" />
+          </Pressable>
+
+          <Pressable
+            className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
+            onPress={() => router.push("/main/addresses" as Href)}
+          >
+            <Text className="text-[14px] font-semibold text-[#364150]">Dia chi giao hang</Text>
+            <Feather name="chevron-right" size={16} color="#7e8997" />
+          </Pressable>
+
+          <Pressable
+            className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
+            onPress={() => router.push("/main/notifications" as Href)}
+          >
+            <Text className="text-[14px] font-semibold text-[#364150]">Thong bao</Text>
+            <Feather name="chevron-right" size={16} color="#7e8997" />
+          </Pressable>
+
+          <Pressable
+            className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
+            onPress={() => router.push("/main/wishlist" as Href)}
+          >
+            <Text className="text-[14px] font-semibold text-[#364150]">Wishlist</Text>
+            <Feather name="chevron-right" size={16} color="#7e8997" />
+          </Pressable>
+
+          <Pressable
+            className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
+            onPress={() => router.push("/main/change-password" as Href)}
+          >
+            <Text className="text-[14px] font-semibold text-[#364150]">Doi mat khau</Text>
+            <Feather name="chevron-right" size={16} color="#7e8997" />
+          </Pressable>
         </View>
 
         <Pressable

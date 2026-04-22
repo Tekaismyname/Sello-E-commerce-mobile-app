@@ -1,8 +1,10 @@
 import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminDashboardData } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
+import { Href, router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,6 +30,9 @@ const emptyConfigItem = (): ConfigItem => ({
 
 export default function AdminSystemScreen() {
   const { token } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canReadSystem = hasPermission("system:dashboard:read");
+  const canUpdateSystemConfig = hasPermission("system:config:update");
   const [dashboardData, setDashboardData] = useState<AdminDashboardData | null>(null);
   const [configOptions, setConfigOptions] = useState<{
     categories: Array<{ id: number; name: string; status: string }>;
@@ -62,6 +67,12 @@ export default function AdminSystemScreen() {
       return;
     }
 
+    if (!canReadSystem) {
+      setError("Ban khong co quyen xem du lieu he thong.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await adminService.getDashboardData(token);
       setDashboardData(res);
@@ -72,7 +83,7 @@ export default function AdminSystemScreen() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [canReadSystem, token]);
 
   useEffect(() => {
     fetchDashboard();
@@ -116,7 +127,7 @@ export default function AdminSystemScreen() {
   };
 
   const handleSave = async () => {
-    if (!token) return;
+    if (!token || !canUpdateSystemConfig) return;
 
     const buildStatusPayload = (list: ConfigItem[]) =>
       list
@@ -326,6 +337,50 @@ export default function AdminSystemScreen() {
 
                 <View className="mt-4 gap-3">
                   <Pressable
+                    onPress={() => router.push("/admin/categories" as Href)}
+                    className="flex-row items-center justify-between rounded-[12px] bg-[#E8F1FB] px-4 py-4"
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <Feather name="grid" size={18} color="#006397" />
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Quan ly danh muc</Text>
+                    </View>
+                    <Feather name="chevron-right" size={18} color="#97a0aa" />
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => router.push("/admin/vouchers" as Href)}
+                    className="flex-row items-center justify-between rounded-[12px] bg-[#E8F1FB] px-4 py-4"
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <Feather name="tag" size={18} color="#006397" />
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Quan ly voucher</Text>
+                    </View>
+                    <Feather name="chevron-right" size={18} color="#97a0aa" />
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => router.push("/admin/notifications" as Href)}
+                    className="flex-row items-center justify-between rounded-[12px] bg-[#E8F1FB] px-4 py-4"
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <Feather name="send" size={18} color="#006397" />
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Gui thong bao</Text>
+                    </View>
+                    <Feather name="chevron-right" size={18} color="#97a0aa" />
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => router.push("/admin/reviews" as Href)}
+                    className="flex-row items-center justify-between rounded-[12px] bg-[#E8F1FB] px-4 py-4"
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <Feather name="message-square" size={18} color="#006397" />
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Kiem duyet review</Text>
+                    </View>
+                    <Feather name="chevron-right" size={18} color="#97a0aa" />
+                  </Pressable>
+
+                  <Pressable
                     onPress={() => setCatalogModal("categories")}
                     className="flex-row items-center justify-between rounded-[12px] bg-[#F8F9FB] px-4 py-4"
                   >
@@ -371,15 +426,21 @@ export default function AdminSystemScreen() {
               )}
             </View>
 
-            <Pressable
-              onPress={handleSave}
-              disabled={saving}
-              className="mt-5 items-center justify-center rounded-[14px] bg-[#006397] py-4"
-            >
-              <Text className="text-[14px] font-bold text-white">
-                {saving ? "Dang luu..." : "Luu cap nhat he thong"}
+            {canUpdateSystemConfig ? (
+              <Pressable
+                onPress={handleSave}
+                disabled={saving}
+                className="mt-5 items-center justify-center rounded-[14px] bg-[#006397] py-4"
+              >
+                <Text className="text-[14px] font-bold text-white">
+                  {saving ? "Dang luu..." : "Luu cap nhat he thong"}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text className="mt-5 text-[12px] text-[#9A6400]">
+                Ban khong co quyen cap nhat cau hinh he thong.
               </Text>
-            </Pressable>
+            )}
           </>
         )}
       </ScrollView>

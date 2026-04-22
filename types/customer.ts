@@ -4,6 +4,10 @@ export interface UserProfile {
   fullName: string;
   email: string;
   phone: string;
+  avatarUrl?: string | null;
+  gender?: "male" | "female" | "other" | null;
+  birthDate?: string | null;
+  emailOptIn?: boolean;
   role: string;
   adminLevel: number | null;
   status: string;
@@ -71,7 +75,10 @@ export interface UpdateAddressPayload {
 export interface Notification {
   id: number;
   title: string;
-  message: string;
+  content: string;
+  message?: string;
+  notificationType?: "promotion" | "order" | "system";
+  imageUrl?: string | null;
   isRead: boolean;
   createdAt: string;
 }
@@ -81,8 +88,9 @@ export interface WishlistItem {
   id: number;
   productId: number;
   productName: string;
-  productImage: string;
+  productImage?: string | null;
   productPrice: number;
+  createdAt?: string;
 }
 
 // ─── Review ───────────────────────────────────────────────
@@ -112,11 +120,14 @@ export interface Cart {
 }
 
 export interface CartSummary {
-  totalItems: number;
-  selectedItems: number;
+  cartId?: number;
+  totalItems?: number;
+  selectedItems?: number;
+  selectedItemsCount?: number;
   subtotal: number;
-  discount: number;
-  total: number;
+  discount?: number;
+  total?: number;
+  totalAmount?: number;
 }
 
 export interface AddCartItemPayload {
@@ -136,11 +147,20 @@ export interface SelectCartItemPayload {
 // ─── Checkout ─────────────────────────────────────────────
 export interface CheckoutPreview {
   items: CartItem[];
-  subtotal: number;
-  shippingFee: number;
-  discount: number;
-  total: number;
-  voucher?: { code: string; discountAmount: number } | null;
+  addresses: Address[];
+  paymentMethods: Array<{
+    id: number;
+    code: string;
+    name: string;
+    status: string;
+  }>;
+  voucher?: { code: string; name?: string; discount: number } | null;
+  pricing: {
+    subtotal: number;
+    shippingFee: number;
+    discount: number;
+    totalAmount: number;
+  };
 }
 
 export interface CheckoutPreviewPayload {
@@ -172,9 +192,13 @@ export interface OrderItem {
   id: number;
   productId: number;
   productName: string;
-  productImage: string;
+  productImage?: string;
+  variantId?: number | null;
+  variantSnapshot?: string | null;
   quantity: number;
-  price: number;
+  price?: number;
+  unitPrice?: number;
+  lineTotal?: number;
 }
 
 export interface Order {
@@ -182,16 +206,67 @@ export interface Order {
   status: OrderStatus;
   totalAmount: number;
   createdAt: string;
+  orderCode?: string;
+  subtotal?: number;
+  shippingFee?: number;
+  discount?: number;
+  paymentStatus?: string;
+  note?: string | null;
+  shippingAddress?: string;
+  payment?: {
+    id: number;
+    paymentMethodId: number;
+    amount: number;
+    transactionCode: string | null;
+    paymentStatus: string;
+    paidAt: string | null;
+    failReason: string | null;
+  } | null;
+  shipment?: {
+    id: number;
+    carrierName: string | null;
+    trackingCode: string | null;
+    shippingType: string | null;
+    driverName?: string | null;
+    driverPhone?: string | null;
+    vehicleNumber?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    shipmentStatus: string;
+    shippedAt: string | null;
+    deliveredAt: string | null;
+  } | null;
+  statusHistory?: Array<{
+    id: number;
+    status: string;
+    description: string | null;
+    updatedBy: number | null;
+    createdAt: string;
+  }>;
   items: OrderItem[];
 }
 
 export interface OrderTracking {
-  orderId: number;
-  status: OrderStatus;
-  events: Array<{
+  shipment: {
+    id: number;
+    carrierName: string | null;
+    trackingCode: string | null;
+    shippingType: string | null;
+    driverName?: string | null;
+    driverPhone?: string | null;
+    vehicleNumber?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    shipmentStatus: string;
+    estimatedDeliveryAt: string | null;
+    shippedAt: string | null;
+    deliveredAt: string | null;
+  } | null;
+  timeline: Array<{
+    id: number;
     status: string;
-    description: string;
-    timestamp: string;
+    description: string | null;
+    createdAt: string;
   }>;
 }
 

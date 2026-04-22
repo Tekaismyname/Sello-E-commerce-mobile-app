@@ -1,5 +1,6 @@
-﻿import { AdminHeader } from "@/components/admin/shared/admin-header";
+import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminReportOverview } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
@@ -23,6 +24,10 @@ const TIME_RANGE_OPTIONS = [
 
 export default function AdminReportsScreen() {
   const { token } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canReadReports = hasPermission("reports:read");
+  const canExportReports = hasPermission("reports:export");
+
   const [report, setReport] = useState<AdminReportOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +44,12 @@ export default function AdminReportsScreen() {
       return;
     }
 
+    if (!canReadReports) {
+      setError("Ban khong co quyen xem bao cao.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await adminService.getReportOverview(token);
       setReport(res.data ?? null);
@@ -47,7 +58,7 @@ export default function AdminReportsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [canReadReports, token]);
 
   useEffect(() => {
     fetchReport();
@@ -63,7 +74,7 @@ export default function AdminReportsScreen() {
   }, [report?.revenueByPeriod, timeRange]);
 
   const handleExport = async (format: "csv" | "json") => {
-    if (!token) return;
+    if (!token || !canExportReports) return;
 
     try {
       setExporting(true);
@@ -90,14 +101,14 @@ export default function AdminReportsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Báo cáo và xuất file</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Bao cao va xuat file</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Chọn kỳ theo dõi, xem thống kê tổng hợp và xuất file báo cáo overview.
+          Chon ky theo doi, xem thong ke tong hop va xuat file bao cao overview.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
           <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Thời gian hiển thị doanh thu
+            Thoi gian hien thi doanh thu
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
             {TIME_RANGE_OPTIONS.map((option) => {
@@ -125,19 +136,24 @@ export default function AdminReportsScreen() {
           <View className="mt-4 flex-row gap-2">
             <Pressable
               onPress={() => handleExport("csv")}
-              disabled={exporting || !report}
-              className="flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-3"
+              disabled={exporting || !report || !canExportReports}
+              className="flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-3 disabled:opacity-50"
             >
               <Text className="text-[12px] font-bold text-white">Export CSV</Text>
             </Pressable>
             <Pressable
               onPress={() => handleExport("json")}
-              disabled={exporting || !report}
-              className="flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3"
+              disabled={exporting || !report || !canExportReports}
+              className="flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3 disabled:opacity-50"
             >
               <Text className="text-[12px] font-bold text-[#006397]">Export JSON</Text>
             </Pressable>
           </View>
+          {!canExportReports ? (
+            <Text className="mt-2 text-[12px] text-[#9A6400]">
+              Ban khong co quyen export report.
+            </Text>
+          ) : null}
         </View>
 
         {loading && (
@@ -171,7 +187,7 @@ export default function AdminReportsScreen() {
 
             <View className="rounded-[14px] bg-white p-4">
               <View className="flex-row items-center justify-between">
-                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo kỳ</Text>
+                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo ky</Text>
                 <Feather name="bar-chart-2" size={18} color="#006397" />
               </View>
               <View className="mt-3 gap-3">

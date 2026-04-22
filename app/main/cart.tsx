@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -6,6 +6,7 @@ import { SelloHeader } from "@/components/main/sello-header";
 import { cartService } from "@/services/customer.service";
 import { Cart, CartItem } from "@/types/customer";
 import { useAuth } from "@/contexts/auth-context";
+import { Href, router } from "expo-router";
 
 export default function CartScreen() {
   const { token } = useAuth();
@@ -92,6 +93,11 @@ export default function CartScreen() {
   };
 
   const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
+  const selectedItems = cart?.items.filter((item) => item.selected) ?? [];
+  const selectedSubtotal = selectedItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
@@ -163,6 +169,27 @@ export default function CartScreen() {
                 </Pressable>
               </View>
             ))}
+
+            <View className="mt-2 rounded-[14px] bg-white p-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-[13px] font-semibold text-[#5E6A78]">
+                  Da chon {selectedItems.length} san pham
+                </Text>
+                <Text className="text-[16px] font-extrabold text-[#006397]">
+                  {formatPrice(selectedSubtotal)}
+                </Text>
+              </View>
+
+              <Pressable
+                disabled={!selectedItems.length}
+                onPress={() => router.push("/main/checkout" as Href)}
+                className={`mt-3 h-[48px] items-center justify-center rounded-[12px] ${
+                  selectedItems.length ? "bg-[#006397]" : "bg-[#AFC8D8]"
+                }`}
+              >
+                <Text className="text-[14px] font-extrabold text-white">Tien hanh thanh toan</Text>
+              </Pressable>
+            </View>
           </View>
         )}
       </ScrollView>

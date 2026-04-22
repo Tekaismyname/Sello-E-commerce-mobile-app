@@ -18,6 +18,12 @@ export default function AdminLayout() {
       <Tabs.Screen name="reports" options={{ title: "Reports" }} />
       <Tabs.Screen name="system" options={{ title: "System" }} />
       <Tabs.Screen name="add-product" options={{ href: null }} />
+      <Tabs.Screen name="categories" options={{ href: null }} />
+      <Tabs.Screen name="category-form" options={{ href: null }} />
+      <Tabs.Screen name="vouchers" options={{ href: null }} />
+      <Tabs.Screen name="voucher-form" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
+      <Tabs.Screen name="reviews" options={{ href: null }} />
     </Tabs>
   );
 }
