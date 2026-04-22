@@ -39,13 +39,13 @@ export default function AdminReportsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap tai khoan admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
       setLoading(false);
       return;
     }
 
     if (!canReadReports) {
-      setError("Ban khong co quyen xem bao cao.");
+      setError("Bạn không có quyền xem báo cáo.");
       setLoading(false);
       return;
     }
@@ -80,11 +80,11 @@ export default function AdminReportsScreen() {
       setExporting(true);
       const res = await adminService.exportReport(token, "overview", format);
       Alert.alert(
-        "Xuat bao cao thanh cong",
+        "Xuất báo cáo thành công",
         `${res.data.fileName}\n${res.data.filePath}`,
       );
     } catch (err: any) {
-      Alert.alert("Loi", err.message);
+      Alert.alert("Lỗi", err.message);
     } finally {
       setExporting(false);
     }
@@ -94,21 +94,21 @@ export default function AdminReportsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Bao cao" />
+      <AdminHeader title="Báo cáo" />
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Bao cao va xuat file</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Báo cáo và xuất file</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Chon ky theo doi, xem thong ke tong hop va xuat file bao cao overview.
+          Chọn kỳ theo dõi, xem thống kê tổng hợp và xuất file báo cáo overview.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
           <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Thoi gian hien thi doanh thu
+            Thời gian hiển thị doanh thu
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
             {TIME_RANGE_OPTIONS.map((option) => {
@@ -151,7 +151,7 @@ export default function AdminReportsScreen() {
           </View>
           {!canExportReports ? (
             <Text className="mt-2 text-[12px] text-[#9A6400]">
-              Ban khong co quyen export report.
+              Bạn không có quyền export report.
             </Text>
           ) : null}
         </View>
@@ -187,7 +187,7 @@ export default function AdminReportsScreen() {
 
             <View className="rounded-[14px] bg-white p-4">
               <View className="flex-row items-center justify-between">
-                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo ky</Text>
+                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo kỳ</Text>
                 <Feather name="bar-chart-2" size={18} color="#006397" />
               </View>
               <View className="mt-3 gap-3">
@@ -216,7 +216,7 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Top san pham ban chay</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">Top sản phẩm bán chạy</Text>
               <View className="mt-3 gap-2">
                 {report.topSellingProducts.map((item, index) => (
                   <View
@@ -229,7 +229,7 @@ export default function AdminReportsScreen() {
                       </Text>
                     </View>
                     <Text className="text-[12px] font-bold text-[#006397]">
-                      {item.totalSold} da ban
+                      {item.totalSold} đã bán
                     </Text>
                   </View>
                 ))}
@@ -237,7 +237,7 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Phan bo trang thai don hang</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">Phân bố trạng thái đơn hàng</Text>
               <View className="mt-3 gap-2">
                 {report.orderStatusDistribution.map((item) => (
                   <View

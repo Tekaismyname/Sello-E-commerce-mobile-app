@@ -40,17 +40,17 @@ export default function AdminVouchersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
-      <AdminHeader title="Voucher Management" />
+      <AdminHeader title="Quản lý voucher" />
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
         <AdminVoucherToolbar value={search} onChange={setSearch} onOpenCreate={openCreate} canCreate={canCreate} />
         {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">Ban khong co quyen tao voucher.</Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">Bạn không có quyền tạo voucher.</Text>
         ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
             <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Ban khong co quyen xem danh sach voucher.
+              Bạn không có quyền xem danh sách voucher.
             </Text>
           </View>
         ) : loading ? (
@@ -70,18 +70,18 @@ export default function AdminVouchersScreen() {
                 onEdit={canUpdate ? openEdit : undefined}
                 onToggleStatus={canUpdate ? (voucher) => {
                   updateVoucherStatus(voucher.id, !voucher.isActive).catch((err: any) => {
-                    Alert.alert("Loi", err?.message ?? "Khong the cap nhat voucher.");
+                    Alert.alert("Lỗi", err?.message ?? "Không thể cập nhật voucher.");
                   });
                 } : undefined}
                 onDelete={canDelete ? (voucher) => {
-                  Alert.alert("Xoa voucher", `Xoa voucher ${voucher.code}?`, [
-                    { text: "Huy", style: "cancel" },
+                  Alert.alert("Xóa voucher", `Xóa voucher ${voucher.code}?`, [
+                    { text: "Hủy", style: "cancel" },
                     {
-                      text: "Xoa",
+                      text: "Xóa",
                       style: "destructive",
                       onPress: () => {
                         deleteVoucher(voucher.id).catch((err: any) => {
-                          Alert.alert("Loi", err?.message ?? "Khong the xoa voucher.");
+                          Alert.alert("Lỗi", err?.message ?? "Không thể xóa voucher.");
                         });
                       },
                     },
@@ -92,7 +92,7 @@ export default function AdminVouchersScreen() {
 
             {!filteredVouchers.length && (
               <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Khong tim thay voucher.</Text>
+                <Text className="text-[14px] text-[#6B7280]">Không tìm thấy voucher.</Text>
               </View>
             )}
           </View>
@@ -101,7 +101,7 @@ export default function AdminVouchersScreen() {
 
       {saving ? (
         <View className="absolute bottom-5 right-5 rounded-full bg-[#111827] px-4 py-2">
-          <Text className="text-[12px] font-semibold text-white">Dang cap nhat...</Text>
+          <Text className="text-[12px] font-semibold text-white">Đang cập nhật...</Text>
         </View>
       ) : null}
     </SafeAreaView>

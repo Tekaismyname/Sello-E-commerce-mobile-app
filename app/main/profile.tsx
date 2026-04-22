@@ -41,7 +41,7 @@ export default function ProfileScreen() {
     router.replace("/onboarding/welcome" as Href);
   };
 
-  const displayName = profile?.fullName || "Sello Member";
+  const displayName = profile?.fullName || "Thành viên Sello";
   const displayEmail = profile?.email || "member@sello.app";
   const initials = displayName.charAt(0).toUpperCase();
 
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
             className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
             onPress={() => router.push("/auth/account-completion" as Href)}
           >
-            <Text className="text-[14px] font-semibold text-[#364150]">Thong tin tai khoan</Text>
+            <Text className="text-[14px] font-semibold text-[#364150]">Thông tin tài khoản</Text>
             <Feather name="chevron-right" size={16} color="#7e8997" />
           </Pressable>
 
@@ -79,7 +79,7 @@ export default function ProfileScreen() {
             className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
             onPress={() => router.push("/main/addresses" as Href)}
           >
-            <Text className="text-[14px] font-semibold text-[#364150]">Dia chi giao hang</Text>
+            <Text className="text-[14px] font-semibold text-[#364150]">Địa chỉ giao hàng</Text>
             <Feather name="chevron-right" size={16} color="#7e8997" />
           </Pressable>
 
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
             className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
             onPress={() => router.push("/main/notifications" as Href)}
           >
-            <Text className="text-[14px] font-semibold text-[#364150]">Thong bao</Text>
+            <Text className="text-[14px] font-semibold text-[#364150]">Thông báo</Text>
             <Feather name="chevron-right" size={16} color="#7e8997" />
           </Pressable>
 
@@ -95,7 +95,7 @@ export default function ProfileScreen() {
             className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
             onPress={() => router.push("/main/wishlist" as Href)}
           >
-            <Text className="text-[14px] font-semibold text-[#364150]">Wishlist</Text>
+            <Text className="text-[14px] font-semibold text-[#364150]">Yêu thích</Text>
             <Feather name="chevron-right" size={16} color="#7e8997" />
           </Pressable>
 
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
             className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
             onPress={() => router.push("/main/change-password" as Href)}
           >
-            <Text className="text-[14px] font-semibold text-[#364150]">Doi mat khau</Text>
+            <Text className="text-[14px] font-semibold text-[#364150]">Đổi mật khẩu</Text>
             <Feather name="chevron-right" size={16} color="#7e8997" />
           </Pressable>
         </View>
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
           className="mt-6 h-[46px] items-center justify-center rounded-[12px] border border-[#d7deea] bg-white"
           onPress={handleLogout}
         >
-          <Text className="text-[14px] font-bold text-[#BA1A1A]">Dang xuat</Text>
+          <Text className="text-[14px] font-bold text-[#BA1A1A]">Đăng xuất</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

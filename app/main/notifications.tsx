@@ -17,7 +17,7 @@ export default function NotificationsScreen() {
           <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
             <Feather name="arrow-left" size={20} color="#0369A1" />
           </Pressable>
-          <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">Thong bao</Text>
+          <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">Thông báo</Text>
         </View>
 
         <Pressable
@@ -27,11 +27,11 @@ export default function NotificationsScreen() {
             try {
               await markAllRead();
             } catch (err: any) {
-              Alert.alert("Loi", err?.message ?? "Khong the danh dau da doc.");
+              Alert.alert("Lỗi", err?.message ?? "Không thể đánh dấu đã đọc.");
             }
           }}
         >
-          <Text className="text-[12px] font-bold text-[#0369A1]">Danh dau tat ca</Text>
+          <Text className="text-[12px] font-bold text-[#0369A1]">Đánh dấu tất cả</Text>
         </Pressable>
       </View>
 
@@ -65,15 +65,15 @@ export default function NotificationsScreen() {
                         try {
                           await markRead(item.id);
                         } catch (err: any) {
-                          Alert.alert("Loi", err?.message ?? "Khong the cap nhat thong bao.");
+                          Alert.alert("Lỗi", err?.message ?? "Không thể cập nhật thông báo.");
                         }
                       }}
                     >
-                      <Text className="text-[11px] font-bold text-[#0369A1]">Da doc</Text>
+                      <Text className="text-[11px] font-bold text-[#0369A1]">Đã đọc</Text>
                     </Pressable>
                   ) : (
                     <View className="rounded-full bg-[#EAF7EF] px-3 py-2">
-                      <Text className="text-[11px] font-bold text-[#1D7A38]">Read</Text>
+                      <Text className="text-[11px] font-bold text-[#1D7A38]">Đã đọc</Text>
                     </View>
                   )}
                 </View>
@@ -82,7 +82,7 @@ export default function NotificationsScreen() {
 
             {!notifications.length && (
               <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Chua co thong bao nao.</Text>
+                <Text className="text-[14px] text-[#6B7280]">Chưa có thông báo nào.</Text>
               </View>
             )}
           </View>

@@ -27,17 +27,17 @@ export default function WriteReviewScreen() {
 
   const submitReview = async () => {
     if (!productId) {
-      Alert.alert("Loi", "San pham khong hop le. Vui long quay lai trang chi tiet.");
+      Alert.alert("Lỗi", "Sản phẩm không hợp lệ. Vui lòng quay lại trang chi tiết.");
       return;
     }
 
     if (rating === 0) {
-      Alert.alert("Thong bao", "Vui long chon so sao danh gia.");
+      Alert.alert("Thông báo", "Vui lòng chọn số sao đánh giá.");
       return;
     }
 
     if (!token) {
-      Alert.alert("Loi", "Vui long dang nhap de viet danh gia.");
+      Alert.alert("Lỗi", "Vui lòng đăng nhập để viết đánh giá.");
       return;
     }
 
@@ -50,11 +50,11 @@ export default function WriteReviewScreen() {
         comment: reviewText || undefined,
       });
 
-      Alert.alert("Thanh cong", "Danh gia da duoc gui!", [
+      Alert.alert("Thành công", "Đánh giá đã được gửi!", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert("Loi", err.message || "Khong the gui danh gia.");
+      Alert.alert("Lỗi", err.message || "Không thể gửi đánh giá.");
     } finally {
       setSubmitting(false);
     }
@@ -75,8 +75,8 @@ export default function WriteReviewScreen() {
               className="h-16 w-16 rounded-[8px]"
             />
             <View className="flex-1">
-              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]">San pham</Text>
-              <Text className="mt-1 text-[12px] text-[#6b7682]">Hay de lai danh gia cua ban</Text>
+              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]">Sản phẩm</Text>
+              <Text className="mt-1 text-[12px] text-[#6b7682]">Hãy để lại đánh giá của bạn</Text>
             </View>
           </View>
 

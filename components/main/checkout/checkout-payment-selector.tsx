@@ -50,7 +50,7 @@ export function CheckoutPaymentSelector({
       {!paymentMethods.length && (
         <View className="rounded-[12px] bg-[#F8F9FB] p-3">
           <Text className="text-[13px] font-semibold text-[#5E6A78]">
-            Khong co phuong thuc thanh toan kha dung.
+            Không có phương thức thanh toán khả dụng.
           </Text>
         </View>
       )}

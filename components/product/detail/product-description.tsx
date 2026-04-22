@@ -6,18 +6,18 @@ type ProductDescriptionProps = {
 
 export function ProductDescription({ description }: ProductDescriptionProps) {
   const fallbackDescription =
-    "Air Jordan 1 High OG mang den thiet ke kinh dien voi chat lieu cao cap va cam giac mang em ai. Phien ban nay phu hop cho ca di chuyen hang ngay lan phong cach streetwear.";
+    "Air Jordan 1 High OG mang đến thiết kế kinh điển với chất liệu cao cấp và cảm giác mang êm ái. Phiên bản này phù hợp cho cả di chuyển hằng ngày lẫn phong cách streetwear.";
 
   return (
     <View className="bg-white px-4 py-5">
-      <Text className="mb-3 text-[20px] font-extrabold text-[#191C1F]">Mo Ta Chi Tiet</Text>
+      <Text className="mb-3 text-[20px] font-extrabold text-[#191C1F]">Mô Tả Chi Tiết</Text>
       <Text className="text-[14px] leading-[24px] text-[#3F4850]">
         {description?.trim() ? description : fallbackDescription}
       </Text>
 
       <View className="mt-6 rounded-[12px] bg-[#F2F3F7] p-5">
         <Text className="text-[14px] italic leading-[24px] text-[#191C1F]">
-          Doi giay nay da thay doi hoan toan phong cach cua toi. Do hoan thien cao va cam giac mang rat em ai.
+          Đôi giày này đã thay đổi hoàn toàn phong cách của tôi. Độ hoàn thiện cao và cảm giác mang rất êm ái.
         </Text>
         <View className="mt-4 flex-row items-center gap-3">
           <View className="h-10 w-10 items-center justify-center rounded-full bg-[#CCE5FF]">

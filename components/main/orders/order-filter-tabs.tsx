@@ -7,9 +7,9 @@ type OrderFilterTabsProps = {
 };
 
 const OPTIONS: { value: CustomerOrderFilter; label: string }[] = [
-  { value: "all", label: "Tat ca" },
-  { value: "pending", label: "Cho xac nhan" },
-  { value: "shipping", label: "Dang giao" },
+  { value: "all", label: "Tất cả" },
+  { value: "pending", label: "Chờ xác nhận" },
+  { value: "shipping", label: "Đang giao" },
 ];
 
 export function OrderFilterTabs({ value, onChange }: OrderFilterTabsProps) {

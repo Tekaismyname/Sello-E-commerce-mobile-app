@@ -17,7 +17,7 @@ export function CheckoutAddressSelector({
     return (
       <View className="rounded-[12px] bg-[#F8F9FB] p-3">
         <Text className="text-[13px] font-semibold text-[#5E6A78]">
-          Ban chua co dia chi giao hang. Vui long them dia chi trong trang tai khoan.
+          Bạn chưa có địa chỉ giao hàng. Vui lòng thêm địa chỉ trong trang tài khoản.
         </Text>
       </View>
     );
@@ -39,7 +39,7 @@ export function CheckoutAddressSelector({
             <View className="flex-row items-start justify-between">
               <View className="flex-1 pr-3">
                 <Text className="text-[14px] font-bold text-[#1F2934]">
-                  {address.recipientName} {address.isDefault ? "(Mac dinh)" : ""}
+                  {address.recipientName} {address.isDefault ? "(Mặc định)" : ""}
                 </Text>
                 <Text className="mt-1 text-[12px] text-[#5E6A78]">{address.phone}</Text>
                 <Text className="mt-1 text-[12px] text-[#5E6A78]" numberOfLines={2}>

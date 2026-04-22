@@ -53,9 +53,9 @@ export default function CheckoutScreen() {
       if (!result) return;
 
       const orderId = Number((result.data as any)?.orderId ?? 0);
-      Alert.alert("Dat hang thanh cong", result.message, [
+      Alert.alert("Đặt hàng thành công", result.message, [
         {
-          text: "Xem chi tiet",
+          text: "Xem chi tiết",
           onPress: () => {
             if (orderId > 0) {
               router.replace((`/main/order-detail?orderId=${orderId}` as unknown) as Href);
@@ -66,7 +66,7 @@ export default function CheckoutScreen() {
         },
       ]);
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the dat hang.");
+      Alert.alert("Lỗi", err.message ?? "Không thể đặt hàng.");
     }
   };
 
@@ -76,7 +76,7 @@ export default function CheckoutScreen() {
         <Pressable className="absolute left-4 h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Thanh toan</Text>
+        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Thanh toán</Text>
       </View>
 
       {loading ? (
@@ -125,7 +125,7 @@ export default function CheckoutScreen() {
                 <View className="flex-row gap-2">
                   <TextInput
                     className="h-11 flex-1 rounded-[10px] bg-[#F5F7FB] px-3 text-[13px] text-[#1F2934]"
-                    placeholder="Nhap ma voucher"
+                    placeholder="Nhập mã voucher"
                     placeholderTextColor="#94A0AE"
                     value={voucherCode}
                     onChangeText={setVoucherCode}
@@ -134,14 +134,14 @@ export default function CheckoutScreen() {
                     onPress={applyVoucher}
                     className="h-11 items-center justify-center rounded-[10px] bg-[#0369A1] px-4"
                   >
-                    <Text className="text-[12px] font-bold text-white">Ap dung</Text>
+                    <Text className="text-[12px] font-bold text-white">Áp dụng</Text>
                   </Pressable>
                 </View>
               </View>
             )}
 
             <View className="mt-3 rounded-[16px] bg-white p-4">
-              <Text className="text-[17px] font-extrabold text-[#1F2934]">Phuong thuc thanh toan</Text>
+              <Text className="text-[17px] font-extrabold text-[#1F2934]">Phương thức thanh toán</Text>
               <View className="mt-3">
                 <CheckoutPaymentSelector
                   paymentMethods={preview?.paymentMethods ?? []}

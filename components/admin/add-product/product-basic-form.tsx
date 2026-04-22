@@ -69,7 +69,7 @@ export function ProductBasicForm({
               >
                 {selectedCategory
                   ? `${selectedCategory.name} (#${selectedCategory.id})`
-                  : "Chọn category theo tên..."}
+                  : "Chọn danh mục theo tên..."}
               </Text>
             </View>
             <Feather name="chevron-down" size={20} color="#6B7682" />
@@ -77,7 +77,7 @@ export function ProductBasicForm({
           <Text className="mt-2 text-[12px] leading-[18px] text-[#97A0AB]">
             {selectedCategory
               ? `Đang chọn ID ${selectedCategory.id}`
-              : "Tìm theo tên hoặc ID để chọn nhanh category."}
+              : "Tìm theo tên hoặc ID để chọn nhanh danh mục."}
           </Text>
         </View>
       </View>
@@ -92,9 +92,9 @@ export function ProductBasicForm({
           <View className="max-h-[82%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
               <View className="flex-1 pr-4">
-                <Text className="text-[18px] font-extrabold text-[#191C1F]">Chọn category</Text>
+                <Text className="text-[18px] font-extrabold text-[#191C1F]">Chọn danh mục</Text>
                 <Text className="mt-1 text-[13px] text-[#5b6470]">
-                  Tìm theo tên hoặc ID, chỉ hiển thị category đang active.
+                  Tìm theo tên hoặc ID, chỉ hiển thị danh mục đang hoạt động.
                 </Text>
               </View>
               <Pressable
@@ -109,7 +109,7 @@ export function ProductBasicForm({
               <Feather name="search" size={16} color="#6B7682" />
               <TextInput
                 className="flex-1 text-[14px] text-[#191C1F]"
-                placeholder="Nhập tên category..."
+                placeholder="Nhập tên danh mục..."
                 placeholderTextColor="#97A0AB"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -153,7 +153,7 @@ export function ProductBasicForm({
                 {filteredCategories.length === 0 && (
                   <View className="items-center rounded-[14px] bg-[#F8F9FB] p-6">
                     <Text className="text-[14px] text-[#5b6470]">
-                      Không tìm thấy category phù hợp.
+                      Không tìm thấy danh mục phù hợp.
                     </Text>
                   </View>
                 )}

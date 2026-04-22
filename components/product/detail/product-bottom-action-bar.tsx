@@ -48,7 +48,7 @@ export function ProductBottomActionBar({
 
   const addToCart = async (goCheckout = false) => {
     if (!token) {
-      Alert.alert("Loi", "Vui long dang nhap de tiep tuc.");
+      Alert.alert("Lỗi", "Vui lòng đăng nhập để tiếp tục.");
       return;
     }
 
@@ -62,16 +62,16 @@ export function ProductBottomActionBar({
       if (goCheckout) {
         router.push("/main/checkout" as Href);
       } else {
-        Alert.alert("Thanh cong", "Da them san pham vao gio hang.");
+        Alert.alert("Thành công", "Đã thêm sản phẩm vào giỏ hàng.");
       }
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the them vao gio hang.");
+      Alert.alert("Lỗi", err.message ?? "Không thể thêm vào giỏ hàng.");
     }
   };
 
   const toggleWishlist = async () => {
     if (!token) {
-      Alert.alert("Loi", "Vui long dang nhap de tiep tuc.");
+      Alert.alert("Lỗi", "Vui lòng đăng nhập để tiếp tục.");
       return;
     }
 
@@ -86,9 +86,12 @@ export function ProductBottomActionBar({
 
       const latest = await wishlistService.getWishlist(token);
       setWishlistItems((latest.data ?? []).map((item) => ({ id: item.id, productId: item.productId })));
-      Alert.alert("Thanh cong", existingWishlistItem ? "Da xoa khoi wishlist." : "Da them vao wishlist.");
+      Alert.alert(
+        "Thành công",
+        existingWishlistItem ? "Đã xóa khỏi danh sách yêu thích." : "Đã thêm vào danh sách yêu thích.",
+      );
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the cap nhat wishlist.");
+      Alert.alert("Lỗi", err.message ?? "Không thể cập nhật danh sách yêu thích.");
     } finally {
       setWishlistLoading(false);
     }
@@ -105,7 +108,7 @@ export function ProductBottomActionBar({
       </Pressable>
 
       <UIButton
-        title="Them vao gio"
+        title="Thêm vào giỏ"
         variant="light"
         className="flex-1 h-[52px] rounded-[20px] border border-[#1872cc] bg-white"
         textClassName="text-[#1872cc] font-bold text-[15px]"
@@ -113,7 +116,7 @@ export function ProductBottomActionBar({
       />
 
       <UIButton
-        title="Mua hang"
+        title="Mua hàng"
         className="flex-1 rounded-[12px] bg-[#1872cc] h-[52px] items-center justify-center"
         textClassName="text-white-600 font-bold text-[15px]"
         onPress={() => addToCart(true)}

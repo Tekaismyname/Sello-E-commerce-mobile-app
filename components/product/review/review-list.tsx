@@ -17,10 +17,10 @@ export function ReviewList({ reviews }: ReviewListProps) {
                 <Text className="text-[120px] font-extrabold text-white">99</Text>
               </View>
               <Text className="text-[20px] font-extrabold leading-[30px] text-white">
-                Su hai long cua ban la nguon cam hung lon nhat cua chung toi.
+                Sự hài lòng của bạn là nguồn cảm hứng lớn nhất của chúng tôi.
               </Text>
               <Text className="mt-3 text-[14px] leading-[22px] text-white/90">
-                Chung toi luon lang nghe tung gop y de cai thien chat luong dich vu moi ngay.
+                Chúng tôi luôn lắng nghe từng góp ý để cải thiện chất lượng dịch vụ mỗi ngày.
               </Text>
             </View>
           )}
@@ -28,7 +28,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
       ))}
 
       <Pressable className="mb-8 mt-2 h-12 w-full flex-row items-center justify-center rounded-[12px] bg-[#E7E8EC]">
-        <Text className="text-[15px] font-bold text-[#006397]">Xem them danh gia</Text>
+        <Text className="text-[15px] font-bold text-[#006397]">Xem thêm đánh giá</Text>
       </Pressable>
     </View>
   );

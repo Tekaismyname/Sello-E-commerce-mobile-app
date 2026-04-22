@@ -1,7 +1,7 @@
 import { CartItem } from "@/types/customer";
 import { Image, Text, View } from "react-native";
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 
 type CheckoutOrderSummaryProps = {
   items: CartItem[];
@@ -10,7 +10,7 @@ type CheckoutOrderSummaryProps = {
 export function CheckoutOrderSummary({ items }: CheckoutOrderSummaryProps) {
   return (
     <View className="rounded-[16px] bg-white p-4">
-      <Text className="text-[17px] font-extrabold text-[#1F2934]">Tom tat don hang</Text>
+      <Text className="text-[17px] font-extrabold text-[#1F2934]">Tóm tắt đơn hàng</Text>
 
       <View className="mt-3 gap-3">
         {items.map((item) => (
@@ -28,7 +28,7 @@ export function CheckoutOrderSummary({ items }: CheckoutOrderSummaryProps) {
                 {item.productName}
               </Text>
               <Text className="mt-1 text-[14px] text-[#64748B]">
-                {item.variantId ? `Phan loai: #${item.variantId}` : "Phan loai: Mac dinh"}
+                {item.variantId ? `Phân loại: #${item.variantId}` : "Phân loại: Mặc định"}
               </Text>
               <View className="mt-1 flex-row items-center">
                 <Text className="text-[15px] font-extrabold text-[#0369A1]">{formatPrice(item.price)}</Text>
@@ -39,7 +39,7 @@ export function CheckoutOrderSummary({ items }: CheckoutOrderSummaryProps) {
         ))}
 
         {!items.length && (
-          <Text className="text-[14px] text-[#64748B]">Khong co san pham duoc chon de thanh toan.</Text>
+          <Text className="text-[14px] text-[#64748B]">Không có sản phẩm được chọn để thanh toán.</Text>
         )}
       </View>
     </View>

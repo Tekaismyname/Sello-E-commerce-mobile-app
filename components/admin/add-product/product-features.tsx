@@ -56,7 +56,7 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
       </View>
 
       <Text className="mt-4 text-[12px] leading-[18px] text-[#97A0AB]">
-        Các đặc điểm này sẽ được lưu vào short description để phục vụ hiển thị nhanh.
+        Các đặc điểm này sẽ được lưu vào mô tả ngắn để phục vụ hiển thị nhanh.
       </Text>
     </View>
   );

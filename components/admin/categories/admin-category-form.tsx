@@ -38,26 +38,26 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
   return (
     <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
       <View className="rounded-[16px] bg-white p-4">
-        <Text className="text-[14px] font-bold text-[#111827]">Ten danh muc</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={name} onChangeText={setName} placeholder="VD: Thoi trang" />
+        <Text className="text-[14px] font-bold text-[#111827]">Tên danh mục</Text>
+        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={name} onChangeText={setName} placeholder="VD: Thời trang" />
 
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Slug</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={slug} onChangeText={setSlug} placeholder="thoi-trang" />
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Danh muc cha (ID)</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={parentId} onChangeText={(v) => setParentId(v.replace(/[^0-9]/g, ""))} keyboardType="numeric" placeholder="Bo trong neu la cap goc" />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Danh mục cha (ID)</Text>
+        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={parentId} onChangeText={(v) => setParentId(v.replace(/[^0-9]/g, ""))} keyboardType="numeric" placeholder="Bỏ trống nếu là cấp gốc" />
         {!!parentOptions.length && (
-          <Text className="mt-1 text-[12px] text-[#6B7280]">Goi y: {parentOptions.slice(0, 5).map((item) => `${item.id}-${item.name}`).join(" | ")}</Text>
+          <Text className="mt-1 text-[12px] text-[#6B7280]">Gợi ý: {parentOptions.slice(0, 5).map((item) => `${item.id}-${item.name}`).join(" | ")}</Text>
         )}
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Anh bia URL</Text>
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Ảnh bìa URL</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={imageUrl} onChangeText={setImageUrl} placeholder="https://..." />
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Mo ta</Text>
-        <TextInput className="mt-2 min-h-[96px] rounded-[12px] bg-[#F3F5FA] px-3 py-3 text-[14px]" multiline value={description} onChangeText={setDescription} placeholder="Mo ta phong cach danh muc..." />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Mô tả</Text>
+        <TextInput className="mt-2 min-h-[96px] rounded-[12px] bg-[#F3F5FA] px-3 py-3 text-[14px]" multiline value={description} onChangeText={setDescription} placeholder="Mô tả phong cách danh mục..." />
 
         <View className="mt-4 flex-row items-center justify-between rounded-[12px] bg-[#F8FAFC] px-3 py-3">
-          <Text className="text-[14px] font-semibold text-[#111827]">Trang thai hoat dong</Text>
+          <Text className="text-[14px] font-semibold text-[#111827]">Trạng thái hoạt động</Text>
           <Switch value={active} onValueChange={setActive} />
         </View>
       </View>
@@ -76,7 +76,7 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
           });
         }}
       >
-        <Text className="text-[15px] font-bold text-white">Luu danh muc</Text>
+        <Text className="text-[15px] font-bold text-white">Lưu danh mục</Text>
       </Pressable>
     </ScrollView>
   );

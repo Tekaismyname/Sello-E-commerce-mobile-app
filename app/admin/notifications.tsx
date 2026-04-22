@@ -22,7 +22,7 @@ export default function AdminNotificationsScreen() {
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
             <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Ban khong co quyen xem thong bao admin.
+              Bạn không có quyền xem thông báo của admin.
             </Text>
           </View>
         ) : loading ? (
@@ -42,16 +42,16 @@ export default function AdminNotificationsScreen() {
                 onSubmit={async (payload) => {
                   try {
                     await createNotification(payload);
-                    Alert.alert("Thanh cong", "Da gui thong bao.");
+                    Alert.alert("Thành công", "Đã gửi thông báo.");
                   } catch (err: any) {
-                    Alert.alert("Loi", err?.message ?? "Khong the gui thong bao.");
+                    Alert.alert("Lỗi", err?.message ?? "Không thể gửi thông báo.");
                   }
                 }}
               />
             ) : (
               <View className="mb-3 rounded-[12px] bg-white p-3">
                 <Text className="text-[13px] text-[#9A6400]">
-                  Ban khong co quyen tao thong bao moi.
+                  Bạn không có quyền tạo thông báo mới.
                 </Text>
               </View>
             )}

@@ -26,14 +26,14 @@ export default function OrdersScreen() {
   };
 
   const handleCancel = (order: Order) => {
-    Alert.alert("Huy don hang", `Ban co chac muon huy don #${order.id}?`, [
-      { text: "Khong", style: "cancel" },
+    Alert.alert("Hủy đơn hàng", `Bạn có chắc muốn hủy đơn #${order.id}?`, [
+      { text: "Không", style: "cancel" },
       {
-        text: "Huy don",
+        text: "Hủy đơn",
         style: "destructive",
         onPress: async () => {
           if (!token) {
-            Alert.alert("Loi", "Phien dang nhap da het han.");
+            Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
             return;
           }
 
@@ -41,7 +41,7 @@ export default function OrdersScreen() {
             await orderService.cancelOrder(token, order.id);
             await fetchOrders();
           } catch (err: any) {
-            Alert.alert("Loi", err.message ?? "Khong the huy don.");
+            Alert.alert("Lỗi", err.message ?? "Không thể hủy đơn.");
           }
         },
       },
@@ -52,9 +52,9 @@ export default function OrdersScreen() {
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top"]}>
       <SelloHeader />
       <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-6">
-        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">Don hang cua ban</Text>
+        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">Đơn hàng của bạn</Text>
         <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
-          Theo doi va quan ly lich su mua sam mot cach de dang.
+          Theo dõi và quản lý lịch sử mua sắm một cách dễ dàng.
         </Text>
 
         <OrderFilterTabs value={filter} onChange={setFilter} />
@@ -86,7 +86,7 @@ export default function OrdersScreen() {
             {!filteredOrders.length && (
               <View className="rounded-[16px] bg-white p-6 items-center">
                 <Feather name="package" size={42} color="#B6C1CD" />
-                <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chua co don hang phu hop</Text>
+                <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chưa có đơn hàng phù hợp</Text>
               </View>
             )}
           </View>

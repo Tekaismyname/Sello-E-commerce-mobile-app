@@ -19,14 +19,23 @@ export function AdminOrderTable({
   onPageChange,
   onSelectOrder,
 }: AdminOrderTableProps) {
+  const orderStatusLabel: Record<string, string> = {
+    pending: "Chờ xử lý",
+    confirmed: "Đã xác nhận",
+    packed: "Đã đóng gói",
+    shipping: "Đang giao",
+    delivered: "Đã giao",
+    cancelled: "Đã hủy",
+    returned: "Đã trả",
+  };
   const from = orders.length ? (page - 1) * pageSize + 1 : 0;
   const to = (page - 1) * pageSize + orders.length;
 
   return (
     <View className="rounded-[16px] bg-white p-4">
       <View className="flex-row border-b border-[#E5EBF2] pb-3">
-        <Text className="flex-1 text-[12px] font-bold text-[#4B5563]">MA DON HANG</Text>
-        <Text className="flex-[1.5] text-[12px] font-bold text-[#4B5563]">KHACH HANG</Text>
+        <Text className="flex-1 text-[12px] font-bold text-[#4B5563]">MÃ ĐƠN HÀNG</Text>
+        <Text className="flex-[1.5] text-[12px] font-bold text-[#4B5563]">KHÁCH HÀNG</Text>
       </View>
 
       <View>
@@ -39,14 +48,14 @@ export function AdminOrderTable({
             <View className="flex-1">
               <Text className="text-[16px] font-extrabold text-[#0369A1]">#{order.orderCode}</Text>
               <Text className="mt-1 text-[12px] text-[#64748B]">
-                {new Intl.NumberFormat("vi-VN").format(order.totalAmount)} d
+                {new Intl.NumberFormat("vi-VN").format(order.totalAmount)} đ
               </Text>
             </View>
             <View className="flex-[1.5]">
               <Text className="text-[15px] font-bold text-[#1F2934]">{order.user.fullName}</Text>
               <Text className="mt-0.5 text-[13px] text-[#64748B]">{order.user.email}</Text>
               <Text className="mt-1 text-[12px] font-semibold text-[#334155]">
-                {order.orderStatus}
+                {orderStatusLabel[String(order.orderStatus).toLowerCase()] ?? order.orderStatus}
               </Text>
             </View>
             {onSelectOrder ? (
@@ -58,13 +67,13 @@ export function AdminOrderTable({
 
       {!orders.length && (
         <View className="py-8 items-center">
-          <Text className="text-[14px] text-[#64748B]">Khong co don hang phu hop.</Text>
+          <Text className="text-[14px] text-[#64748B]">Không có đơn hàng phù hợp.</Text>
         </View>
       )}
 
       <View className="mt-4 flex-row items-center justify-between">
         <Text className="text-[13px] leading-[19px] text-[#4B5563]">
-          Hien thi {from}-{to} trong so {Math.max(pageCount * pageSize, to)} don hang
+          Hiển thị {from}-{to} trong số {Math.max(pageCount * pageSize, to)} đơn hàng
         </Text>
 
         <View className="flex-row items-center">

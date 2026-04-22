@@ -18,7 +18,7 @@ export function AddressCard({ address, onEdit, onSetDefault, onDelete }: Props) 
             <Text className="text-[18px] font-extrabold text-[#111827]">{address.recipientName}</Text>
             {address.isDefault ? (
               <View className="rounded-full bg-[#DBEBFA] px-2 py-1">
-                <Text className="text-[10px] font-bold text-[#0369A1]">MAC DINH</Text>
+                <Text className="text-[10px] font-bold text-[#0369A1]">MẶC ĐỊNH</Text>
               </View>
             ) : null}
           </View>
@@ -35,7 +35,7 @@ export function AddressCard({ address, onEdit, onSetDefault, onDelete }: Props) 
       <View className="mt-3 flex-row gap-2">
         {!address.isDefault ? (
           <Pressable className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#E8F1FB]" onPress={() => onSetDefault(address)}>
-            <Text className="text-[13px] font-bold text-[#0369A1]">Dat mac dinh</Text>
+            <Text className="text-[13px] font-bold text-[#0369A1]">Đặt mặc định</Text>
           </Pressable>
         ) : (
           <View className="flex-1" />

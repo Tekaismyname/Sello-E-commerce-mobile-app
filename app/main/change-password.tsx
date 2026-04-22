@@ -15,22 +15,22 @@ export default function ChangePasswordScreen() {
 
   const submit = async () => {
     if (!token) {
-      Alert.alert("Loi", "Vui long dang nhap lai.");
+      Alert.alert("Lỗi", "Vui long dang nhap lai.");
       return;
     }
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      Alert.alert("Thieu du lieu", "Vui long nhap day du thong tin.");
+      Alert.alert("Thiếu dữ liệu", "Vui long nhap day du thong tin.");
       return;
     }
 
     if (newPassword.length < 8) {
-      Alert.alert("Mat khau yeu", "Mat khau moi phai co it nhat 8 ky tu.");
+      Alert.alert("Mật khẩu yếu", "Mật khẩu mới phải có ít nhất 8 ký tự.");
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      Alert.alert("Khong khop", "Xac nhan mat khau moi chua khop.");
+      Alert.alert("Không khớp", "ác nhận mật khẩu mới chưa khớp.");
       return;
     }
 
@@ -41,10 +41,10 @@ export default function ChangePasswordScreen() {
         newPassword,
         confirmNewPassword,
       });
-      Alert.alert("Thanh cong", "Da cap nhat mat khau.");
+      Alert.alert("Thành công", "Đã cập nhật mật khẩu.");
       router.back();
     } catch (err: any) {
-      Alert.alert("Loi", err?.message ?? "Khong the doi mat khau.");
+      Alert.alert("Lỗi", err?.message ?? "Không thể đổi mật khẩu.");
     } finally {
       setSaving(false);
     }

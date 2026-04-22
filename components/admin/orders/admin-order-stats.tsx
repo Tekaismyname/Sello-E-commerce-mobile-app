@@ -8,17 +8,17 @@ type AdminOrderStatsProps = {
   monthlyRevenue: number;
 };
 
-const formatMoney = (value: number) => `${(value / 1_000_000).toFixed(1)}M`;
+const formatMoney = (value: number) => `${(value / 1_000_000).toFixed(1)} triệu`;
 
 export function AdminOrderStats({ total, pending, shipping, monthlyRevenue }: AdminOrderStatsProps) {
   const cards = [
-    { key: "total", label: "Tong don hang", value: String(total), icon: "clipboard", color: "#2563EB" },
-    { key: "pending", label: "Cho xu ly", value: String(pending), icon: "briefcase", color: "#D97706" },
-    { key: "shipping", label: "Dang giao", value: String(shipping), icon: "truck", color: "#7E22CE" },
+    { key: "total", label: "Tổng đơn hàng", value: String(total), icon: "clipboard", color: "#2563EB" },
+    { key: "pending", label: "Chờ xử lý", value: String(pending), icon: "briefcase", color: "#D97706" },
+    { key: "shipping", label: "Đang giao", value: String(shipping), icon: "truck", color: "#7E22CE" },
     {
       key: "revenue",
-      label: "Doanh thu thang",
-      value: `${formatMoney(monthlyRevenue)}d`,
+      label: "Doanh thu tháng",
+      value: `${formatMoney(monthlyRevenue)} đ`,
       icon: "dollar-sign",
       color: "#047857",
     },

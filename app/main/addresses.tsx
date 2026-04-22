@@ -25,12 +25,12 @@ export default function AddressesScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[20px] font-extrabold text-[#0F4C6B]">Danh sach dia chi</Text>
+        <Text className="ml-2 text-[20px] font-extrabold text-[#0F4C6B]">Danh sách địa chỉ</Text>
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
-        <Text className="text-[32px] font-extrabold leading-[38px] text-[#111827]">Dia chi nhan hang</Text>
-        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">Quan ly cac dia diem giao hang thuong xuyen cua ban.</Text>
+        <Text className="text-[32px] font-extrabold leading-[38px] text-[#111827]">Địa chỉ nhận hàng</Text>
+        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">Quản lý các địa điểm giao hàng thường xuyên của bạn.</Text>
 
         {loading ? (
           <View className="mt-8 items-center">
@@ -49,18 +49,18 @@ export default function AddressesScreen() {
                 onEdit={openEdit}
                 onSetDefault={(address) => {
                   setDefaultAddress(address.id).catch((err: any) => {
-                    Alert.alert("Loi", err?.message ?? "Khong the dat mac dinh.");
+                    Alert.alert("Lỗi", err?.message ?? "Không thể đặt mặc định.");
                   });
                 }}
                 onDelete={(address) => {
-                  Alert.alert("Xoa dia chi", "Ban chac chan muon xoa dia chi nay?", [
-                    { text: "Huy", style: "cancel" },
+                  Alert.alert("Xóa địa chỉ", "Bạn chắc chắn muốn xóa địa chỉ này?", [
+                    { text: "Hủy", style: "cancel" },
                     {
-                      text: "Xoa",
+                      text: "Xóa",
                       style: "destructive",
                       onPress: () => {
                         deleteAddress(address.id).catch((err: any) => {
-                          Alert.alert("Loi", err?.message ?? "Khong the xoa dia chi.");
+                          Alert.alert("Lỗi", err?.message ?? "Không thể xóa địa chỉ.");
                         });
                       },
                     },
@@ -80,13 +80,13 @@ export default function AddressesScreen() {
 
       <View className="border-t border-[#E5E7EB] bg-white p-4">
         <Pressable className="h-12 items-center justify-center rounded-[12px] bg-[#2F95D2]" onPress={openCreate}>
-          <Text className="text-[16px] font-bold text-white">Them dia chi moi</Text>
+          <Text className="text-[16px] font-bold text-white">Thêm địa chỉ mới</Text>
         </Pressable>
       </View>
 
       {saving ? (
         <View className="absolute bottom-20 right-5 rounded-full bg-[#111827] px-4 py-2">
-          <Text className="text-[12px] font-semibold text-white">Dang cap nhat...</Text>
+          <Text className="text-[12px] font-semibold text-white">Đang cập nhật...</Text>
         </View>
       ) : null}
     </SafeAreaView>

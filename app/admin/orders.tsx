@@ -72,14 +72,14 @@ export default function AdminOrdersScreen() {
 
     try {
       const response = await adminService.exportReport(token, "overview", "csv");
-      Alert.alert("Xuat bao cao thanh cong", response.data.fileName);
+      Alert.alert("Xuất báo cáo thành công", response.data.fileName);
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the xuat bao cao");
+      Alert.alert("Lỗi", err.message ?? "Không thể xuất báo cáo");
     }
   };
 
   const handleCreateOrder = () => {
-    Alert.alert("Thong bao", "Backend hien tai chua ho tro tao don moi tu admin.");
+    Alert.alert("Thông báo", "Backend hiện tại chưa hỗ trợ tạo đơn mới từ admin.");
   };
 
   const openOrderDetail = async (order: AdminOrder) => {
@@ -90,7 +90,7 @@ export default function AdminOrdersScreen() {
       const response = await adminService.getOrderDetail(token, order.id);
       setSelectedOrder(response.data);
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the tai chi tiet don hang.");
+      Alert.alert("Lỗi", err.message ?? "Không thể tải chi tiết đơn hàng.");
     } finally {
       setLoadingDetail(false);
     }
@@ -109,9 +109,9 @@ export default function AdminOrdersScreen() {
       );
       setSelectedOrder(response.data);
       await fetchOrders();
-      Alert.alert("Thanh cong", "Da cap nhat trang thai don hang.");
+      Alert.alert("Thành công", "Đã cập nhật trạng thái đơn hàng.");
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the cap nhat trang thai.");
+      Alert.alert("ỗi", err.message ?? "Không thể cập nhật trạng thái.");
     } finally {
       setSavingStatus(false);
     }
@@ -127,10 +127,10 @@ export default function AdminOrdersScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">
-          Quan ly Don hang
+          Quản lý Đơn hàng
         </Text>
         <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
-          Theo doi va cap nhat trang thai van chuyen cua khach hang.
+          Theo dõi và cập nhật trạng thái vận chuyển của khách hàng.
         </Text>
 
         <AdminOrderActions
@@ -141,7 +141,7 @@ export default function AdminOrdersScreen() {
         />
         {!canExportReport ? (
           <Text className="mt-2 text-[12px] text-[#9A6400]">
-            Ban khong co quyen export report.
+            Bạn không có quyền xuất báo cáo.
           </Text>
         ) : null}
 
@@ -195,7 +195,7 @@ export default function AdminOrdersScreen() {
           <View className="max-h-[88%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-[18px] font-extrabold text-[#191C1F]">
-                Chi tiet don hang
+                Chi tiết đơn hàng
               </Text>
               <Pressable
                 className="h-10 w-10 items-center justify-center"
@@ -219,16 +219,16 @@ export default function AdminOrdersScreen() {
                     {selectedOrder.user.fullName} - {selectedOrder.user.email}
                   </Text>
                   <Text className="mt-1 text-[13px] text-[#4B5563]">
-                    Tong tien: {new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)} d
+                    Tổng tiền: {new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)} d
                   </Text>
                   <Text className="mt-1 text-[13px] text-[#4B5563]">
-                    Trang thai hien tai: {selectedOrder.orderStatus}
+                    Trạng thái hiện tại: {selectedOrder.orderStatus}
                   </Text>
                 </View>
 
                 {!!selectedOrder.shippingAddress && (
                   <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                    <Text className="text-[13px] font-bold text-[#191C1F]">Dia chi giao</Text>
+                    <Text className="text-[13px] font-bold text-[#191C1F]">Địa chỉ giao</Text>
                     <Text className="mt-1 text-[13px] text-[#4B5563]">
                       {selectedOrder.shippingAddress}
                     </Text>
@@ -238,7 +238,7 @@ export default function AdminOrdersScreen() {
                 {canUpdateOrders ? (
                   <View className="mt-4 rounded-[14px] bg-white">
                     <Text className="text-[13px] font-bold text-[#191C1F]">
-                      Cap nhat trang thai
+                      Cập nhật trạng thái
                     </Text>
                     <View className="mt-3 flex-row flex-wrap gap-2">
                       {ORDER_STATUSES.map((status) => (
@@ -263,7 +263,7 @@ export default function AdminOrdersScreen() {
                     <TextInput
                       className="mt-3 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3"
                       multiline
-                      placeholder="Ghi chu cap nhat (tuy chon)"
+                      placeholder="Ghi chú cập nhật (tùy chọn)"
                       placeholderTextColor="#97a0aa"
                       value={statusNote}
                       onChangeText={setStatusNote}
@@ -275,13 +275,13 @@ export default function AdminOrdersScreen() {
                       onPress={handleUpdateStatus}
                     >
                       <Text className="text-[13px] font-bold text-white">
-                        {savingStatus ? "Dang luu..." : "Luu trang thai"}
+                        {savingStatus ? "Đang lưu..." : "Lưu trạng thái"}
                       </Text>
                     </Pressable>
                   </View>
                 ) : (
                   <Text className="mt-4 text-[12px] text-[#9A6400]">
-                    Ban khong co quyen cap nhat trang thai don hang.
+                    Bạn không có quyền cập nhật trạng thái đơn hàng.
                   </Text>
                 )}
               </ScrollView>

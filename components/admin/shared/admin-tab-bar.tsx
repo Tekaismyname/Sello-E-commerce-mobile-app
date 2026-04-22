@@ -10,12 +10,12 @@ type TabMeta = {
 };
 
 const tabs: TabMeta[] = [
-  { key: "dashboard", label: "Home", icon: "home" },
-  { key: "products", label: "Products", icon: "grid" },
-  { key: "users", label: "Users", icon: "users" },
-  { key: "orders", label: "Orders", icon: "truck" },
-  { key: "reports", label: "Reports", icon: "bar-chart-2" },
-  { key: "system", label: "System", icon: "settings" },
+  { key: "dashboard", label: "Trang chủ", icon: "home" },
+  { key: "products", label: "Sản phẩm", icon: "grid" },
+  { key: "users", label: "Người dùng", icon: "users" },
+  { key: "orders", label: "Đơn hàng", icon: "truck" },
+  { key: "reports", label: "Báo cáo", icon: "bar-chart-2" },
+  { key: "system", label: "Hệ thống", icon: "settings" },
 ];
 
 export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProps) {

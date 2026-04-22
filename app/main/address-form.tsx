@@ -20,7 +20,7 @@ export default function AddressFormScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sua dia chi" : "Them dia chi moi"}</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}</Text>
       </View>
 
       <AddressForm
@@ -33,10 +33,10 @@ export default function AddressFormScreen() {
             } else {
               await createAddress(payload);
             }
-            Alert.alert("Thanh cong", "Da luu dia chi.");
+            Alert.alert("Thành công", "Đã lưu địa chỉ.");
             router.back();
           } catch (err: any) {
-            Alert.alert("Loi", err?.message ?? "Khong the luu dia chi.");
+            Alert.alert("Lỗi", err?.message ?? "Không thể lưu địa chỉ.");
           }
         }}
       />

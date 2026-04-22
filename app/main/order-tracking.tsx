@@ -19,7 +19,7 @@ export default function OrderTrackingScreen() {
     const id = Number(orderId);
 
     if (!token || !id) {
-      setError("Khong tim thay thong tin van chuyen.");
+      setError("Không tìm thấy thông tin vận chuyển.");
       setLoading(false);
       return;
     }
@@ -27,12 +27,12 @@ export default function OrderTrackingScreen() {
     orderService
       .getOrderTracking(token, id)
       .then((response) => setTracking(response.data))
-      .catch((err: any) => setError(err.message ?? "Khong the tai hanh trinh don hang."))
+      .catch((err: any) => setError(err.message ?? "Không thể tải hành trình đơn hàng."))
       .finally(() => setLoading(false));
   }, [orderId, token]);
 
   const latestStatus = useMemo(
-    () => tracking?.timeline[tracking.timeline.length - 1]?.status ?? "Dang cap nhat",
+    () => tracking?.timeline[tracking.timeline.length - 1]?.status ?? "Đang cập nhật",
     [tracking?.timeline],
   );
 
@@ -42,7 +42,7 @@ export default function OrderTrackingScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#1F2934" />
         </Pressable>
-        <Text className="ml-1 text-[20px] font-extrabold text-[#1F2934]">Theo doi don hang</Text>
+        <Text className="ml-1 text-[20px] font-extrabold text-[#1F2934]">Theo dõi đơn hàng</Text>
       </View>
 
       {loading ? (
@@ -51,7 +51,7 @@ export default function OrderTrackingScreen() {
         </View>
       ) : error || !tracking ? (
         <View className="px-4 py-4">
-          <Text className="text-[14px] font-semibold text-[#BA1A1A]">{error ?? "Khong co du lieu"}</Text>
+          <Text className="text-[14px] font-semibold text-[#BA1A1A]">{error ?? "Không có dữ liệu"}</Text>
         </View>
       ) : (
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-2" showsVerticalScrollIndicator={false}>
@@ -59,7 +59,7 @@ export default function OrderTrackingScreen() {
             <View className="flex-row items-center justify-between">
               <View className="rounded-full bg-[#DBEBFA] px-3 py-1">
                 <Text className="text-[12px] font-bold text-[#0369A1]">
-                  #{tracking.shipment?.trackingCode ?? "DANG CAP NHAT"}
+                  #{tracking.shipment?.trackingCode ?? "ĐANG CẬP NHẬT"}
                 </Text>
               </View>
               <View className="flex-row items-center">
@@ -68,17 +68,17 @@ export default function OrderTrackingScreen() {
               </View>
             </View>
 
-            <Text className="mt-3 text-[20px] font-extrabold leading-[28px] text-[#1F2934]">Kien hang dang toi</Text>
+            <Text className="mt-3 text-[20px] font-extrabold leading-[28px] text-[#1F2934]">Kiện hàng đang tới</Text>
             <Text className="mt-1 text-[14px] text-[#4B5563]">
-              Du kien giao:{" "}
+              Dự kiến ngày giao:{" "}
               <Text className="font-bold">
                 {tracking.shipment?.estimatedDeliveryAt
                   ? new Date(tracking.shipment.estimatedDeliveryAt).toLocaleString("vi-VN")
-                  : "Hom nay"}
+                  : "Hôm nay"}
               </Text>
             </Text>
             {!!tracking.shipment?.driverPhone && (
-              <Text className="mt-1 text-[13px] text-[#4B5563]">Lien he tai xe: {tracking.shipment.driverPhone}</Text>
+              <Text className="mt-1 text-[13px] text-[#4B5563]">Liên hệ tài xế: {tracking.shipment.driverPhone}</Text>
             )}
 
             <View className="mt-3 overflow-hidden rounded-[14px]">
@@ -90,10 +90,10 @@ export default function OrderTrackingScreen() {
               />
               <View className="absolute bottom-3 left-3 right-3 rounded-[12px] bg-white p-3 flex-row items-center justify-between">
                 <View>
-                  <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
+                  <Text className="text-[13px] text-[#64748B]">Tài xế hiện tại</Text>
                   <Text className="text-[15px] font-extrabold text-[#1F2934]">
-                    {tracking.shipment?.driverName ?? "Dang cap nhat"}{" "}
-                    {tracking.shipment?.vehicleNumber ? `� ${tracking.shipment.vehicleNumber}` : ""}
+                    {tracking.shipment?.driverName ?? "Đang cập nhật"}{" "}
+                    {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
                   </Text>
                 </View>
                 <View className="h-9 w-9 items-center justify-center rounded-full bg-[#E8F3FC]">
@@ -110,21 +110,21 @@ export default function OrderTrackingScreen() {
           <View className="mt-3 rounded-[16px] bg-white p-4">
             <View className="flex-row items-center">
               <Feather name="truck" size={16} color="#0369A1" />
-              <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Don vi van chuyen</Text>
+              <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Đơn vị vận chuyển</Text>
             </View>
             <Text className="mt-3 text-[17px] font-extrabold text-[#1F2934]">
-              {tracking.shipment?.carrierName ?? "Dang cap nhat"}
+              {tracking.shipment?.carrierName ?? "Đang cập nhật"}
             </Text>
             <View className="mt-2 flex-row justify-between">
-              <Text className="text-[14px] text-[#4B5563]">Ma van don</Text>
+              <Text className="text-[14px] text-[#4B5563]">Mã vận đơn</Text>
               <Text className="text-[14px] font-semibold text-[#1F2934]">
                 {tracking.shipment?.trackingCode ?? "N/A"}
               </Text>
             </View>
             <View className="mt-1 flex-row justify-between">
-              <Text className="text-[14px] text-[#4B5563]">Hinh thuc</Text>
+              <Text className="text-[14px] text-[#4B5563]">Hình thức</Text>
               <Text className="text-[14px] font-semibold text-[#1F2934]">
-                {tracking.shipment?.shippingType ?? "Giao tieu chuan"}
+                {tracking.shipment?.shippingType ?? "Giao tiêu chuẩn"}
               </Text>
             </View>
           </View>

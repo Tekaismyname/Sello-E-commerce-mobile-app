@@ -25,11 +25,13 @@ export default function AdminVoucherFormScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sua Voucher" : "Tao Voucher Moi"}</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">
+          {initialValue ? "Sửa voucher" : "Tạo voucher mới"}
+        </Text>
       </View>
       {!canSubmit ? (
         <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">Ban khong co quyen luu voucher.</Text>
+          <Text className="text-[12px] text-[#9A6400]">Bạn không có quyền lưu voucher.</Text>
         </View>
       ) : null}
 
@@ -38,7 +40,7 @@ export default function AdminVoucherFormScreen() {
         loading={saving || loading || !canSubmit}
         onSubmit={async (payload) => {
           if (!canSubmit) {
-            Alert.alert("Khong co quyen", "Ban khong co quyen luu voucher.");
+            Alert.alert("Không có quyền", "Bạn không có quyền lưu voucher.");
             return;
           }
           try {
@@ -47,10 +49,10 @@ export default function AdminVoucherFormScreen() {
             } else {
               await createVoucher(payload);
             }
-            Alert.alert("Thanh cong", "Da luu voucher.");
+            Alert.alert("Thành công", "Đã lưu voucher.");
             router.back();
           } catch (error: any) {
-            Alert.alert("Loi", error?.message ?? "Khong the luu voucher.");
+            Alert.alert("Lỗi", error?.message ?? "Không thể lưu voucher.");
           }
         }}
       />

@@ -21,14 +21,14 @@ export function OrderTimeline({ timeline, currentStatus }: OrderTimelineProps) {
   if (!timeline.length) {
     return (
       <View className="rounded-[12px] bg-[#F8F9FB] p-4">
-        <Text className="text-[13px] text-[#5E6A78]">Chua co cap nhat hanh trinh don hang.</Text>
+        <Text className="text-[13px] text-[#5E6A78]">Chưa có cập nhật hành trình đơn hàng.</Text>
       </View>
     );
   }
 
   return (
     <View className="rounded-[16px] bg-white p-4">
-      <Text className="text-[15px] font-extrabold text-[#1F2934]">Hanh trinh don hang</Text>
+      <Text className="text-[15px] font-extrabold text-[#1F2934]">Hành trình đơn hàng</Text>
 
       <View className="mt-3 gap-3">
         {timeline.map((item, index) => {

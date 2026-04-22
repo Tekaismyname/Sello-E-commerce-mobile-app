@@ -21,7 +21,7 @@ export default function OrderDetailScreen() {
   useEffect(() => {
     const id = Number(orderId);
     if (!token || !id) {
-      setError("Khong tim thay don hang.");
+      setError("Không tìm thấy đơn hàng.");
       setLoading(false);
       return;
     }
@@ -29,7 +29,7 @@ export default function OrderDetailScreen() {
     orderService
       .getOrderDetail(token, id)
       .then((response) => setOrder(response.data))
-      .catch((err: any) => setError(err.message ?? "Khong the tai chi tiet don hang."))
+      .catch((err: any) => setError(err.message ?? "Không thể tải chi tiết đơn hàng."))
       .finally(() => setLoading(false));
   }, [orderId, token]);
 
@@ -39,7 +39,7 @@ export default function OrderDetailScreen() {
         {
           id: 1,
           status: "pending",
-          description: "Cho cap nhat",
+          description: "Chờ cập nhật",
           createdAt: order?.createdAt ?? new Date().toISOString(),
         },
       ];
@@ -59,7 +59,7 @@ export default function OrderDetailScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#334155" />
         </Pressable>
-        <Text className="ml-1 text-[20px] font-extrabold text-[#2563EB]">Chi tiet don hang</Text>
+        <Text className="ml-1 text-[20px] font-extrabold text-[#2563EB]">Chi tiết đơn hàng</Text>
       </View>
 
       {loading ? (
@@ -68,7 +68,7 @@ export default function OrderDetailScreen() {
         </View>
       ) : error || !order ? (
         <View className="px-4 py-4">
-          <Text className="text-[14px] font-semibold text-[#BA1A1A]">{error ?? "Khong tim thay don hang"}</Text>
+          <Text className="text-[14px] font-semibold text-[#BA1A1A]">{error ?? "Không tìm thấy đơn hàng"}</Text>
         </View>
       ) : (
         <>
@@ -82,21 +82,21 @@ export default function OrderDetailScreen() {
             <View className="mt-3 rounded-[16px] bg-white p-4">
               <View className="flex-row items-center">
                 <Feather name="map-pin" size={16} color="#0369A1" />
-                <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Thong tin nhan hang</Text>
+                <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Thông tin nhận hàng</Text>
               </View>
               <View className="mt-3 rounded-[12px] bg-[#F8FAFD] p-3">
-                <Text className="text-[15px] font-extrabold text-[#1F2934]">{order.shippingAddress ?? "Dang cap nhat"}</Text>
+                <Text className="text-[15px] font-extrabold text-[#1F2934]">{order.shippingAddress ?? "Đang cập nhật"}</Text>
               </View>
             </View>
 
             <View className="mt-3 rounded-[16px] bg-white p-4">
-              <Text className="text-[17px] font-extrabold text-[#1F2934]">San pham da chon</Text>
+              <Text className="text-[17px] font-extrabold text-[#1F2934]">Sản phẩm đã chọn</Text>
               <View className="mt-3 gap-3">
                 {order.items.map((item) => (
                   <View key={item.id} className="rounded-[12px] bg-[#F8FAFD] p-3">
                     <Text className="text-[16px] font-extrabold text-[#1F2934]">{item.productName}</Text>
                     {!!item.variantSnapshot && (
-                      <Text className="mt-1 text-[13px] text-[#64748B]">Phan loai: {item.variantSnapshot}</Text>
+                      <Text className="mt-1 text-[13px] text-[#64748B]">Phân loại: {item.variantSnapshot}</Text>
                     )}
                     <View className="mt-2 flex-row items-center justify-between">
                       <Text className="text-[15px] font-extrabold text-[#0369A1]">
@@ -110,27 +110,27 @@ export default function OrderDetailScreen() {
             </View>
 
             <View className="mt-3 rounded-[16px] bg-white p-4">
-              <Text className="text-[17px] font-extrabold text-[#1F2934]">Chi tiet thanh toan</Text>
+              <Text className="text-[17px] font-extrabold text-[#1F2934]">Chi tiết thanh toán</Text>
               <View className="mt-3 gap-2">
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-[14px] text-[#4B5563]">Tong tien hang</Text>
+                  <Text className="text-[14px] text-[#4B5563]">Tổng tiền hàng</Text>
                   <Text className="text-[14px] font-semibold text-[#1F2934]">{formatPrice(order.subtotal ?? 0)}</Text>
                 </View>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-[14px] text-[#4B5563]">Phi van chuyen</Text>
+                  <Text className="text-[14px] text-[#4B5563]">Phí vận chuyển</Text>
                   <Text className="text-[14px] font-semibold text-[#1F2934]">
                     {formatPrice(order.shippingFee ?? 0)}
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-[14px] text-[#4B5563]">Giam gia</Text>
+                  <Text className="text-[14px] text-[#4B5563]">Giảm giá</Text>
                   <Text className="text-[14px] font-semibold text-[#12805C]">
                     -{formatPrice(order.discount ?? 0)}
                   </Text>
                 </View>
                 <View className="mt-1 h-[1px] bg-[#E5EBF2]" />
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-[16px] font-extrabold text-[#1F2934]">Tong cong</Text>
+                  <Text className="text-[16px] font-extrabold text-[#1F2934]">Tổng cộng</Text>
                   <Text className="text-[20px] font-extrabold text-[#0369A1]">{formatPrice(order.totalAmount)}</Text>
                 </View>
               </View>
@@ -142,7 +142,7 @@ export default function OrderDetailScreen() {
               className="h-[52px] items-center justify-center rounded-[12px] bg-[#2F95D2]"
               onPress={() => router.push((`/main/order-tracking?orderId=${order.id}` as unknown) as Href)}
             >
-              <Text className="text-[16px] font-extrabold text-white">Theo doi don hang</Text>
+              <Text className="text-[16px] font-extrabold text-white">Theo dõi đơn hàng</Text>
             </Pressable>
           </View>
         </>

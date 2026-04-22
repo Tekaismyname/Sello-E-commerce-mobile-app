@@ -26,7 +26,7 @@ export function AdminCategoryCard({ category, onEdit, onToggleStatus, onDelete }
         </View>
         <View className={`rounded-full px-3 py-1 ${isActive ? "bg-[#DCFCE7]" : "bg-[#FEE2E2]"}`}>
           <Text className={`text-[11px] font-bold ${isActive ? "text-[#15803D]" : "text-[#B91C1C]"}`}>
-            {isActive ? "Active" : "Inactive"}
+            {isActive ? "Hoạt động" : "Không hoạt động"}
           </Text>
         </View>
       </View>
@@ -35,12 +35,12 @@ export function AdminCategoryCard({ category, onEdit, onToggleStatus, onDelete }
         <View className="mt-4 flex-row gap-2">
           {onEdit ? (
             <Pressable className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#E8F1FB]" onPress={() => onEdit(category)}>
-              <Text className="text-[13px] font-bold text-[#0369A1]">Sua</Text>
+              <Text className="text-[13px] font-bold text-[#0369A1]">Sửa</Text>
             </Pressable>
           ) : null}
           {onToggleStatus ? (
             <Pressable className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#F3F4F6]" onPress={() => onToggleStatus(category)}>
-              <Text className="text-[13px] font-bold text-[#374151]">{isActive ? "An" : "Bat"}</Text>
+              <Text className="text-[13px] font-bold text-[#374151]">{isActive ? "Ẩn" : "Bật"}</Text>
             </Pressable>
           ) : null}
           {onDelete ? (

@@ -25,11 +25,11 @@ export default function AdminCategoryFormScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sua Danh muc" : "Them Danh muc"}</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sửa Danh mục" : "Thêm Danh mục"}</Text>
       </View>
       {!canSubmit ? (
         <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">Ban khong co quyen luu danh muc.</Text>
+          <Text className="text-[12px] text-[#9A6400]">Bạn không có quyền lưu danh mục.</Text>
         </View>
       ) : null}
 
@@ -39,7 +39,7 @@ export default function AdminCategoryFormScreen() {
         loading={saving || loading || !canSubmit}
         onSubmit={async (payload) => {
           if (!canSubmit) {
-            Alert.alert("Khong co quyen", "Ban khong co quyen luu danh muc.");
+            Alert.alert("Không có quyền", "Bạn không có quyền lưu danh mục.");
             return;
           }
           try {
@@ -48,10 +48,10 @@ export default function AdminCategoryFormScreen() {
             } else {
               await createCategory(payload);
             }
-            Alert.alert("Thanh cong", "Da luu danh muc.");
+            Alert.alert("Thành công", "Đã lưu danh mục.");
             router.back();
           } catch (error: any) {
-            Alert.alert("Loi", error?.message ?? "Khong the luu danh muc.");
+            Alert.alert("Lỗi", error?.message ?? "Không thể lưu danh mục.");
           }
         }}
       />

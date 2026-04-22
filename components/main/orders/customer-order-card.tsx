@@ -10,16 +10,16 @@ type CustomerOrderCardProps = {
 };
 
 const statusConfig = {
-  delivered: { label: "DA GIAO HANG", color: "#15803D", icon: "check-circle" as const },
-  shipping: { label: "DANG VAN CHUYEN", color: "#0369A1", icon: "truck" as const },
-  packed: { label: "DANG VAN CHUYEN", color: "#0369A1", icon: "truck" as const },
-  confirmed: { label: "CHO XAC NHAN", color: "#4B5563", icon: "clock" as const },
-  pending: { label: "CHO XAC NHAN", color: "#4B5563", icon: "clock" as const },
-  cancelled: { label: "DA HUY", color: "#B91C1C", icon: "x-circle" as const },
-  returned: { label: "DA TRA", color: "#92400E", icon: "rotate-ccw" as const },
+  delivered: { label: "ĐÃ GIAO HÀNG", color: "#15803D", icon: "check-circle" as const },
+  shipping: { label: "ĐANG VẬN CHUYỂN", color: "#0369A1", icon: "truck" as const },
+  packed: { label: "ĐANG ĐÓNG GÓI", color: "#0369A1", icon: "truck" as const },
+  confirmed: { label: "CHỜ XÁC NHẬN", color: "#4B5563", icon: "clock" as const },
+  pending: { label: "CHỜ XÁC NHẬN", color: "#4B5563", icon: "clock" as const },
+  cancelled: { label: "ĐÃ HỦY", color: "#B91C1C", icon: "x-circle" as const },
+  returned: { label: "ĐÃ TRẢ", color: "#92400E", icon: "rotate-ccw" as const },
 };
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 
 export function CustomerOrderCard({
   order,
@@ -41,7 +41,7 @@ export function CustomerOrderCard({
           className="rounded-[10px] bg-[#FDECEC] px-5 py-2.5"
           onPress={() => onCancel(order)}
         >
-          <Text className="text-[13px] font-bold text-[#BA1A1A]">Huy don</Text>
+          <Text className="text-[13px] font-bold text-[#BA1A1A]">Hủy đơn</Text>
         </Pressable>
       );
     }
@@ -52,7 +52,7 @@ export function CustomerOrderCard({
           className="rounded-[10px] bg-[#E8EDF3] px-5 py-2.5"
           onPress={() => onOpenTracking(order)}
         >
-          <Text className="text-[13px] font-bold text-[#0369A1]">Theo doi don hang</Text>
+          <Text className="text-[13px] font-bold text-[#0369A1]">Theo dõi đơn hàng</Text>
         </Pressable>
       );
     }
@@ -62,7 +62,7 @@ export function CustomerOrderCard({
         className="rounded-[10px] bg-[#2F95D2] px-5 py-2.5"
         onPress={() => onOpenDetail(order)}
       >
-        <Text className="text-[13px] font-bold text-white">Mua lai</Text>
+        <Text className="text-[13px] font-bold text-white">Mua lại</Text>
       </Pressable>
     );
   };
@@ -85,7 +85,7 @@ export function CustomerOrderCard({
         <Image source={{ uri: imageSource }} className="h-[84px] w-[96px] rounded-[10px]" />
         <View className="ml-4 flex-1">
           <Text className="text-[18px] font-extrabold leading-[24px] text-[#1F2934]" numberOfLines={2}>
-            {item?.productName ?? `Don #${order.id}`}
+            {item?.productName ?? `Đơn #${order.id}`}
           </Text>
           {!!item?.variantSnapshot && (
             <Text className="mt-1 text-[14px] text-[#64748B]" numberOfLines={1}>
@@ -100,7 +100,7 @@ export function CustomerOrderCard({
 
       <View className="mt-3 flex-row items-center justify-end">
         <Pressable className="mr-3" onPress={() => onOpenDetail(order)}>
-          <Text className="text-[13px] font-bold text-[#0369A1]">Xem chi tiet</Text>
+          <Text className="text-[13px] font-bold text-[#0369A1]">Xem chi tiết</Text>
         </Pressable>
         {renderActions()}
       </View>

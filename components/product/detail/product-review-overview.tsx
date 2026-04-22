@@ -10,9 +10,9 @@ export function ProductReviewOverview({ productId }: ProductReviewOverviewProps)
   return (
     <View className="bg-white py-5">
       <View className="mb-4 flex-row items-center justify-between px-4">
-        <Text className="text-[16px] font-extrabold uppercase tracking-wider text-[#191C1F]">Danh gia thuc te</Text>
+        <Text className="text-[16px] font-extrabold uppercase tracking-wider text-[#191C1F]">Đánh giá thực tế</Text>
         <Pressable onPress={() => router.push(`/product/reviews?id=${productId}` as Href)}>
-          <Text className="text-[14px] font-bold text-[#006397]">Xem tat ca</Text>
+          <Text className="text-[14px] font-bold text-[#006397]">Xem tất cả</Text>
         </Pressable>
       </View>
 
@@ -24,13 +24,13 @@ export function ProductReviewOverview({ productId }: ProductReviewOverviewProps)
             ))}
           </View>
           <Text className="text-[13px] leading-[20px] text-[#3F4850]" numberOfLines={3}>
-            Giay dep, dong goi ky, giao nhanh. Chat lieu mem va de phoi do.
+            Giày đẹp, đóng gói kỹ, giao nhanh. Chất liệu mềm và dễ phối đồ.
           </Text>
         </View>
 
         <View className="w-[160px] items-center justify-center rounded-[12px] bg-[#F8D8FF] p-4">
           <Text className="text-[28px] font-extrabold text-[#320047]">+150</Text>
-          <Text className="mt-1 text-[13px] text-[#320047]/80">Anh tu khach</Text>
+          <Text className="mt-1 text-[13px] text-[#320047]/80">Ảnh từ khách</Text>
         </View>
       </ScrollView>
     </View>

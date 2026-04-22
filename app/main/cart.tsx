@@ -19,7 +19,7 @@ export default function CartScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap de xem gio hang.");
+      setError("Vui lòng đăng nhập để xem giỏ hàng.");
       setLoading(false);
       return;
     }
@@ -45,7 +45,7 @@ export default function CartScreen() {
     if (newQty < 1) return;
 
     if (!token) {
-      Alert.alert("Loi", "Phien dang nhap da het han.");
+      Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
       return;
     }
 
@@ -53,13 +53,13 @@ export default function CartScreen() {
       await cartService.updateCartItem(token, item.id, { quantity: newQty });
       fetchCart();
     } catch (err: any) {
-      Alert.alert("Loi", err.message);
+      Alert.alert("Lỗi", err.message);
     }
   };
 
   const handleToggleSelect = async (item: CartItem) => {
     if (!token) {
-      Alert.alert("Loi", "Phien dang nhap da het han.");
+      Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
       return;
     }
 
@@ -67,19 +67,19 @@ export default function CartScreen() {
       await cartService.selectCartItem(token, item.id, { selected: !item.selected });
       fetchCart();
     } catch (err: any) {
-      Alert.alert("Loi", err.message);
+      Alert.alert("Lỗi", err.message);
     }
   };
 
   const handleDelete = async (item: CartItem) => {
-    Alert.alert("Xoa san pham", `Ban co chac muon xoa \"${item.productName}\"?`, [
-      { text: "Huy", style: "cancel" },
+    Alert.alert("Xóa sản phẩm", `Bạn có chắc muốn xóa \"${item.productName}\"?`, [
+      { text: "Hủy", style: "cancel" },
       {
-        text: "Xoa",
+        text: "Xóa",
         style: "destructive",
         onPress: async () => {
           if (!token) {
-            Alert.alert("Loi", "Phien dang nhap da het han.");
+            Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
             return;
           }
 
@@ -87,7 +87,7 @@ export default function CartScreen() {
             await cartService.deleteCartItem(token, item.id);
             fetchCart();
           } catch (err: any) {
-            Alert.alert("Loi", err.message);
+            Alert.alert("Lỗi", err.message);
           }
         },
       },
@@ -105,12 +105,12 @@ export default function CartScreen() {
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
       <SelloHeader />
       <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
-        <Text className="text-[30px] font-extrabold text-[#1f2934]">Gio hang</Text>
+        <Text className="text-[30px] font-extrabold text-[#1f2934]">Giỏ hàng</Text>
 
         {loading && (
           <View className="mt-10 items-center">
             <ActivityIndicator size="large" color="#006397" />
-            <Text className="mt-3 text-[13px] text-[#7d8896]">Dang tai gio hang...</Text>
+            <Text className="mt-3 text-[13px] text-[#7d8896]">Đang tải giỏ hàng...</Text>
           </View>
         )}
 
@@ -123,8 +123,8 @@ export default function CartScreen() {
         {!loading && !error && cart && cart.items.length === 0 && (
           <View className="mt-6 rounded-[14px] bg-white p-6 items-center">
             <Feather name="shopping-cart" size={48} color="#c5cdd6" />
-            <Text className="mt-3 text-[15px] font-semibold text-[#465362]">Gio hang trong</Text>
-            <Text className="mt-1 text-[12px] text-[#7d8896]">Hay them san pham vao gio hang!</Text>
+            <Text className="mt-3 text-[15px] font-semibold text-[#465362]">Giỏ hàng trống</Text>
+            <Text className="mt-1 text-[12px] text-[#7d8896]">ãy thêm sản phẩm vào giỏ hàng!</Text>
           </View>
         )}
 
@@ -175,7 +175,7 @@ export default function CartScreen() {
             <View className="mt-2 rounded-[14px] bg-white p-4">
               <View className="flex-row items-center justify-between">
                 <Text className="text-[13px] font-semibold text-[#5E6A78]">
-                  Da chon {selectedItems.length} san pham
+                  Da chon {selectedItems.length} sản phẩm
                 </Text>
                 <Text className="text-[16px] font-extrabold text-[#006397]">
                   {formatPrice(selectedSubtotal)}
@@ -189,7 +189,7 @@ export default function CartScreen() {
                   selectedItems.length ? "bg-[#006397]" : "bg-[#AFC8D8]"
                 }`}
               >
-                <Text className="text-[14px] font-extrabold text-white">Tien hanh thanh toan</Text>
+                <Text className="text-[14px] font-extrabold text-white">Tiến hành thanh toán</Text>
               </Pressable>
             </View>
           </View>

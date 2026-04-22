@@ -17,6 +17,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const REVIEW_FILTERS = ["all", "visible", "hidden", "deleted"] as const;
+const REVIEW_FILTER_LABELS: Record<(typeof REVIEW_FILTERS)[number], string> = {
+  all: "Tất cả",
+  visible: "Hiển thị",
+  hidden: "Ẩn",
+  deleted: "Đã xóa",
+};
 
 type ReviewFilter = (typeof REVIEW_FILTERS)[number];
 
@@ -39,13 +45,13 @@ export default function AdminReviewsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap tai khoan admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
       setLoading(false);
       return;
     }
 
     if (!canReadReviews) {
-      setError("Ban khong co quyen xem danh sach review.");
+      setError("Bạn không có quyền xem danh sách đánh giá.");
       setLoading(false);
       return;
     }
@@ -61,7 +67,7 @@ export default function AdminReviewsScreen() {
         }, {}),
       );
     } catch (err: any) {
-      setError(err.message ?? "Khong the tai danh sach review.");
+      setError(err.message ?? "Không thể tải danh sách đánh giá.");
     } finally {
       setLoading(false);
     }
@@ -105,7 +111,7 @@ export default function AdminReviewsScreen() {
       );
       await fetchReviews();
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the cap nhat moderation.");
+      Alert.alert("Lỗi", err.message ?? "Không thể cập nhật trạng thái kiểm duyệt.");
     } finally {
       setSavingId(null);
     }
@@ -113,15 +119,15 @@ export default function AdminReviewsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Review moderation" />
+      <AdminHeader title="Kiểm duyệt đánh giá" />
       <ScrollView
         className="flex-1"
         contentContainerClassName="p-4 pb-24"
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Kiem duyet review</Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Kiểm duyệt đánh giá</Text>
         <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Quan ly cac review, an/noi bat/noi dung khong phu hop.
+          Quản lý đánh giá, ẩn hoặc hiển thị nội dung không phù hợp.
         </Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
@@ -129,7 +135,7 @@ export default function AdminReviewsScreen() {
             <Feather name="search" size={17} color="#6B7280" />
             <TextInput
               className="ml-2 flex-1 text-[14px] text-[#1F2934]"
-              placeholder="Tim theo san pham, user, email..."
+              placeholder="Tìm theo sản phẩm, người dùng, email..."
               placeholderTextColor="#9CA3AF"
               value={search}
               onChangeText={setSearch}
@@ -152,7 +158,7 @@ export default function AdminReviewsScreen() {
                       selected ? "text-white" : "text-[#44515F]"
                     }`}
                   >
-                    {item.toUpperCase()}
+                    {REVIEW_FILTER_LABELS[item]}
                   </Text>
                 </Pressable>
               );
@@ -182,7 +188,7 @@ export default function AdminReviewsScreen() {
                       #{review.id} - {review.productName}
                     </Text>
                     <Text className="mt-1 text-[12px] text-[#5b6470]">
-                      {review.userName} ({review.userEmail}) - {review.rating}/5
+                      {review.userName} ({review.userEmail}) - {review.rating}/5 sao
                     </Text>
                   </View>
                   <View className="rounded-full bg-[#EEF5FA] px-3 py-1">
@@ -206,7 +212,7 @@ export default function AdminReviewsScreen() {
                     <TextInput
                       className="min-h-[78px] rounded-[10px] bg-[#F3F5FA] px-3 py-2 text-[13px] text-[#1F2934]"
                       multiline
-                      placeholder="Ghi chu moderation (tuy chon)"
+                      placeholder="Ghi chú kiểm duyệt (tùy chọn)"
                       placeholderTextColor="#9CA3AF"
                       value={noteDrafts[review.id] ?? ""}
                       onChangeText={(value) =>
@@ -231,7 +237,7 @@ export default function AdminReviewsScreen() {
                                 : "text-[#44515F]"
                             }`}
                           >
-                            {status}
+                            {REVIEW_FILTER_LABELS[status]}
                           </Text>
                         </Pressable>
                       ))}
@@ -243,7 +249,7 @@ export default function AdminReviewsScreen() {
 
             {!filteredReviews.length && (
               <View className="items-center rounded-[14px] bg-white p-6">
-                <Text className="text-[14px] text-[#5b6470]">Khong co review phu hop.</Text>
+                <Text className="text-[14px] text-[#5b6470]">Không có đánh giá phù hợp.</Text>
               </View>
             )}
           </View>

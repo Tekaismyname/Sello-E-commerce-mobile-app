@@ -86,7 +86,7 @@ export default function AddProductScreen() {
 
   useEffect(() => {
     if (!hasWritePermission) {
-      Alert.alert("Khong co quyen", "Ban khong co quyen thao tac voi san pham nay.");
+      Alert.alert("Không có quyền", "Ban không có quyền thao tác với sản phẩm này.");
       router.back();
     }
   }, [hasWritePermission, router]);
@@ -197,7 +197,7 @@ export default function AddProductScreen() {
     }
 
     if (!hasWritePermission) {
-      Alert.alert("Khong co quyen", "Ban khong co quyen luu san pham.");
+      Alert.alert("Không có quyền", "Ban không có quyền lưu sản phẩm.");
       return;
     }
 

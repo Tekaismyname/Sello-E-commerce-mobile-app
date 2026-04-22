@@ -5,7 +5,7 @@ import { Href, router } from "expo-router";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const formatMoney = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)} d`;
+const formatMoney = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
 
 export default function WishlistScreen() {
   const { token } = useAuth();
@@ -17,7 +17,7 @@ export default function WishlistScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">Wishlist</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">Yêu thích</Text>
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
@@ -54,7 +54,7 @@ export default function WishlistScreen() {
                         className="rounded-[10px] bg-[#E8F1FB] px-3 py-2"
                         onPress={() => router.push(`/product/detail?id=${item.productId}` as Href)}
                       >
-                        <Text className="text-[12px] font-bold text-[#0369A1]">Xem san pham</Text>
+                        <Text className="text-[12px] font-bold text-[#0369A1]">Xem sản phẩm</Text>
                       </Pressable>
                       <Pressable
                         className="rounded-[10px] bg-[#FEE2E2] px-3 py-2 disabled:opacity-60"
@@ -63,11 +63,11 @@ export default function WishlistScreen() {
                           try {
                             await removeItem(item.id);
                           } catch (err: any) {
-                            Alert.alert("Loi", err?.message ?? "Khong the xoa khoi wishlist.");
+                            Alert.alert("Lỗi", err?.message ?? "Không thể xóa khỏi danh sách yêu thích.");
                           }
                         }}
                       >
-                        <Text className="text-[12px] font-bold text-[#B91C1C]">Xoa</Text>
+                        <Text className="text-[12px] font-bold text-[#B91C1C]">Xóa</Text>
                       </Pressable>
                     </View>
                   </View>
@@ -77,7 +77,7 @@ export default function WishlistScreen() {
 
             {!wishlist.length && (
               <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Wishlist cua ban dang trong.</Text>
+                <Text className="text-[14px] text-[#6B7280]">Danh sách yêu thích của bạn đang trống.</Text>
               </View>
             )}
           </View>

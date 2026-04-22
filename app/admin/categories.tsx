@@ -40,17 +40,17 @@ export default function AdminCategoriesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
-      <AdminHeader title="Quan ly Danh muc" />
+      <AdminHeader title="Quản lý Danh mục" />
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
         <AdminCategoryToolbar value={search} onChange={setSearch} onOpenCreate={openCreate} canCreate={canCreate} />
         {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">Ban khong co quyen tao danh muc.</Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">Bạn không có quyền tạo danh mục.</Text>
         ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
             <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Ban khong co quyen xem danh sach danh muc.
+              Bạn không có quyền xem danh sách danh mục.
             </Text>
           </View>
         ) : loading ? (
@@ -70,18 +70,18 @@ export default function AdminCategoriesScreen() {
                 onEdit={canUpdate ? openEdit : undefined}
                 onToggleStatus={canUpdate ? (category) => {
                   updateCategoryStatus(category.id, category.status === "active" ? "inactive" : "active").catch((err: any) => {
-                    Alert.alert("Loi", err?.message ?? "Khong the cap nhat trang thai.");
+                    Alert.alert("Loi", err?.message ?? "Không thể cập nhật trang thái.");
                   });
                 } : undefined}
                 onDelete={canDelete ? (category) => {
-                  Alert.alert("Xoa danh muc", `Xoa danh muc ${category.name}?`, [
-                    { text: "Huy", style: "cancel" },
+                  Alert.alert("Xóa danh mục", `Xóa danh mục ${category.name}?`, [
+                    { text: "Hủy", style: "cancel" },
                     {
-                      text: "Xoa",
+                      text: "Xóa",
                       style: "destructive",
                       onPress: () => {
                         deleteCategory(category.id).catch((err: any) => {
-                          Alert.alert("Loi", err?.message ?? "Khong the xoa danh muc.");
+                          Alert.alert("Lỗi", err?.message ?? "Không thể xóa danh mục.");
                         });
                       },
                     },
@@ -92,7 +92,7 @@ export default function AdminCategoriesScreen() {
 
             {!filteredCategories.length && (
               <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Khong tim thay danh muc phu hop.</Text>
+                <Text className="text-[14px] text-[#6B7280]">Không tìm thấy danh mục phù hợp.</Text>
               </View>
             )}
           </View>
@@ -101,7 +101,7 @@ export default function AdminCategoriesScreen() {
 
       {saving ? (
         <View className="absolute bottom-5 right-5 rounded-full bg-[#111827] px-4 py-2">
-          <Text className="text-[12px] font-semibold text-white">Dang cap nhat...</Text>
+          <Text className="text-[12px] font-semibold text-white">Đang cập nhật...</Text>
         </View>
       ) : null}
 

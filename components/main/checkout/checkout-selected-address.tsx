@@ -13,10 +13,10 @@ export function CheckoutSelectedAddress({ address, onChangePress }: CheckoutSele
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <Feather name="map-pin" size={17} color="#0369A1" />
-          <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Dia chi nhan hang</Text>
+          <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Địa chỉ nhận hàng</Text>
         </View>
         <Pressable onPress={onChangePress}>
-          <Text className="text-[13px] font-bold text-[#0369A1]">Thay doi</Text>
+          <Text className="text-[13px] font-bold text-[#0369A1]">Thay đổi</Text>
         </Pressable>
       </View>
 
@@ -30,7 +30,7 @@ export function CheckoutSelectedAddress({ address, onChangePress }: CheckoutSele
           </Text>
         </View>
       ) : (
-        <Text className="mt-3 text-[14px] text-[#64748B]">Chua co dia chi mac dinh.</Text>
+        <Text className="mt-3 text-[14px] text-[#64748B]">Chưa có địa chỉ mặc định.</Text>
       )}
     </View>
   );
