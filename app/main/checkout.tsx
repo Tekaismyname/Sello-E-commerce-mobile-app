@@ -71,7 +71,7 @@ export default function CheckoutScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F2F4F8]" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-[#F2F4F8]" edges={["top"]}>
       <View className="h-[56px] flex-row items-center justify-center px-4">
         <Pressable className="absolute left-4 h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />

@@ -54,7 +54,7 @@ export default function OrderDetailScreen() {
   }, [order?.createdAt, order?.statusHistory]);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top"]}>
       <View className="h-[56px] flex-row items-center px-4">
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#334155" />

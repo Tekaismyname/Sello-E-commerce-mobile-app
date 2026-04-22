@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -6,7 +6,7 @@ import { SelloHeader } from "@/components/main/sello-header";
 import { cartService } from "@/services/customer.service";
 import { Cart, CartItem } from "@/types/customer";
 import { useAuth } from "@/contexts/auth-context";
-import { Href, router } from "expo-router";
+import { Href, router, useFocusEffect } from "expo-router";
 
 export default function CartScreen() {
   const { token } = useAuth();
@@ -34,9 +34,11 @@ export default function CartScreen() {
     }
   }, [token]);
 
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchCart();
+    }, [fetchCart]),
+  );
 
   const handleUpdateQuantity = async (item: CartItem, delta: number) => {
     const newQty = item.quantity + delta;
