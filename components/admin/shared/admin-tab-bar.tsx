@@ -6,16 +6,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type TabMeta = {
   key: string;
   label: string;
-  icon: "home" | "grid" | "users" | "truck" | "bar-chart-2" | "settings";
+  icon: keyof typeof Feather.glyphMap;
 };
 
 const tabs: TabMeta[] = [
-  { key: "dashboard", label: "Trang chủ", icon: "home" },
-  { key: "products", label: "Sản phẩm", icon: "grid" },
-  { key: "users", label: "Người dùng", icon: "users" },
-  { key: "orders", label: "Đơn hàng", icon: "truck" },
-  { key: "reports", label: "Báo cáo", icon: "bar-chart-2" },
-  { key: "system", label: "Hệ thống", icon: "settings" },
+  { key: "dashboard", label: "Dashboard", icon: "home" },
+  { key: "products", label: "Product", icon: "grid" },
+  { key: "reports", label: "Report", icon: "bar-chart-2" },
+  { key: "system", label: "He thong", icon: "settings" },
+  { key: "menu", label: "Menu", icon: "menu" },
 ];
 
 export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -37,7 +36,7 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
           const route = state.routes[routeIndex];
           const isFocused = state.index === routeIndex;
           const descriptor = descriptors[route.key];
-          const tintColor = isFocused ? "#006397" : "#CCD1D9";
+          const tintColor = isFocused ? "#006397" : "#97A0AB";
 
           const onPress = () => {
             const event = navigation.emit({
@@ -61,11 +60,7 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
               className="h-[56px] flex-1 items-center justify-center"
             >
               <Feather name={tab.icon} size={16} color={tintColor} />
-              <Text
-                className={`mt-1 text-[10px] font-bold ${
-                  isFocused ? "text-[#006397]" : "text-[#97A0AB]"
-                }`}
-              >
+              <Text className={`mt-1 text-[10px] font-bold ${isFocused ? "text-[#006397]" : "text-[#97A0AB]"}`}>
                 {tab.label}
               </Text>
             </Pressable>

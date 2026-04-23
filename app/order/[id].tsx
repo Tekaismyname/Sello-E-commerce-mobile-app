@@ -29,6 +29,25 @@ const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
+const getPaymentLabel = (order: OrderDetail) => {
+  const methodCode = order.payment?.methodCode?.toUpperCase();
+  const methodName = order.payment?.methodName;
+
+  if (methodCode === "COD") {
+    return `Thanh toan bang COD - ${order.paymentStatus ?? "unpaid"}`;
+  }
+  if (methodCode === "MOMO") {
+    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua MoMo`;
+  }
+  if (methodCode === "CARD") {
+    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ngan hang`;
+  }
+
+  return methodName
+    ? `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ${methodName}`
+    : order.payment?.paymentStatus ?? order.paymentStatus ?? "pending";
+};
+
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams();
   const { token } = useAuth();
@@ -172,7 +191,7 @@ export default function OrderDetailScreen() {
             <View>
               <Text className="text-[13px] font-semibold text-[#607080]">Thanh toan</Text>
               <Text className="mt-1 text-[15px] font-bold text-[#102033]">
-                {order.payment?.paymentStatus ?? order.paymentStatus ?? "pending"}
+                {getPaymentLabel(order)}
               </Text>
             </View>
 

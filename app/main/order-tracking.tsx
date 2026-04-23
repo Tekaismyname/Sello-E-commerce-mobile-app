@@ -5,7 +5,7 @@ import { OrderTracking } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OrderTrackingScreen() {
@@ -81,13 +81,20 @@ export default function OrderTrackingScreen() {
               <Text className="mt-1 text-[13px] text-[#4B5563]">Liên hệ tài xế: {tracking.shipment.driverPhone}</Text>
             )}
 
-            <View className="mt-3 overflow-hidden rounded-[14px]">
-              <Image
-                source={{
-                  uri: "https://images.unsplash.com/photo-1569336415962-a4bd9f69c07a?auto=format&fit=crop&w=1200&q=80",
-                }}
-                className="h-[220px] w-full"
-              />
+            <View className="mt-3 h-[220px] overflow-hidden rounded-[14px] bg-[#EAF1F7]">
+              <View className="absolute left-0 right-0 top-[48px] h-[1px] bg-[#D5E1EB]" />
+              <View className="absolute left-0 right-0 top-[112px] h-[1px] bg-[#D5E1EB]" />
+              <View className="absolute left-0 right-0 top-[176px] h-[1px] bg-[#D5E1EB]" />
+              <View className="absolute bottom-0 top-0 left-[72px] w-[1px] bg-[#D5E1EB]" />
+              <View className="absolute bottom-0 top-0 left-[170px] w-[1px] bg-[#D5E1EB]" />
+              <View className="absolute bottom-0 top-0 right-[72px] w-[1px] bg-[#D5E1EB]" />
+              <View className="absolute left-8 right-10 top-[96px] h-[5px] rotate-[-10deg] rounded-full bg-[#8CC5E8]" />
+              <View className="absolute left-[54px] top-[74px] h-10 w-10 items-center justify-center rounded-full bg-[#0F6CBD]">
+                <Feather name="truck" size={18} color="white" />
+              </View>
+              <View className="absolute right-[48px] top-[118px] h-10 w-10 items-center justify-center rounded-full bg-[#E53935]">
+                <Feather name="map-pin" size={18} color="white" />
+              </View>
               <View className="absolute bottom-3 left-3 right-3 rounded-[12px] bg-white p-3 flex-row items-center justify-between">
                 <View>
                   <Text className="text-[13px] text-[#64748B]">Tài xế hiện tại</Text>
@@ -101,6 +108,25 @@ export default function OrderTrackingScreen() {
                 </View>
               </View>
             </View>
+            {tracking.destination ? (
+              <View className="mt-3 rounded-[12px] bg-[#F8FAFD] p-3">
+                <View className="flex-row items-start">
+                  <Feather name="map-pin" size={16} color="#BA1A1A" />
+                  <View className="ml-2 flex-1">
+                    <Text className="text-[13px] font-bold text-[#1F2934]">Diem giao hang</Text>
+                    <Text className="mt-1 text-[13px] leading-[19px] text-[#4B5563]">
+                      {tracking.destination.address}
+                    </Text>
+                  </View>
+                </View>
+                <View className="mt-2 flex-row items-center">
+                  <Feather name="navigation" size={14} color="#0F6CBD" />
+                  <Text className="ml-2 text-[12px] font-semibold text-[#64748B]">
+                    Tai xe: {tracking.shipment?.latitude?.toFixed(5)}, {tracking.shipment?.longitude?.toFixed(5)}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
           </View>
 
           <View className="mt-3">

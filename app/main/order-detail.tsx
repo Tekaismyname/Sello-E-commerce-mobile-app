@@ -11,6 +11,25 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
+const getPaymentLabel = (order: Order) => {
+  const methodCode = order.payment?.methodCode?.toUpperCase();
+  const methodName = order.payment?.methodName;
+
+  if (methodCode === "COD") {
+    return `Thanh toan bang COD - ${order.paymentStatus ?? "unpaid"}`;
+  }
+  if (methodCode === "MOMO") {
+    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua MoMo`;
+  }
+  if (methodCode === "CARD") {
+    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ngan hang`;
+  }
+
+  return methodName
+    ? `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ${methodName}`
+    : order.payment?.paymentStatus ?? order.paymentStatus ?? "pending";
+};
+
 export default function OrderDetailScreen() {
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const { token } = useAuth();
@@ -132,6 +151,10 @@ export default function OrderDetailScreen() {
                 <View className="flex-row items-center justify-between">
                   <Text className="text-[16px] font-extrabold text-[#1F2934]">Tổng cộng</Text>
                   <Text className="text-[20px] font-extrabold text-[#0369A1]">{formatPrice(order.totalAmount)}</Text>
+                </View>
+                <View className="mt-3 rounded-[12px] bg-[#F8FAFD] p-3">
+                  <Text className="text-[13px] text-[#64748B]">Trang thai thanh toan</Text>
+                  <Text className="mt-1 text-[15px] font-extrabold text-[#1F2934]">{getPaymentLabel(order)}</Text>
                 </View>
               </View>
             </View>

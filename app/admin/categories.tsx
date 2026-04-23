@@ -1,9 +1,9 @@
 import { AdminCategoryCard } from "@/components/admin/categories/admin-category-card";
 import { AdminCategoryToolbar } from "@/components/admin/categories/admin-category-toolbar";
 import { AdminHeader } from "@/components/admin/shared/admin-header";
-import { useAuth } from "@/contexts/auth-context";
-import { usePermissions } from "@/hooks/auth/use-permissions";
 import { useAdminCategoriesView } from "@/hooks/admin/use-admin-categories-view";
+import { usePermissions } from "@/hooks/auth/use-permissions";
+import { useAuth } from "@/contexts/auth-context";
 import { AdminCategory } from "@/types/admin";
 import { Href, router } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
@@ -16,6 +16,7 @@ export default function AdminCategoriesScreen() {
   const canCreate = hasPermission("categories:create");
   const canUpdate = hasPermission("categories:update");
   const canDelete = hasPermission("categories:delete");
+  const canHide = canDelete || canUpdate;
 
   const {
     filteredCategories,
@@ -38,19 +39,38 @@ export default function AdminCategoriesScreen() {
     router.push((`/admin/category-form?categoryId=${item.id}` as unknown) as Href);
   };
 
+  const hideCategory = (category: AdminCategory) => {
+    Alert.alert("An danh muc", `An danh muc ${category.name}?`, [
+      { text: "Huy", style: "cancel" },
+      {
+        text: "An",
+        style: "destructive",
+        onPress: () => {
+          const action = canDelete
+            ? deleteCategory(category.id)
+            : updateCategoryStatus(category.id, "inactive");
+
+          action.catch((err: any) => {
+            Alert.alert("Loi", err?.message ?? "Khong the an danh muc.");
+          });
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
-      <AdminHeader title="Quản lý Danh mục" />
+      <AdminHeader title="Quan ly Danh muc" />
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
         <AdminCategoryToolbar value={search} onChange={setSearch} onOpenCreate={openCreate} canCreate={canCreate} />
         {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">Bạn không có quyền tạo danh mục.</Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">Ban khong co quyen tao danh muc.</Text>
         ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
             <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Bạn không có quyền xem danh sách danh mục.
+              Ban khong co quyen xem danh sach danh muc.
             </Text>
           </View>
         ) : loading ? (
@@ -70,29 +90,16 @@ export default function AdminCategoriesScreen() {
                 onEdit={canUpdate ? openEdit : undefined}
                 onToggleStatus={canUpdate ? (category) => {
                   updateCategoryStatus(category.id, category.status === "active" ? "inactive" : "active").catch((err: any) => {
-                    Alert.alert("Loi", err?.message ?? "Không thể cập nhật trang thái.");
+                    Alert.alert("Loi", err?.message ?? "Khong the cap nhat trang thai.");
                   });
                 } : undefined}
-                onDelete={canDelete ? (category) => {
-                  Alert.alert("Xóa danh mục", `Xóa danh mục ${category.name}?`, [
-                    { text: "Hủy", style: "cancel" },
-                    {
-                      text: "Xóa",
-                      style: "destructive",
-                      onPress: () => {
-                        deleteCategory(category.id).catch((err: any) => {
-                          Alert.alert("Lỗi", err?.message ?? "Không thể xóa danh mục.");
-                        });
-                      },
-                    },
-                  ]);
-                } : undefined}
+                onDelete={canHide ? hideCategory : undefined}
               />
             ))}
 
             {!filteredCategories.length && (
-              <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Không tìm thấy danh mục phù hợp.</Text>
+              <View className="items-center rounded-[14px] bg-white p-6">
+                <Text className="text-[14px] text-[#6B7280]">Khong tim thay danh muc phu hop.</Text>
               </View>
             )}
           </View>
@@ -101,7 +108,7 @@ export default function AdminCategoriesScreen() {
 
       {saving ? (
         <View className="absolute bottom-5 right-5 rounded-full bg-[#111827] px-4 py-2">
-          <Text className="text-[12px] font-semibold text-white">Đang cập nhật...</Text>
+          <Text className="text-[12px] font-semibold text-white">Dang cap nhat...</Text>
         </View>
       ) : null}
 

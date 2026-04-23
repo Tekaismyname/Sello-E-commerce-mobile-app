@@ -45,6 +45,14 @@ export interface AdminCategory {
   childCount?: number;
 }
 
+export interface AdminBrand {
+  id: number;
+  name: string;
+  slug?: string | null;
+  logoUrl?: string | null;
+  status: "active" | "inactive";
+}
+
 export interface AdminVoucher {
   id: number;
   code: string;
@@ -225,6 +233,20 @@ export interface UpdateAdminCategoryPayload {
   imageUrl?: string | null;
   parentId?: number | null;
   description?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface CreateAdminBrandPayload {
+  name: string;
+  slug?: string | null;
+  logoUrl?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface UpdateAdminBrandPayload {
+  name?: string;
+  slug?: string | null;
+  logoUrl?: string | null;
   status?: "active" | "inactive";
 }
 

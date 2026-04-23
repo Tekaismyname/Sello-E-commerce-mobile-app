@@ -1,5 +1,6 @@
 import { API_BASE_URL_CANDIDATES, API_ENDPOINTS } from "@/constants/api";
 import {
+  AdminBrand,
   AdminCategory,
   AdminDashboardData,
   AdminExportedReport,
@@ -15,9 +16,11 @@ import {
   AdminReportOverview,
   AdminUser,
   AdminVoucher,
+  CreateAdminBrandPayload,
   CreateAdminCategoryPayload,
   CreateAdminNotificationPayload,
   CreateAdminVoucherPayload,
+  UpdateAdminBrandPayload,
   UpdateAdminCategoryPayload,
   UpdateAdminVoucherPayload,
 } from "@/types/admin";
@@ -241,6 +244,21 @@ const mapCategory = (category: Record<string, unknown>): AdminCategory => ({
         : null,
   description: typeof category.description === "string" ? category.description : null,
   status: (category.status ?? category.categoryStatus) === "inactive" ? "inactive" : "active",
+  productCount: toNumber(category.productCount ?? category.product_count),
+  childCount: toNumber(category.childCount ?? category.child_count),
+});
+
+const mapBrand = (brand: Record<string, unknown>): AdminBrand => ({
+  id: toNumber(brand.id ?? brand.brandId ?? brand.brand_id),
+  name: String(brand.name ?? ""),
+  slug: typeof brand.slug === "string" ? brand.slug : null,
+  logoUrl:
+    typeof brand.logoUrl === "string"
+      ? brand.logoUrl
+      : typeof brand.logo_url === "string"
+        ? brand.logo_url
+        : null,
+  status: brand.status === "inactive" ? "inactive" : "active",
 });
 
 const mapVoucher = (voucher: Record<string, unknown>): AdminVoucher => ({
@@ -470,6 +488,57 @@ export const adminService = {
     return {
       ...response,
       data: mapCategory(asRecord(response.data)),
+    };
+  },
+
+  async listBrands(token: string) {
+    const response = await requestAdmin<{ message: string; data: unknown[] }>(
+      API_ENDPOINTS.admin.brands,
+      token,
+    );
+
+    return {
+      ...response,
+      data: ensureArray<Record<string, unknown>>(response.data).map(mapBrand),
+    };
+  },
+
+  async createBrand(token: string, payload: CreateAdminBrandPayload) {
+    const response = await requestAdmin<{ message: string; data: unknown }>(
+      API_ENDPOINTS.admin.createBrand,
+      token,
+      { method: "POST", body: JSON.stringify(payload) },
+    );
+
+    return {
+      ...response,
+      data: mapBrand(asRecord(response.data)),
+    };
+  },
+
+  async updateBrand(token: string, brandId: number, payload: UpdateAdminBrandPayload) {
+    const response = await requestAdmin<{ message: string; data: unknown }>(
+      API_ENDPOINTS.admin.updateBrand(brandId),
+      token,
+      { method: "PUT", body: JSON.stringify(payload) },
+    );
+
+    return {
+      ...response,
+      data: mapBrand(asRecord(response.data)),
+    };
+  },
+
+  async updateBrandStatus(token: string, brandId: number, status: "active" | "inactive") {
+    const response = await requestAdmin<{ message: string; data: unknown }>(
+      API_ENDPOINTS.admin.updateBrandStatus(brandId),
+      token,
+      { method: "PATCH", body: JSON.stringify({ status }) },
+    );
+
+    return {
+      ...response,
+      data: mapBrand(asRecord(response.data)),
     };
   },
 

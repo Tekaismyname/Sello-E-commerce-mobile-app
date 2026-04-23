@@ -228,11 +228,16 @@ export interface Order {
   payment?: {
     id: number;
     paymentMethodId: number;
+    methodCode?: string | null;
+    methodName?: string | null;
     amount: number;
     transactionCode: string | null;
     paymentStatus: string;
     paidAt: string | null;
     failReason: string | null;
+    paymentUrl?: string;
+    qrPayload?: string;
+    qrCodeUrl?: string;
   } | null;
   shipment?: {
     id: number;
@@ -269,6 +274,13 @@ export interface OrderTracking {
     estimatedDeliveryAt: string | null;
     shippedAt: string | null;
     deliveredAt: string | null;
+  } | null;
+  destination?: {
+    recipientName?: string | null;
+    phone?: string | null;
+    address: string;
+    latitude: number;
+    longitude: number;
   } | null;
   timeline: OrderStatusEvent[];
 }

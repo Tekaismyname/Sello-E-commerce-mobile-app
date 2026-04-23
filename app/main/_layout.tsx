@@ -19,6 +19,10 @@ export default function MainLayout() {
       <Tabs.Screen name="search" options={{ href: null }} />
       <Tabs.Screen name="product-list" options={{ href: null }} />
       <Tabs.Screen name="checkout" options={{ href: null }} />
+      <Tabs.Screen name="payment" options={{ href: null }} />
+      <Tabs.Screen name="payment-processing" options={{ href: null }} />
+      <Tabs.Screen name="payment-success" options={{ href: null }} />
+      <Tabs.Screen name="payment-failed" options={{ href: null }} />
       <Tabs.Screen name="order-detail" options={{ href: null }} />
       <Tabs.Screen name="order-tracking" options={{ href: null }} />
       <Tabs.Screen name="addresses" options={{ href: null }} />

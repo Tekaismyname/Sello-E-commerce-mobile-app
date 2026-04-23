@@ -205,6 +205,14 @@ const mapOrder = (raw: Record<string, unknown>): Order => ({
     ? {
         id: toNumber(asRecord(raw.payment).id),
         paymentMethodId: toNumber(asRecord(raw.payment).paymentMethodId),
+        methodCode:
+          typeof asRecord(raw.payment).methodCode === "string"
+            ? String(asRecord(raw.payment).methodCode)
+            : null,
+        methodName:
+          typeof asRecord(raw.payment).methodName === "string"
+            ? String(asRecord(raw.payment).methodName)
+            : null,
         amount: toNumber(asRecord(raw.payment).amount),
         transactionCode:
           typeof asRecord(raw.payment).transactionCode === "string"
@@ -219,6 +227,18 @@ const mapOrder = (raw: Record<string, unknown>): Order => ({
           typeof asRecord(raw.payment).failReason === "string"
             ? String(asRecord(raw.payment).failReason)
             : null,
+        paymentUrl:
+          typeof asRecord(raw.payment).paymentUrl === "string"
+            ? String(asRecord(raw.payment).paymentUrl)
+            : undefined,
+        qrPayload:
+          typeof asRecord(raw.payment).qrPayload === "string"
+            ? String(asRecord(raw.payment).qrPayload)
+            : undefined,
+        qrCodeUrl:
+          typeof asRecord(raw.payment).qrCodeUrl === "string"
+            ? String(asRecord(raw.payment).qrCodeUrl)
+            : undefined,
       }
     : null,
   shipment: raw.shipment
@@ -753,6 +773,21 @@ export const orderService = {
                 typeof asRecord(data.shipment).deliveredAt === "string"
                   ? toDateString(asRecord(data.shipment).deliveredAt)
                   : null,
+            }
+          : null,
+        destination: data.destination
+          ? {
+              recipientName:
+                typeof asRecord(data.destination).recipientName === "string"
+                  ? String(asRecord(data.destination).recipientName)
+                  : null,
+              phone:
+                typeof asRecord(data.destination).phone === "string"
+                  ? String(asRecord(data.destination).phone)
+                  : null,
+              address: String(asRecord(data.destination).address ?? ""),
+              latitude: toNumber(asRecord(data.destination).latitude),
+              longitude: toNumber(asRecord(data.destination).longitude),
             }
           : null,
         timeline: asArray<Record<string, unknown>>(data.timeline).map((item) => ({

@@ -1,3 +1,4 @@
+import { AddressForm } from "@/components/main/address/address-form";
 import { CheckoutAddressSelector } from "@/components/main/checkout/checkout-address-selector";
 import { CheckoutFooterBar } from "@/components/main/checkout/checkout-footer-bar";
 import { CheckoutOrderSummary } from "@/components/main/checkout/checkout-order-summary";
@@ -7,12 +8,15 @@ import { CheckoutSelectedAddress } from "@/components/main/checkout/checkout-sel
 import { CheckoutVoucherRow } from "@/components/main/checkout/checkout-voucher-row";
 import { useAuth } from "@/contexts/auth-context";
 import { useCheckout } from "@/hooks/customer/use-checkout";
+import { addressService, cartService } from "@/services/customer.service";
+import { Address, CartItem, CreateAddressPayload, UpdateAddressPayload } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -36,37 +40,94 @@ export default function CheckoutScreen() {
     setSelectedAddressId,
     setSelectedPaymentMethodId,
     applyVoucher,
+    fetchPreview,
     placeOrder,
   } = useCheckout(token);
   const [showAddressOptions, setShowAddressOptions] = useState(false);
   const [showVoucherInput, setShowVoucherInput] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
 
   const selectedAddress = useMemo(
     () => preview?.addresses.find((item) => item.id === selectedAddressId) ?? null,
     [preview?.addresses, selectedAddressId],
   );
 
+  const refreshCheckout = async () => {
+    await fetchPreview(voucherCode);
+  };
+
   const handlePlaceOrder = async () => {
     try {
       const result = await placeOrder();
-
       if (!result) return;
 
-      const orderId = Number((result.data as any)?.orderId ?? 0);
-      Alert.alert("Đặt hàng thành công", result.message, [
-        {
-          text: "Xem chi tiết",
-          onPress: () => {
-            if (orderId > 0) {
-              router.replace((`/main/order-detail?orderId=${orderId}` as unknown) as Href);
-            } else {
-              router.replace("/main/orders" as Href);
-            }
-          },
-        },
-      ]);
+      const data = (result.data ?? {}) as any;
+      const orderId = Number(data.orderId ?? data.id ?? 0);
+      const paymentId = Number(data.paymentId ?? 0);
+      const paymentType = String(data.paymentType ?? "cod");
+      const paymentMethod = preview?.paymentMethods.find((method) => method.id === selectedPaymentMethodId);
+      const params = new URLSearchParams({
+        orderId: String(orderId),
+        paymentId: String(paymentId),
+        amount: String(pricing.totalAmount),
+        method: paymentMethod?.name ?? paymentMethod?.code ?? "Thanh toan",
+        paymentType,
+        qrCodeUrl: String(data.qrCodeUrl ?? ""),
+        paymentUrl: String(data.paymentUrl ?? ""),
+      });
+
+      router.replace((`/main/payment?${params.toString()}` as unknown) as Href);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể đặt hàng.");
+      Alert.alert("Loi", err.message ?? "Khong the dat hang.");
+    }
+  };
+
+  const openCreateAddress = () => {
+    setEditingAddress(null);
+    setShowAddressForm(true);
+  };
+
+  const openEditAddress = (address: Address) => {
+    setEditingAddress(address);
+    setShowAddressForm(true);
+  };
+
+  const saveAddress = async (payload: CreateAddressPayload | UpdateAddressPayload) => {
+    if (!token) return;
+
+    setSavingAddress(true);
+    try {
+      const response = editingAddress
+        ? await addressService.updateAddress(token, editingAddress.id, payload)
+        : await addressService.createAddress(token, payload as CreateAddressPayload);
+
+      if (response.data?.id) {
+        setSelectedAddressId(response.data.id);
+      }
+
+      setShowAddressForm(false);
+      await refreshCheckout();
+    } catch (err: any) {
+      Alert.alert("Loi", err.message ?? "Khong the luu dia chi.");
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  const handleChangeQuantity = async (item: CartItem, nextQuantity: number) => {
+    if (!token || nextQuantity < 1) return;
+
+    setUpdatingItemId(item.id);
+    try {
+      await cartService.updateCartItem(token, item.id, { quantity: nextQuantity });
+      await refreshCheckout();
+    } catch (err: any) {
+      Alert.alert("Loi", err.message ?? "Khong the cap nhat so luong.");
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
@@ -76,7 +137,7 @@ export default function CheckoutScreen() {
         <Pressable className="absolute left-4 h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Thanh toán</Text>
+        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Thanh toan</Text>
       </View>
 
       {loading ? (
@@ -96,8 +157,27 @@ export default function CheckoutScreen() {
               address={selectedAddress}
               onChangePress={() => setShowAddressOptions((prev) => !prev)}
             />
+
             {showAddressOptions && (
-              <View className="mt-2">
+              <View className="mt-2 rounded-[16px] bg-white p-3">
+                <View className="mb-3 flex-row gap-2">
+                  <Pressable
+                    className="h-10 flex-1 flex-row items-center justify-center rounded-[10px] bg-[#0369A1]"
+                    onPress={openCreateAddress}
+                  >
+                    <Feather name="plus" size={15} color="white" />
+                    <Text className="ml-2 text-[13px] font-bold text-white">Them dia chi</Text>
+                  </Pressable>
+                  {selectedAddress ? (
+                    <Pressable
+                      className="h-10 flex-1 flex-row items-center justify-center rounded-[10px] bg-[#EAF5FC]"
+                      onPress={() => openEditAddress(selectedAddress)}
+                    >
+                      <Feather name="edit-2" size={15} color="#0369A1" />
+                      <Text className="ml-2 text-[13px] font-bold text-[#0369A1]">Sua dia chi</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
                 <CheckoutAddressSelector
                   addresses={preview?.addresses ?? []}
                   selectedAddressId={selectedAddressId}
@@ -110,7 +190,11 @@ export default function CheckoutScreen() {
             )}
 
             <View className="mt-3">
-              <CheckoutOrderSummary items={preview?.items ?? []} />
+              <CheckoutOrderSummary
+                items={preview?.items ?? []}
+                updatingItemId={updatingItemId}
+                onChangeQuantity={handleChangeQuantity}
+              />
             </View>
 
             <View className="mt-3">
@@ -125,7 +209,7 @@ export default function CheckoutScreen() {
                 <View className="flex-row gap-2">
                   <TextInput
                     className="h-11 flex-1 rounded-[10px] bg-[#F5F7FB] px-3 text-[13px] text-[#1F2934]"
-                    placeholder="Nhập mã voucher"
+                    placeholder="Nhap ma voucher"
                     placeholderTextColor="#94A0AE"
                     value={voucherCode}
                     onChangeText={setVoucherCode}
@@ -134,14 +218,14 @@ export default function CheckoutScreen() {
                     onPress={applyVoucher}
                     className="h-11 items-center justify-center rounded-[10px] bg-[#0369A1] px-4"
                   >
-                    <Text className="text-[12px] font-bold text-white">Áp dụng</Text>
+                    <Text className="text-[12px] font-bold text-white">Ap dung</Text>
                   </Pressable>
                 </View>
               </View>
             )}
 
             <View className="mt-3 rounded-[16px] bg-white p-4">
-              <Text className="text-[17px] font-extrabold text-[#1F2934]">Phương thức thanh toán</Text>
+              <Text className="text-[17px] font-extrabold text-[#1F2934]">Phuong thuc thanh toan</Text>
               <View className="mt-3">
                 <CheckoutPaymentSelector
                   paymentMethods={preview?.paymentMethods ?? []}
@@ -163,10 +247,24 @@ export default function CheckoutScreen() {
 
           <CheckoutFooterBar
             totalAmount={pricing.totalAmount}
-            disabled={!preview?.items.length}
+            disabled={!preview?.items.length || !selectedAddressId || !selectedPaymentMethodId}
             submitting={submitting}
             onSubmit={handlePlaceOrder}
           />
+
+          <Modal visible={showAddressForm} animationType="slide" presentationStyle="pageSheet">
+            <View className="flex-1 bg-[#F3F5FA]">
+              <View className="h-[56px] flex-row items-center justify-between bg-white px-4">
+                <Text className="text-[18px] font-extrabold text-[#0F4C6B]">
+                  {editingAddress ? "Sua dia chi" : "Them dia chi moi"}
+                </Text>
+                <Pressable className="h-10 w-10 items-center justify-center" onPress={() => setShowAddressForm(false)}>
+                  <Feather name="x" size={20} color="#1F2934" />
+                </Pressable>
+              </View>
+              <AddressForm initialValue={editingAddress} loading={savingAddress} onSubmit={saveAddress} />
+            </View>
+          </Modal>
         </>
       )}
     </SafeAreaView>
