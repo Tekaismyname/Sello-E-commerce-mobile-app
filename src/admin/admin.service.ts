@@ -114,6 +114,67 @@ export class AdminService {
     };
   }
 
+  async listBrands() {
+    return {
+      message: 'Brands fetched successfully',
+      data: await this.database.listAdminBrands(),
+    };
+  }
+
+  async createBrand(payload: {
+    name: string;
+    slug?: string | null;
+    logoUrl?: string | null;
+    status?: 'active' | 'inactive';
+  }) {
+    const brand = await this.database.createAdminBrand(payload);
+
+    return {
+      message: 'Brand created successfully',
+      data: brand,
+    };
+  }
+
+  async updateBrand(
+    brandId: number,
+    payload: {
+      name?: string;
+      slug?: string | null;
+      logoUrl?: string | null;
+      status?: 'active' | 'inactive';
+    },
+  ) {
+    const brand = await this.database.updateAdminBrand(brandId, payload);
+
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    return {
+      message: 'Brand updated successfully',
+      data: brand,
+    };
+  }
+
+  async updateBrandStatus(
+    brandId: number,
+    payload: { status: 'active' | 'inactive' },
+  ) {
+    const brand = await this.database.updateAdminBrandStatus(
+      brandId,
+      payload.status,
+    );
+
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    return {
+      message: 'Brand status updated successfully',
+      data: brand,
+    };
+  }
+
   async listVouchers() {
     return {
       message: 'Vouchers fetched successfully',

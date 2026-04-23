@@ -31,6 +31,24 @@ export class UpdateCategoryStatusDto {
   status!: 'active' | 'inactive';
 }
 
+export class CreateBrandDto {
+  name!: string;
+  slug?: string | null;
+  logoUrl?: string | null;
+  status?: 'active' | 'inactive';
+}
+
+export class UpdateBrandDto {
+  name?: string;
+  slug?: string | null;
+  logoUrl?: string | null;
+  status?: 'active' | 'inactive';
+}
+
+export class UpdateBrandStatusDto {
+  status!: 'active' | 'inactive';
+}
+
 export class CreateVoucherDto {
   code!: string;
   name!: string;

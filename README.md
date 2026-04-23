@@ -249,6 +249,35 @@ Admin API được bảo vệ bằng JWT guard, role/admin guard và permission 
 - `POST /me/contact-admin`: user gửi nội dung hỗ trợ tới admin dưới dạng notification.
 - `POST /reviews`: chỉ cho review khi user đã mua sản phẩm và đơn đã `delivered`.
 
+### Mock Payment QR
+
+Online payment hien la mock flow de demo va test, khong tich hop cong thanh toan tra phi. Khi `payment_method.method_code` khac `COD`, backend tra them:
+
+```json
+{
+  "orderId": 123,
+  "orderCode": "ORD1770000000000",
+  "paymentId": 456,
+  "paymentType": "online",
+  "paymentStatus": "pending",
+  "orderStatus": "pending",
+  "paymentUrl": "https://mock-gateway.local/payments/456",
+  "qrPayload": "{\"type\":\"SELLO_MOCK_PAYMENT\",\"paymentId\":456,\"orderCode\":\"ORD1770000000000\",\"amount\":230000,\"currency\":\"VND\",\"paymentUrl\":\"https://mock-gateway.local/payments/456\"}",
+  "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=..."
+}
+```
+
+`qrCodeUrl` la anh QR tao tu public free QR API. Frontend co the hien thi truc tiep URL nay bang image component. De gia lap thanh toan thanh cong, goi:
+
+```http
+POST /payments/mock/:paymentId/callback
+Content-Type: application/json
+
+{
+  "result": "success"
+}
+```
+
 ## Reports
 
 `POST /admin/reports/export` ghi file vào thư mục `exports/` tại root backend và trả:
@@ -286,10 +315,14 @@ Nếu repo đang có khác biệt line-ending/Prettier cũ, nên kiểm tra diff
 
 ## Postman
 
+Current collection file: `Sello-Auth.postman_collection.json`.
+
+For online payment QR testing, the collection's `Create Order` request uses `paymentMethodId: 2` by default. Its test script stores `paymentId`, `paymentUrl`, `paymentQrPayload`, and `paymentQrCodeUrl`; run `Open Mock Payment QR Code` to view the generated QR image.
+
 Collection hiện nằm tại frontend repo:
 
 ```txt
-../Sello-Ecommerce/Sello-Auth.postman_collection.json
+Sello-Auth.postman_collection.json
 ```
 
 Thứ tự test nhanh:
@@ -300,7 +333,8 @@ Thứ tự test nhanh:
 4. Add Cart Item.
 5. Select Cart Item.
 6. Checkout Preview.
-7. Create Order.
+7. Create Order. Default body uses `paymentMethodId: 2` for online mock payment and QR variables.
+8. Open Mock Payment QR Code.
 8. Mock Payment Callback nếu đơn online.
 9. Get My Orders.
 10. Get Order Detail.

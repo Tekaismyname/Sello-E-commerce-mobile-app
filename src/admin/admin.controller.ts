@@ -22,11 +22,14 @@ import { AdminService } from './admin.service';
 import {
   CreateProductDto,
   CreateAdminNotificationDto,
+  CreateBrandDto,
   CreateCategoryDto,
   CreateVoucherDto,
   ExportReportDto,
   ModerateReviewDto,
   UpdateOrderStatusDto,
+  UpdateBrandDto,
+  UpdateBrandStatusDto,
   UpdateCategoryDto,
   UpdateCategoryStatusDto,
   UpdateProductDto,
@@ -100,6 +103,36 @@ export class AdminController {
   @Permissions('categories:delete')
   deleteCategory(@Param('categoryId', ParseIntPipe) categoryId: number) {
     return this.adminService.deleteCategory(categoryId);
+  }
+
+  @Get('brands')
+  @Permissions('brands:read')
+  listBrands() {
+    return this.adminService.listBrands();
+  }
+
+  @Post('brands')
+  @Permissions('brands:create')
+  createBrand(@Body() payload: CreateBrandDto) {
+    return this.adminService.createBrand(payload);
+  }
+
+  @Put('brands/:brandId')
+  @Permissions('brands:update')
+  updateBrand(
+    @Param('brandId', ParseIntPipe) brandId: number,
+    @Body() payload: UpdateBrandDto,
+  ) {
+    return this.adminService.updateBrand(brandId, payload);
+  }
+
+  @Patch('brands/:brandId/status')
+  @Permissions('brands:update')
+  updateBrandStatus(
+    @Param('brandId', ParseIntPipe) brandId: number,
+    @Body() payload: UpdateBrandStatusDto,
+  ) {
+    return this.adminService.updateBrandStatus(brandId, payload);
   }
 
   @Get('vouchers')

@@ -60,6 +60,7 @@ interface CategoryRow extends RowDataPacket {
   slug?: string | null;
   image_url?: string | null;
   parent_id?: number | null;
+  parent_name?: string | null;
   description?: string | null;
   status?: string | null;
   product_count?: number | string;
@@ -69,6 +70,9 @@ interface CategoryRow extends RowDataPacket {
 interface BrandRow extends RowDataPacket {
   brand_id: number;
   name: string;
+  slug?: string | null;
+  logo_url?: string | null;
+  status?: string | null;
 }
 
 interface ProductRow extends RowDataPacket {
@@ -133,6 +137,8 @@ interface OrderItemRow extends RowDataPacket {
 interface PaymentRow extends RowDataPacket {
   payment_id: number;
   payment_method_id: number;
+  method_code?: string | null;
+  method_name?: string | null;
   amount: number | string;
   transaction_code: string | null;
   payment_status: string;
@@ -303,6 +309,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       'categories:create',
       'categories:update',
       'categories:delete',
+      'brands:read',
+      'brands:create',
+      'brands:update',
       'vouchers:read',
       'vouchers:create',
       'vouchers:update',
@@ -1028,7 +1037,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         paymentType: 'online',
         paymentStatus: 'pending',
         orderStatus: 'pending',
-        paymentUrl: `https://mock-gateway.local/payments/${paymentId}`,
+        ...this.buildMockPaymentQr(paymentId, orderCode, totalAmount),
       };
     } catch (error) {
       await connection.rollback();
@@ -1183,9 +1192,11 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       ),
       this.pool.query<RowDataPacket[]>(
         `
-          SELECT payment_id, payment_method_id, amount, transaction_code, payment_status, paid_at, fail_reason
-          FROM payments
-          WHERE order_id = ?
+          SELECT p.payment_id, p.payment_method_id, pm.method_code, pm.method_name, p.amount, p.transaction_code,
+                 p.payment_status, p.paid_at, p.fail_reason
+          FROM payments p
+          INNER JOIN payment_methods pm ON pm.payment_method_id = p.payment_method_id
+          WHERE p.order_id = ?
           LIMIT 1
         `,
         [orderId],
@@ -1235,6 +1246,8 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         ? {
             id: paymentRows[0][0].payment_id,
             paymentMethodId: paymentRows[0][0].payment_method_id,
+            methodCode: paymentRows[0][0].method_code,
+            methodName: paymentRows[0][0].method_name,
             amount: Number(paymentRows[0][0].amount),
             transactionCode: paymentRows[0][0].transaction_code,
             paymentStatus: paymentRows[0][0].payment_status,
@@ -1242,6 +1255,13 @@ export class MySqlDatabaseService implements OnModuleDestroy {
               ? new Date(paymentRows[0][0].paid_at)
               : null,
             failReason: paymentRows[0][0].fail_reason,
+            ...(paymentRows[0][0].method_code === 'COD'
+              ? {}
+              : this.buildMockPaymentQr(
+                  paymentRows[0][0].payment_id,
+                  order.order_code,
+                  Number(paymentRows[0][0].amount),
+                )),
           }
         : null,
       shipment: shipmentRows[0][0]
@@ -1367,15 +1387,19 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   async getOrderTracking(userId: number, orderId: number) {
     const [orderRows] = await this.pool.query<RowDataPacket[]>(
       `
-        SELECT order_id
-        FROM orders
-        WHERE order_id = ? AND user_id = ?
+        SELECT o.order_id, o.order_code, o.order_status, o.placed_at,
+               a.recipient_name, a.phone, a.province, a.district, a.ward,
+               a.detail_address, a.latitude, a.longitude
+        FROM orders o
+        INNER JOIN addresses a ON a.address_id = o.address_id
+        WHERE o.order_id = ? AND o.user_id = ?
         LIMIT 1
       `,
       [orderId, userId],
     );
 
-    if (!orderRows[0]) {
+    const order = orderRows[0];
+    if (!order) {
       return undefined;
     }
 
@@ -1401,25 +1425,64 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       ),
     ]);
 
+    const destination = this.buildMockDestination(order);
+    const currentLocation = this.buildMockDriverLocation(
+      destination.latitude,
+      destination.longitude,
+      order.order_status,
+    );
+    const shipment = shipmentRows[0][0];
+
     return {
-      shipment: shipmentRows[0][0]
+      shipment: shipment
         ? {
-            id: shipmentRows[0][0].shipment_id,
-            carrierName: shipmentRows[0][0].carrier_name,
-            trackingCode: shipmentRows[0][0].tracking_code,
-            shippingType: shipmentRows[0][0].shipping_type,
-            shipmentStatus: shipmentRows[0][0].shipment_status,
-            estimatedDeliveryAt: shipmentRows[0][0].estimated_delivery_at
-              ? new Date(shipmentRows[0][0].estimated_delivery_at)
+            id: shipment.shipment_id,
+            carrierName: shipment.carrier_name,
+            trackingCode: shipment.tracking_code,
+            shippingType: shipment.shipping_type,
+            driverName: shipment.driver_name,
+            driverPhone: shipment.driver_phone,
+            vehicleNumber: shipment.vehicle_number,
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+            shipmentStatus: shipment.shipment_status,
+            estimatedDeliveryAt: shipment.estimated_delivery_at
+              ? new Date(shipment.estimated_delivery_at)
               : null,
-            shippedAt: shipmentRows[0][0].shipped_at
-              ? new Date(shipmentRows[0][0].shipped_at)
+            shippedAt: shipment.shipped_at
+              ? new Date(shipment.shipped_at)
               : null,
-            deliveredAt: shipmentRows[0][0].delivered_at
-              ? new Date(shipmentRows[0][0].delivered_at)
+            deliveredAt: shipment.delivered_at
+              ? new Date(shipment.delivered_at)
               : null,
           }
-        : null,
+        : {
+            id: 0,
+            carrierName: 'Sello Express',
+            trackingCode: `MOCK-${order.order_code ?? order.order_id}`,
+            shippingType: 'Giao tieu chuan',
+            driverName: 'Nguyen Van Tai',
+            driverPhone: '0909009009',
+            vehicleNumber: 'SELLO-01',
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+            shipmentStatus:
+              order.order_status === 'delivered'
+                ? 'delivered'
+                : order.order_status === 'shipping'
+                  ? 'shipping'
+                  : 'pending',
+            estimatedDeliveryAt: new Date(
+              new Date(order.placed_at).getTime() + 3 * 24 * 60 * 60 * 1000,
+            ),
+            shippedAt:
+              order.order_status === 'shipping' || order.order_status === 'delivered'
+                ? new Date(order.placed_at)
+                : null,
+            deliveredAt:
+              order.order_status === 'delivered' ? new Date() : null,
+          },
+      destination,
       timeline: historyRows[0].map((row) => ({
         id: row.history_id,
         status: row.status,
@@ -2130,6 +2193,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           c.slug,
           c.image_url,
           c.parent_id,
+          parent.name AS parent_name,
           c.description,
           c.status,
           COUNT(DISTINCT p.product_id) AS product_count,
@@ -2137,6 +2201,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         FROM categories c
         LEFT JOIN products p ON p.category_id = c.category_id
         LEFT JOIN categories child ON child.parent_id = c.category_id
+        LEFT JOIN categories parent ON parent.category_id = c.parent_id
         GROUP BY c.category_id
         ORDER BY c.category_id DESC
       `,
@@ -2154,6 +2219,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           c.slug,
           c.image_url,
           c.parent_id,
+          parent.name AS parent_name,
           c.description,
           c.status,
           COUNT(DISTINCT p.product_id) AS product_count,
@@ -2161,6 +2227,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         FROM categories c
         LEFT JOIN products p ON p.category_id = c.category_id
         LEFT JOIN categories child ON child.parent_id = c.category_id
+        LEFT JOIN categories parent ON parent.category_id = c.parent_id
         WHERE c.category_id = ?
         GROUP BY c.category_id
         LIMIT 1
@@ -2265,6 +2332,109 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     status: 'active' | 'inactive',
   ) {
     return this.updateAdminCategory(categoryId, { status });
+  }
+
+  async listAdminBrands() {
+    const [rows] = await this.pool.query<BrandRow[]>(
+      `
+        SELECT brand_id, name, slug, logo_url, status
+        FROM brands
+        ORDER BY brand_id DESC
+      `,
+    );
+
+    return rows.map((row) => this.mapAdminBrand(row));
+  }
+
+  async getAdminBrand(brandId: number) {
+    const [rows] = await this.pool.query<BrandRow[]>(
+      `
+        SELECT brand_id, name, slug, logo_url, status
+        FROM brands
+        WHERE brand_id = ?
+        LIMIT 1
+      `,
+      [brandId],
+    );
+
+    return rows[0] ? this.mapAdminBrand(rows[0]) : undefined;
+  }
+
+  async createAdminBrand(input: {
+    name: string;
+    slug?: string | null;
+    logoUrl?: string | null;
+    status?: 'active' | 'inactive';
+  }) {
+    if (!input.name?.trim()) {
+      throw new BadRequestException('Brand name is required');
+    }
+
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `
+        INSERT INTO brands (name, slug, logo_url, status)
+        VALUES (?, ?, ?, ?)
+      `,
+      [
+        input.name.trim(),
+        input.slug?.trim() || this.slugify(input.name),
+        input.logoUrl ?? null,
+        input.status ?? 'active',
+      ],
+    );
+
+    return this.getAdminBrand(result.insertId);
+  }
+
+  async updateAdminBrand(
+    brandId: number,
+    input: {
+      name?: string;
+      slug?: string | null;
+      logoUrl?: string | null;
+      status?: 'active' | 'inactive';
+    },
+  ) {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+
+    if (input.name !== undefined) {
+      if (!input.name.trim()) {
+        throw new BadRequestException('Brand name is required');
+      }
+      fields.push('name = ?');
+      values.push(input.name.trim());
+    }
+    if (input.slug !== undefined) {
+      fields.push('slug = ?');
+      values.push(input.slug?.trim() || null);
+    }
+    if (input.logoUrl !== undefined) {
+      fields.push('logo_url = ?');
+      values.push(input.logoUrl);
+    }
+    if (input.status !== undefined) {
+      fields.push('status = ?');
+      values.push(input.status);
+    }
+
+    if (!fields.length) {
+      return this.getAdminBrand(brandId);
+    }
+
+    const [result] = await this.pool.query<ResultSetHeader>(
+      `UPDATE brands SET ${fields.join(', ')} WHERE brand_id = ?`,
+      [...values, brandId],
+    );
+
+    return result.affectedRows > 0 ? this.getAdminBrand(brandId) : undefined;
+  }
+
+  async updateAdminBrandStatus(
+    brandId: number,
+    status: 'active' | 'inactive',
+  ) {
+    return this.updateAdminBrand(brandId, { status });
   }
 
   async listAdminVouchers() {
@@ -2786,9 +2956,11 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         ),
         this.pool.query<PaymentRow[]>(
           `
-            SELECT payment_id, payment_method_id, amount, transaction_code, payment_status, paid_at, fail_reason
-            FROM payments
-            WHERE order_id = ?
+            SELECT p.payment_id, p.payment_method_id, pm.method_code, pm.method_name, p.amount, p.transaction_code,
+                   p.payment_status, p.paid_at, p.fail_reason
+            FROM payments p
+            INNER JOIN payment_methods pm ON pm.payment_method_id = p.payment_method_id
+            WHERE p.order_id = ?
             LIMIT 1
           `,
           [orderId],
@@ -2829,6 +3001,8 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       ? {
           id: paymentRows[0][0].payment_id,
           paymentMethodId: paymentRows[0][0].payment_method_id,
+          methodCode: paymentRows[0][0].method_code,
+          methodName: paymentRows[0][0].method_name,
           amount: Number(paymentRows[0][0].amount),
           transactionCode: paymentRows[0][0].transaction_code,
           paymentStatus: paymentRows[0][0].payment_status,
@@ -2836,6 +3010,13 @@ export class MySqlDatabaseService implements OnModuleDestroy {
             ? new Date(paymentRows[0][0].paid_at)
             : null,
           failReason: paymentRows[0][0].fail_reason,
+          ...(paymentRows[0][0].method_code === 'COD'
+            ? {}
+            : this.buildMockPaymentQr(
+                paymentRows[0][0].payment_id,
+                order.order_code,
+                Number(paymentRows[0][0].amount),
+              )),
         }
       : null;
 
@@ -3586,6 +3767,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         'categories:read',
         'categories:create',
         'categories:update',
+        'brands:read',
+        'brands:create',
+        'brands:update',
         'vouchers:read',
         'vouchers:create',
         'vouchers:update',
@@ -3604,6 +3788,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       'products:read',
       'reports:read',
       'categories:read',
+      'brands:read',
       'vouchers:read',
       'notifications:read',
       'reviews:read',
@@ -4110,10 +4295,21 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       slug: row.slug ?? null,
       imageUrl: row.image_url ?? null,
       parentId: row.parent_id ?? null,
+      parentName: row.parent_name ?? null,
       description: row.description ?? null,
       status: row.status ?? 'active',
       productCount: Number(row.product_count ?? 0),
       childCount: Number(row.child_count ?? 0),
+    };
+  }
+
+  private mapAdminBrand(row: BrandRow) {
+    return {
+      id: row.brand_id,
+      name: row.name,
+      slug: row.slug ?? null,
+      logoUrl: row.logo_url ?? null,
+      status: row.status ?? 'active',
     };
   }
 
@@ -4319,6 +4515,86 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     );
 
     return Number(rows[0]?.total ?? 0) > 0;
+  }
+
+  private buildMockPaymentQr(
+    paymentId: number,
+    orderCode: string,
+    amount: number,
+  ) {
+    const paymentUrl = `https://mock-gateway.local/payments/${paymentId}`;
+    const qrPayload = JSON.stringify({
+      type: 'SELLO_MOCK_PAYMENT',
+      paymentId,
+      orderCode,
+      amount,
+      currency: 'VND',
+      paymentUrl,
+    });
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrPayload)}`;
+
+    return {
+      paymentUrl,
+      qrPayload,
+      qrCodeUrl,
+    };
+  }
+
+  private buildMockDestination(order: RowDataPacket) {
+    const province = String(order.province ?? '').toLowerCase();
+    const fallback =
+      province.includes('ha noi') || province.includes('hanoi')
+        ? { latitude: 21.0278, longitude: 105.8342 }
+        : province.includes('da nang')
+          ? { latitude: 16.0544, longitude: 108.2022 }
+          : { latitude: 10.7769, longitude: 106.7009 };
+
+    return {
+      recipientName: order.recipient_name,
+      phone: order.phone,
+      address: [
+        order.detail_address,
+        order.ward,
+        order.district,
+        order.province,
+      ]
+        .filter(Boolean)
+        .join(', '),
+      latitude:
+        order.latitude !== null && order.latitude !== undefined
+          ? Number(order.latitude)
+          : fallback.latitude,
+      longitude:
+        order.longitude !== null && order.longitude !== undefined
+          ? Number(order.longitude)
+          : fallback.longitude,
+    };
+  }
+
+  private buildMockDriverLocation(
+    destinationLat: number,
+    destinationLng: number,
+    orderStatus: string,
+  ) {
+    const progressByStatus: Record<string, number> = {
+      pending: 0.15,
+      confirmed: 0.25,
+      packed: 0.45,
+      shipping: 0.78,
+      delivered: 1,
+    };
+    const progress = progressByStatus[orderStatus] ?? 0.35;
+    const origin = {
+      latitude: destinationLat + 0.055,
+      longitude: destinationLng - 0.065,
+    };
+
+    return {
+      latitude:
+        origin.latitude + (destinationLat - origin.latitude) * progress,
+      longitude:
+        origin.longitude + (destinationLng - origin.longitude) * progress,
+    };
   }
 
   private mapUser(row: UserRow): User {

@@ -3,7 +3,7 @@
     "_postman_id": "8e4379c0-7b0e-4a14-9fb4-4b9190b4d836",
     "name": "Sello Auth API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for testing Sello Ecommerce auth flows with MySQL-backed users, OTP delivery by email or phone, logout, and admin level-based access."
+    "description": "Postman collection for testing Sello Ecommerce auth, customer checkout/orders, mock online payment QR, tracking, and admin flows."
   },
   "variable": [
     {
@@ -116,6 +116,18 @@
     },
     {
       "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "paymentUrl",
+      "value": ""
+    },
+    {
+      "key": "paymentQrPayload",
+      "value": ""
+    },
+    {
+      "key": "paymentQrCodeUrl",
       "value": ""
     },
     {
@@ -898,6 +910,24 @@
         },
         {
           "name": "Get Order Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const payment = (json.data && json.data.payment) || {};",
+                  "  if (payment.id) pm.collectionVariables.set('paymentId', String(payment.id));",
+                  "  if (payment.paymentUrl) pm.collectionVariables.set('paymentUrl', payment.paymentUrl);",
+                  "  if (payment.qrPayload) pm.collectionVariables.set('paymentQrPayload', payment.qrPayload);",
+                  "  if (payment.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', payment.qrCodeUrl);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -1422,6 +1452,9 @@
                   "  const data = json.data || {};",
                   "  if (data.orderId) pm.collectionVariables.set('orderId', String(data.orderId));",
                   "  if (data.paymentId) pm.collectionVariables.set('paymentId', String(data.paymentId));",
+                  "  if (data.paymentUrl) pm.collectionVariables.set('paymentUrl', data.paymentUrl);",
+                  "  if (data.qrPayload) pm.collectionVariables.set('paymentQrPayload', data.qrPayload);",
+                  "  if (data.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', data.qrCodeUrl);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1442,7 +1475,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"addressId\": {{addressId}},\n  \"paymentMethodId\": 1,\n  \"note\": \"Please call before delivery\"\n}"
+              "raw": "{\n  \"addressId\": {{addressId}},\n  \"paymentMethodId\": 2,\n  \"note\": \"Please call before delivery\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
@@ -1532,6 +1565,24 @@
         },
         {
           "name": "Get Order Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const payment = (json.data && json.data.payment) || {};",
+                  "  if (payment.id) pm.collectionVariables.set('paymentId', String(payment.id));",
+                  "  if (payment.paymentUrl) pm.collectionVariables.set('paymentUrl', payment.paymentUrl);",
+                  "  if (payment.qrPayload) pm.collectionVariables.set('paymentQrPayload', payment.qrPayload);",
+                  "  if (payment.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', payment.qrCodeUrl);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -1548,6 +1599,20 @@
               "path": [
                 "orders",
                 "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Open Mock Payment QR Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentQrCodeUrl}}",
+              "host": [
+                "{{paymentQrCodeUrl}}"
               ]
             }
           },
