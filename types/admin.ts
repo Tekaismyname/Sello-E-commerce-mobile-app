@@ -38,10 +38,11 @@ export interface AdminCategory {
   slug?: string | null;
   imageUrl?: string | null;
   parentId?: number | null;
+  parentName?: string | null;
   description?: string | null;
   status: "active" | "inactive";
-  productCount: number;
-  childCount: number;
+  productCount?: number;
+  childCount?: number;
 }
 
 export interface AdminVoucher {
@@ -63,15 +64,15 @@ export interface AdminVoucher {
 
 export interface AdminNotification {
   id: number;
-  userId: number;
-  userName?: string;
-  userEmail?: string;
+  userId?: number | null;
+  userName?: string | null;
+  userEmail?: string | null;
   title: string;
-  content?: string | null;
+  content: string;
   notificationType: "promotion" | "order" | "system";
   imageUrl?: string | null;
-  isRead: boolean;
-  createdAt: string;
+  isRead?: boolean;
+  createdAt?: string;
 }
 
 export interface AdminReview {
@@ -80,7 +81,7 @@ export interface AdminReview {
   productName: string;
   userId: number;
   userName: string;
-  userEmail?: string;
+  userEmail: string;
   rating: number;
   title?: string | null;
   comment?: string | null;
@@ -171,14 +172,7 @@ export interface AdminOrder {
   user: AdminOrderUser;
   paymentMethodName: string;
   totalAmount: number;
-  orderStatus:
-    | "pending"
-    | "confirmed"
-    | "packed"
-    | "shipping"
-    | "delivered"
-    | "cancelled"
-    | "returned";
+  orderStatus: AdminOrderStatus;
   paymentStatus: string;
   placedAt: string;
   shippingAddress?: string;
@@ -190,6 +184,17 @@ export interface AdminOrder {
   }[];
   statusHistory?: AdminOrderStatusHistory[];
 }
+
+export type AdminOrderStatus =
+  | "pending"
+  | "confirmed"
+  | "packed"
+  | "shipping"
+  | "delivered"
+  | "cancelled"
+  | "returned";
+
+export type AdminReviewModerationStatus = "visible" | "hidden" | "deleted";
 
 export interface AdminReportOverview {
   users: number;
@@ -203,4 +208,60 @@ export interface AdminExportedReport {
   fileName: string;
   filePath: string;
   mimeType: string;
+}
+
+export interface CreateAdminCategoryPayload {
+  name: string;
+  slug?: string;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface UpdateAdminCategoryPayload {
+  name?: string;
+  slug?: string | null;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  description?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface CreateAdminVoucherPayload {
+  code: string;
+  name: string;
+  description?: string | null;
+  voucherType: "product" | "shipping" | "cashback";
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  maxDiscountValue?: number | null;
+  minOrderValue?: number;
+  usageLimit?: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+}
+
+export interface UpdateAdminVoucherPayload {
+  code?: string;
+  name?: string;
+  description?: string | null;
+  voucherType?: "product" | "shipping" | "cashback";
+  discountType?: "percent" | "fixed";
+  discountValue?: number;
+  maxDiscountValue?: number | null;
+  minOrderValue?: number;
+  usageLimit?: number;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+}
+
+export interface CreateAdminNotificationPayload {
+  title: string;
+  content: string;
+  targetScope: "all_users" | "customer_only" | "admin_only";
+  notificationType?: "promotion" | "order" | "system";
+  imageUrl?: string | null;
 }

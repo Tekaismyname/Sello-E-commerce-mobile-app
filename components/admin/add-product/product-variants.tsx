@@ -125,7 +125,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
 
         {variants.length === 0 && (
           <View className="rounded-[12px] bg-[#F8F9FA] p-4">
-            <Text className="text-[13px] text-[#6B7682]">Chưa có phân loại nào. Bạn có thể tạo product đơn hoặc thêm variant mới.</Text>
+            <Text className="text-[13px] text-[#6B7682]">Chưa có phân loại nào. Bạn có thể tạo sản phẩm đơn hoặc thêm variant mới.</Text>
           </View>
         )}
       </View>

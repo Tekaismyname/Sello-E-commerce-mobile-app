@@ -23,7 +23,7 @@ export default function AdminDashboardScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap tai khoan admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
       setLoading(false);
       return;
     }

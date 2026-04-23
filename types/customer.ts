@@ -4,6 +4,10 @@ export interface UserProfile {
   fullName: string;
   email: string;
   phone: string;
+  avatarUrl?: string | null;
+  gender?: "male" | "female" | "other" | null;
+  birthDate?: string | null;
+  emailOptIn?: boolean;
   role: string;
   adminLevel: number | null;
   status: string;
@@ -70,9 +74,8 @@ export interface UpdateAddressPayload {
 // ─── Notification ─────────────────────────────────────────
 export interface Notification {
   id: number;
-  userId?: number;
   title: string;
-  content?: string | null;
+  content: string;
   message?: string;
   notificationType?: "promotion" | "order" | "system";
   imageUrl?: string | null;
@@ -80,18 +83,14 @@ export interface Notification {
   createdAt: string;
 }
 
-export interface ContactAdminPayload {
-  subject: string;
-  message: string;
-}
-
 // ─── Wishlist ─────────────────────────────────────────────
 export interface WishlistItem {
   id: number;
   productId: number;
   productName: string;
-  productImage: string;
+  productImage?: string | null;
   productPrice: number;
+  createdAt?: string;
 }
 
 // ─── Review ───────────────────────────────────────────────
@@ -100,39 +99,37 @@ export interface CreateReviewPayload {
   rating: number;
   title?: string;
   comment?: string;
-  media?: { mediaUrl: string; mediaType?: "image" | "video" }[];
+  media?: Array<{ mediaUrl: string; mediaType?: "image" | "video" }>;
 }
 
 // ─── Cart ─────────────────────────────────────────────────
 export interface CartItem {
   id: number;
-  cartId?: number;
   productId: number;
-  variantId: number | null;
+  variantId?: number | null;
   productName: string;
   productImage: string;
+  variantLabel?: string | null;
   price: number;
   quantity: number;
   selected: boolean;
-  variantLabel?: string | null;
-  availableStock?: number;
+  availableStock?: number | null;
 }
 
 export interface Cart {
-  cartId?: number;
   items: CartItem[];
   totalItems: number;
-  selectedItems: number;
-  subtotal: number;
-  total: number;
 }
 
 export interface CartSummary {
-  totalItems: number;
-  selectedItems: number;
+  cartId?: number;
+  totalItems?: number;
+  selectedItems?: number;
+  selectedItemsCount?: number;
   subtotal: number;
-  discount: number;
-  total: number;
+  discount?: number;
+  total?: number;
+  totalAmount?: number;
 }
 
 export interface AddCartItemPayload {
@@ -152,11 +149,20 @@ export interface SelectCartItemPayload {
 // ─── Checkout ─────────────────────────────────────────────
 export interface CheckoutPreview {
   items: CartItem[];
-  subtotal: number;
-  shippingFee: number;
-  discount: number;
-  total: number;
-  voucher?: { code: string; discountAmount: number } | null;
+  addresses: Address[];
+  paymentMethods: Array<{
+    id: number;
+    code: string;
+    name: string;
+    status: string;
+  }>;
+  voucher?: { code: string; name?: string; discount: number } | null;
+  pricing: {
+    subtotal: number;
+    shippingFee: number;
+    discount: number;
+    totalAmount: number;
+  };
 }
 
 export interface CheckoutPreviewPayload {
@@ -174,16 +180,6 @@ export interface CreateOrderPayload {
   note?: string;
 }
 
-export interface CreateOrderResult {
-  orderId: number;
-  orderCode: string;
-  paymentId: number;
-  paymentType: "cod" | "online";
-  paymentStatus: string;
-  orderStatus: OrderStatus;
-  paymentUrl?: string;
-}
-
 // ─── Order ────────────────────────────────────────────────
 export type OrderStatus =
   | "pending"
@@ -197,71 +193,84 @@ export type OrderStatus =
 export interface OrderItem {
   id: number;
   productId: number;
-  variantId?: number | null;
   productName: string;
   productImage?: string;
+  variantId?: number | null;
   variantLabel?: string | null;
+  variantSnapshot?: string | null;
   quantity: number;
   price: number;
+  unitPrice?: number;
   lineTotal?: number;
 }
 
-export interface OrderSummary {
+export interface OrderStatusEvent {
   id: number;
-  orderCode: string;
+  status: string;
+  description: string | null;
+  updatedBy?: number | null;
+  createdAt: string;
+  timestamp: string;
+}
+
+export interface Order {
+  id: number;
   status: OrderStatus;
   totalAmount: number;
+  createdAt: string;
+  orderCode?: string;
   subtotal?: number;
   shippingFee?: number;
   discount?: number;
   paymentStatus?: string;
-  createdAt: string;
-}
-
-export interface OrderTimelineEvent {
-  id?: number;
-  status: string;
-  description: string;
-  updatedBy?: number | null;
-  timestamp: string;
-}
-
-export interface OrderTracking {
-  shipment: {
-    id: number;
-    carrierName?: string | null;
-    trackingCode?: string | null;
-    shippingType?: string | null;
-    shipmentStatus?: string | null;
-    estimatedDeliveryAt?: string | null;
-    shippedAt?: string | null;
-    deliveredAt?: string | null;
-  } | null;
-  timeline: OrderTimelineEvent[];
-}
-
-export interface OrderDetail extends OrderSummary {
   note?: string | null;
-  items: OrderItem[];
+  shippingAddress?: string;
   payment?: {
     id: number;
     paymentMethodId: number;
     amount: number;
-    transactionCode?: string | null;
+    transactionCode: string | null;
     paymentStatus: string;
-    paidAt?: string | null;
-    failReason?: string | null;
+    paidAt: string | null;
+    failReason: string | null;
   } | null;
   shipment?: {
     id: number;
-    carrierName?: string | null;
-    trackingCode?: string | null;
-    shippingType?: string | null;
-    shipmentStatus?: string | null;
-    shippedAt?: string | null;
-    deliveredAt?: string | null;
+    carrierName: string | null;
+    trackingCode: string | null;
+    shippingType: string | null;
+    driverName?: string | null;
+    driverPhone?: string | null;
+    vehicleNumber?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    shipmentStatus: string;
+    shippedAt: string | null;
+    deliveredAt: string | null;
   } | null;
-  statusHistory?: OrderTimelineEvent[];
+  statusHistory?: OrderStatusEvent[];
+  items: OrderItem[];
+}
+
+export interface OrderDetail extends Order {}
+
+export interface OrderTracking {
+  shipment: {
+    id: number;
+    carrierName: string | null;
+    trackingCode: string | null;
+    shippingType: string | null;
+    driverName?: string | null;
+    driverPhone?: string | null;
+    vehicleNumber?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    shipmentStatus: string;
+    estimatedDeliveryAt: string | null;
+    shippedAt: string | null;
+    deliveredAt: string | null;
+  } | null;
+  timeline: OrderStatusEvent[];
 }
 
 export interface MockPaymentCallbackPayload {

@@ -1,86 +1,47 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
+import { CustomerOrderCard } from "@/components/main/orders/customer-order-card";
+import { OrderFilterTabs } from "@/components/main/orders/order-filter-tabs";
+import { RecommendedProducts } from "@/components/main/orders/recommended-products";
 import { SelloHeader } from "@/components/main/sello-header";
 import { useAuth } from "@/contexts/auth-context";
+import { useOrdersView } from "@/hooks/customer/use-orders-view";
+import { useHomeData } from "@/hooks/main/use-main-data";
 import { orderService } from "@/services/customer.service";
-import { OrderStatus, OrderSummary } from "@/types/customer";
-
-const statusLabels: Record<OrderStatus, string> = {
-  pending: "Cho xu ly",
-  confirmed: "Da xac nhan",
-  packed: "Da dong goi",
-  shipping: "Dang giao",
-  delivered: "Da giao",
-  cancelled: "Da huy",
-  returned: "Da tra",
-};
-
-const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
-  pending: { bg: "bg-[#FFF3E0]", text: "text-[#E65100]" },
-  confirmed: { bg: "bg-[#E3F2FD]", text: "text-[#1565C0]" },
-  packed: { bg: "bg-[#F3E8FF]", text: "text-[#873DA6]" },
-  shipping: { bg: "bg-[#E0F7FA]", text: "text-[#00838F]" },
-  delivered: { bg: "bg-[#E8F5E9]", text: "text-[#2E7D32]" },
-  cancelled: { bg: "bg-[#FFEBEE]", text: "text-[#C62828]" },
-  returned: { bg: "bg-[#FFF8E1]", text: "text-[#F57F17]" },
-};
-
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
+import { Order } from "@/types/customer";
+import { Feather } from "@expo/vector-icons";
+import { Href, router } from "expo-router";
+import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OrdersScreen() {
   const { token } = useAuth();
-  const [orders, setOrders] = useState<OrderSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: homeData } = useHomeData();
+  const { filteredOrders, filter, loading, error, setFilter, fetchOrders } = useOrdersView(token);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const openOrderDetail = (order: Order) => {
+    router.push((`/main/order-detail?orderId=${order.id}` as unknown) as Href);
+  };
 
-    if (!token) {
-      setError("Vui long dang nhap de xem don hang.");
-      setLoading(false);
-      return;
-    }
+  const openOrderTracking = (order: Order) => {
+    router.push((`/main/order-tracking?orderId=${order.id}` as unknown) as Href);
+  };
 
-    try {
-      const response = await orderService.getMyOrders(token);
-      setOrders(response.data);
-    } catch (nextError: any) {
-      setError(nextError.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  const handleCancel = (order: OrderSummary) => {
-    if (!["pending", "confirmed"].includes(order.status)) {
-      return;
-    }
-
-    Alert.alert("Huy don hang", `Ban co chac muon huy don #${order.orderCode}?`, [
-      { text: "Khong", style: "cancel" },
+  const handleCancel = (order: Order) => {
+    Alert.alert("Hủy đơn hàng", `Bạn có chắc muốn hủy đơn #${order.id}?`, [
+      { text: "Không", style: "cancel" },
       {
-        text: "Huy don",
+        text: "Hủy đơn",
         style: "destructive",
         onPress: async () => {
           if (!token) {
-            Alert.alert("Loi", "Phien dang nhap da het han.");
+            Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
             return;
           }
 
           try {
             await orderService.cancelOrder(token, order.id);
             await fetchOrders();
-          } catch (nextError: any) {
-            Alert.alert("Loi", nextError.message);
+          } catch (err: any) {
+            Alert.alert("Lỗi", err.message ?? "Không thể hủy đơn.");
           }
         },
       },
@@ -88,91 +49,50 @@ export default function OrdersScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top"]}>
       <SelloHeader />
+      <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-6">
+        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">Đơn hàng của bạn</Text>
+        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
+          Theo dõi và quản lý lịch sử mua sắm một cách dễ dàng.
+        </Text>
 
-      <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
-        <Text className="text-[30px] font-extrabold text-[#1f2934]">Don hang</Text>
+        <OrderFilterTabs value={filter} onChange={setFilter} />
 
-        {loading ? (
+        {loading && (
           <View className="mt-10 items-center">
-            <ActivityIndicator size="large" color="#006397" />
-            <Text className="mt-3 text-[13px] text-[#7d8896]">Dang tai don hang...</Text>
+            <ActivityIndicator size="large" color="#0369A1" />
           </View>
-        ) : null}
+        )}
 
-        {!loading && error ? (
-          <View className="mt-6 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#465362]">{error}</Text>
+        {!loading && error && (
+          <View className="mt-4 rounded-[14px] bg-white p-4">
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">{error}</Text>
           </View>
-        ) : null}
+        )}
 
-        {!loading && !error && orders.length === 0 ? (
-          <View className="mt-6 items-center rounded-[14px] bg-white p-6">
-            <Feather name="package" size={48} color="#c5cdd6" />
-            <Text className="mt-3 text-[15px] font-semibold text-[#465362]">Chua co don hang</Text>
-            <Text className="mt-1 text-[12px] text-[#7d8896]">Don hang cua ban se hien thi tai day.</Text>
-          </View>
-        ) : null}
-
-        {!loading && !error && orders.length > 0 ? (
+        {!loading && !error && (
           <View className="mt-4 gap-3">
-            {orders.map((order) => {
-              const colors = statusColors[order.status] ?? statusColors.pending;
-              const canCancel = order.status === "pending" || order.status === "confirmed";
+            {filteredOrders.map((order) => (
+              <CustomerOrderCard
+                key={order.id}
+                order={order}
+                onOpenDetail={openOrderDetail}
+                onOpenTracking={openOrderTracking}
+                onCancel={handleCancel}
+              />
+            ))}
 
-              return (
-                <Pressable
-                  key={order.id}
-                  className="rounded-[14px] bg-white p-4"
-                  onPress={() =>
-                    router.push(`/order/${order.id}` as Href)
-                  }
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View>
-                      <Text className="text-[15px] font-bold text-[#1f2934]">#{order.orderCode}</Text>
-                      <Text className="mt-1 text-[12px] text-[#7d8896]">
-                        {new Date(order.createdAt).toLocaleDateString("vi-VN")}
-                      </Text>
-                    </View>
-
-                    <View className={`rounded-full px-3 py-1 ${colors.bg}`}>
-                      <Text className={`text-[11px] font-bold ${colors.text}`}>
-                        {statusLabels[order.status] || order.status}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="mt-3 flex-row items-center justify-between">
-                    <View>
-                      <Text className="text-[16px] font-bold text-[#006397]">{formatPrice(order.totalAmount)}</Text>
-                      <Text className="mt-1 text-[12px] text-[#607080]">
-                        Thanh toan: {order.paymentStatus ?? "pending"}
-                      </Text>
-                    </View>
-
-                    <View className="items-end">
-                      {canCancel ? (
-                        <Pressable
-                          className="rounded-[8px] border border-[#BA1A1A] px-4 py-2"
-                          onPress={(event) => {
-                            event.stopPropagation();
-                            handleCancel(order);
-                          }}
-                        >
-                          <Text className="text-[12px] font-bold text-[#BA1A1A]">Huy don</Text>
-                        </Pressable>
-                      ) : null}
-
-                      <Text className="mt-3 text-[12px] font-semibold text-[#607080]">Xem chi tiet</Text>
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })}
+            {!filteredOrders.length && (
+              <View className="rounded-[16px] bg-white p-6 items-center">
+                <Feather name="package" size={42} color="#B6C1CD" />
+                <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chưa có đơn hàng phù hợp</Text>
+              </View>
+            )}
           </View>
-        ) : null}
+        )}
+
+        <RecommendedProducts products={homeData?.suggestedProducts ?? []} />
       </ScrollView>
     </SafeAreaView>
   );

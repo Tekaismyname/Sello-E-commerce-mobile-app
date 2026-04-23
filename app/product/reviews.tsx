@@ -12,15 +12,16 @@ import {
 } from "@/components/product";
 
 export default function ProductReviewsScreen() {
-  const { id } = useLocalSearchParams();
-  const [selectedFilter, setSelectedFilter] = useState("Tất cả");
+  const params = useLocalSearchParams<{ id?: string; productId?: string }>();
+  const [selectedFilter, setSelectedFilter] = useState("Tat ca");
+  const productId = typeof params.id === "string" ? params.id : params.productId;
 
-  const filters = ["Tất cả", "5 Sao", "4 Sao", "3 Sao", "2 Sao", "1 Sao", "Có hình ảnh"];
+  const filters = ["Tat ca", "5 Sao", "4 Sao", "3 Sao", "2 Sao", "1 Sao", "Co hinh anh"];
 
   const reviews: ReviewData[] = [
     {
       id: "1",
-      user: "Nguyễn Văn A",
+      user: "Nguyen Van A",
       avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80",
       rating: 5,
       date: "12/05/2026",
@@ -33,7 +34,7 @@ export default function ProductReviewsScreen() {
     },
     {
       id: "2",
-      user: "Trần Thị B",
+      user: "Tran Thi B",
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80",
       rating: 4,
       date: "10/05/2026",
@@ -44,7 +45,7 @@ export default function ProductReviewsScreen() {
     },
     {
       id: "3",
-      user: "Lê Văn C",
+      user: "Le Van C",
       avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80",
       rating: 5,
       date: "05/05/2026",
@@ -70,11 +71,11 @@ export default function ProductReviewsScreen() {
         </View>
 
         <ReviewList reviews={reviews} />
-        
+
         <View className="h-[80px]" />
       </ScrollView>
 
-      <WriteReviewFab productId={id as string} />
+      <WriteReviewFab productId={productId} />
     </SafeAreaView>
   );
 }

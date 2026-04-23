@@ -25,7 +25,7 @@ export function ProductSpecs() {
           </View>
           <View className="flex-row justify-between border-b border-[#E7E8EC] pb-4">
             <Text className="text-[14px] text-[#3F4850]">Chất liệu</Text>
-            <Text className="text-[14px] font-bold text-[#191C1F]">Da cao cấp (Full-grain Leather)</Text>
+            <Text className="text-[14px] font-bold text-[#191C1F]">Chất da cao cấp (Full-grain Leather)</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-[14px] text-[#3F4850]">Bảo hành</Text>

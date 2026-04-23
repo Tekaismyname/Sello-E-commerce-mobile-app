@@ -1,5 +1,6 @@
-﻿import { AdminHeader } from "@/components/admin/shared/admin-header";
+import { AdminHeader } from "@/components/admin/shared/admin-header";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminReportOverview } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
@@ -23,6 +24,10 @@ const TIME_RANGE_OPTIONS = [
 
 export default function AdminReportsScreen() {
   const { token } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canReadReports = hasPermission("reports:read");
+  const canExportReports = hasPermission("reports:export");
+
   const [report, setReport] = useState<AdminReportOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +39,13 @@ export default function AdminReportsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap tai khoan admin.");
+      setError("Vui lòng đăng nhập tài khoản admin.");
+      setLoading(false);
+      return;
+    }
+
+    if (!canReadReports) {
+      setError("Bạn không có quyền xem báo cáo.");
       setLoading(false);
       return;
     }
@@ -47,7 +58,7 @@ export default function AdminReportsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [canReadReports, token]);
 
   useEffect(() => {
     fetchReport();
@@ -63,17 +74,17 @@ export default function AdminReportsScreen() {
   }, [report?.revenueByPeriod, timeRange]);
 
   const handleExport = async (format: "csv" | "json") => {
-    if (!token) return;
+    if (!token || !canExportReports) return;
 
     try {
       setExporting(true);
       const res = await adminService.exportReport(token, "overview", format);
       Alert.alert(
-        "Xuat bao cao thanh cong",
+        "Xuất báo cáo thành công",
         `${res.data.fileName}\n${res.data.filePath}`,
       );
     } catch (err: any) {
-      Alert.alert("Loi", err.message);
+      Alert.alert("Lỗi", err.message);
     } finally {
       setExporting(false);
     }
@@ -83,7 +94,7 @@ export default function AdminReportsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Bao cao" />
+      <AdminHeader title="Báo cáo" />
 
       <ScrollView
         className="flex-1"
@@ -125,19 +136,24 @@ export default function AdminReportsScreen() {
           <View className="mt-4 flex-row gap-2">
             <Pressable
               onPress={() => handleExport("csv")}
-              disabled={exporting || !report}
-              className="flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-3"
+              disabled={exporting || !report || !canExportReports}
+              className="flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-3 disabled:opacity-50"
             >
               <Text className="text-[12px] font-bold text-white">Export CSV</Text>
             </Pressable>
             <Pressable
               onPress={() => handleExport("json")}
-              disabled={exporting || !report}
-              className="flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3"
+              disabled={exporting || !report || !canExportReports}
+              className="flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3 disabled:opacity-50"
             >
               <Text className="text-[12px] font-bold text-[#006397]">Export JSON</Text>
             </Pressable>
           </View>
+          {!canExportReports ? (
+            <Text className="mt-2 text-[12px] text-[#9A6400]">
+              Bạn không có quyền export report.
+            </Text>
+          ) : null}
         </View>
 
         {loading && (
@@ -200,7 +216,7 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Top san pham ban chay</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">Top sản phẩm bán chạy</Text>
               <View className="mt-3 gap-2">
                 {report.topSellingProducts.map((item, index) => (
                   <View
@@ -213,7 +229,7 @@ export default function AdminReportsScreen() {
                       </Text>
                     </View>
                     <Text className="text-[12px] font-bold text-[#006397]">
-                      {item.totalSold} da ban
+                      {item.totalSold} đã bán
                     </Text>
                   </View>
                 ))}
@@ -221,7 +237,7 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Phan bo trang thai don hang</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">Phân bố trạng thái đơn hàng</Text>
               <View className="mt-3 gap-2">
                 {report.orderStatusDistribution.map((item) => (
                   <View

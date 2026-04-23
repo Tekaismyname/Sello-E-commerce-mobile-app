@@ -83,7 +83,7 @@ export default function WelcomeScreen() {
               <View className="h-[153px] flex-1 items-center justify-center rounded-[18px] bg-[#e5ddf1]">
                 <Text className="text-[42px] font-extrabold text-[#6b2eb5]">Xu hướng</Text>
                 <Text className="mt-1 text-[20px] font-medium tracking-[0.4px] text-[#6b2eb5]">
-                  MÙA THU 2024
+                  MÙA THU 2026
                 </Text>
               </View>
             </View>

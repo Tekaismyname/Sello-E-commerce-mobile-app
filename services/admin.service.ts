@@ -5,14 +5,21 @@ import {
   AdminExportedReport,
   AdminNotification,
   AdminOrder,
+  AdminOrderStatus,
   AdminProduct,
   AdminProductImage,
   AdminProductsData,
   AdminRecentOrder,
-  AdminReportOverview,
   AdminReview,
+  AdminReviewModerationStatus,
+  AdminReportOverview,
   AdminUser,
   AdminVoucher,
+  CreateAdminCategoryPayload,
+  CreateAdminNotificationPayload,
+  CreateAdminVoucherPayload,
+  UpdateAdminCategoryPayload,
+  UpdateAdminVoucherPayload,
 } from "@/types/admin";
 
 async function requestAdmin<T>(path: string, token?: string, init?: RequestInit): Promise<T> {
@@ -85,11 +92,6 @@ const toNullableNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const toText = (value: unknown, fallback = "") =>
-  typeof value === "string" ? value : fallback;
-
-const toBoolean = (value: unknown) => value === true || value === 1 || value === "1";
-
 const mapRecentOrder = (order: Record<string, unknown>, index: number): AdminRecentOrder => ({
   id: String(order.id ?? `ORD-00${index}`),
   name: String(order.name ?? order.orderCode ?? `Don hang #${index + 1}`),
@@ -104,8 +106,6 @@ const mapRecentOrder = (order: Record<string, unknown>, index: number): AdminRec
 });
 
 const mapProduct = (product: Record<string, unknown>, index: number): AdminProduct => {
-  const category = asRecord(product.category);
-  const brand = asRecord(product.brand);
   const variants = ensureArray<Record<string, unknown>>(product.variants).map((variant) => {
     const status: "active" | "inactive" | undefined =
       variant.status === "inactive" || variant.status === "active"
@@ -129,11 +129,11 @@ const mapProduct = (product: Record<string, unknown>, index: number): AdminProdu
     id: String(product.id ?? `P-${index}`),
     productId: toNullableNumber(product.id) ?? undefined,
     name: String(product.name ?? `San pham ${index + 1}`),
-    category: String(product.categoryName ?? category.name ?? product.category ?? "Danh muc"),
-    categoryId: toNullableNumber(product.categoryId ?? category.id),
-    brandName: typeof product.brandName === "string" ? product.brandName : typeof brand.name === "string" ? brand.name : null,
-    stock: String(product.stockQty ?? product.stock ?? variants.reduce((total, variant) => total + (variant.stockQty ?? 0), 0)),
-    stockQty: toNullableNumber(product.stockQty ?? product.stock) ?? variants.reduce((total, variant) => total + (variant.stockQty ?? 0), 0),
+    category: String(product.categoryName ?? product.category ?? "Danh muc"),
+    categoryId: toNullableNumber(product.categoryId),
+    brandName: typeof product.brandName === "string" ? product.brandName : null,
+    stock: String(product.stockQty ?? product.stock ?? variants[0]?.stockQty ?? 0),
+    stockQty: toNullableNumber(product.stockQty ?? product.stock) ?? undefined,
     image:
       String(product.primaryImageUrl ?? product.image ?? "") ||
       "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80",
@@ -179,76 +179,6 @@ const mapUser = (user: Record<string, unknown>): AdminUser => ({
   updatedAt: typeof user.updatedAt === "string" ? user.updatedAt : undefined,
 });
 
-const mapCategory = (category: Record<string, unknown>): AdminCategory => ({
-  id: toNumber(category.id),
-  name: toText(category.name, "Danh muc"),
-  slug: typeof category.slug === "string" ? category.slug : null,
-  imageUrl: typeof category.imageUrl === "string" ? category.imageUrl : null,
-  parentId: toNullableNumber(category.parentId),
-  description: typeof category.description === "string" ? category.description : null,
-  status: category.status === "inactive" ? "inactive" : "active",
-  productCount: toNumber(category.productCount),
-  childCount: toNumber(category.childCount),
-});
-
-const mapVoucher = (voucher: Record<string, unknown>): AdminVoucher => ({
-  id: toNumber(voucher.id),
-  code: toText(voucher.code, "VOUCHER"),
-  name: toText(voucher.name, "Voucher"),
-  description: typeof voucher.description === "string" ? voucher.description : null,
-  voucherType:
-    voucher.voucherType === "shipping" || voucher.voucherType === "cashback"
-      ? voucher.voucherType
-      : "product",
-  discountType: voucher.discountType === "fixed" ? "fixed" : "percent",
-  discountValue: toNumber(voucher.discountValue),
-  maxDiscountValue: toNullableNumber(voucher.maxDiscountValue),
-  minOrderValue: toNumber(voucher.minOrderValue),
-  usageLimit: toNumber(voucher.usageLimit),
-  usedCount: toNumber(voucher.usedCount),
-  startAt: typeof voucher.startAt === "string" ? voucher.startAt : null,
-  endAt: typeof voucher.endAt === "string" ? voucher.endAt : null,
-  isActive: toBoolean(voucher.isActive),
-});
-
-const mapNotification = (notification: Record<string, unknown>): AdminNotification => ({
-  id: toNumber(notification.id),
-  userId: toNumber(notification.userId),
-  userName: toText(notification.userName),
-  userEmail: toText(notification.userEmail),
-  title: toText(notification.title, "Thong bao"),
-  content: typeof notification.content === "string" ? notification.content : null,
-  notificationType:
-    notification.notificationType === "promotion" || notification.notificationType === "order"
-      ? notification.notificationType
-      : "system",
-  imageUrl: typeof notification.imageUrl === "string" ? notification.imageUrl : null,
-  isRead: toBoolean(notification.isRead),
-  createdAt: toText(notification.createdAt, new Date().toISOString()),
-});
-
-const mapReview = (review: Record<string, unknown>): AdminReview => ({
-  id: toNumber(review.id),
-  productId: toNumber(review.productId),
-  productName: toText(review.productName, "San pham"),
-  userId: toNumber(review.userId),
-  userName: toText(review.userName, "Khach hang"),
-  userEmail: toText(review.userEmail),
-  rating: toNumber(review.rating),
-  title: typeof review.title === "string" ? review.title : null,
-  comment: typeof review.comment === "string" ? review.comment : null,
-  isVerifiedPurchase: toBoolean(review.isVerifiedPurchase),
-  moderationStatus:
-    review.moderationStatus === "hidden" || review.moderationStatus === "deleted"
-      ? review.moderationStatus
-      : "visible",
-  moderationNote: typeof review.moderationNote === "string" ? review.moderationNote : null,
-  moderatedBy: toNullableNumber(review.moderatedBy),
-  moderatedAt: typeof review.moderatedAt === "string" ? review.moderatedAt : null,
-  mediaUrls: ensureArray<string>(review.mediaUrls),
-  createdAt: toText(review.createdAt, new Date().toISOString()),
-});
-
 const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
   id: toNumber(order.id),
   orderCode: String(order.orderCode ?? order.id ?? "N/A"),
@@ -287,65 +217,170 @@ const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
   })),
 });
 
+const mapCategory = (category: Record<string, unknown>): AdminCategory => ({
+  id: toNumber(category.id ?? category.categoryId),
+  name: String(category.name ?? ""),
+  slug:
+    typeof category.slug === "string"
+      ? category.slug
+      : typeof category.categorySlug === "string"
+        ? category.categorySlug
+        : null,
+  imageUrl:
+    typeof category.imageUrl === "string"
+      ? category.imageUrl
+      : typeof category.image_url === "string"
+        ? category.image_url
+        : null,
+  parentId: toNullableNumber(category.parentId ?? category.parent_id),
+  parentName:
+    typeof category.parentName === "string"
+      ? category.parentName
+      : typeof category.parent_name === "string"
+        ? category.parent_name
+        : null,
+  description: typeof category.description === "string" ? category.description : null,
+  status: (category.status ?? category.categoryStatus) === "inactive" ? "inactive" : "active",
+});
+
+const mapVoucher = (voucher: Record<string, unknown>): AdminVoucher => ({
+  id: toNumber(voucher.id ?? voucher.voucherId),
+  code: String(voucher.code ?? ""),
+  name: String(voucher.name ?? ""),
+  description: typeof voucher.description === "string" ? voucher.description : null,
+  voucherType:
+    voucher.voucherType === "shipping" ||
+    voucher.voucherType === "cashback" ||
+    voucher.voucher_type === "shipping" ||
+    voucher.voucher_type === "cashback"
+      ? String(voucher.voucherType ?? voucher.voucher_type) as "shipping" | "cashback"
+      : "product",
+  discountType:
+    (voucher.discountType ?? voucher.discount_type) === "percent" ? "percent" : "fixed",
+  discountValue: toNumber(voucher.discountValue ?? voucher.discount_value),
+  maxDiscountValue: toNullableNumber(voucher.maxDiscountValue ?? voucher.max_discount_value),
+  minOrderValue: toNumber(voucher.minOrderValue ?? voucher.min_order_value),
+  usageLimit: toNumber(voucher.usageLimit ?? voucher.usage_limit),
+  usedCount: toNumber(voucher.usedCount ?? voucher.used_count),
+  startAt:
+    typeof voucher.startAt === "string"
+      ? voucher.startAt
+      : typeof voucher.start_at === "string"
+        ? voucher.start_at
+        : null,
+  endAt:
+    typeof voucher.endAt === "string"
+      ? voucher.endAt
+      : typeof voucher.end_at === "string"
+        ? voucher.end_at
+        : null,
+  isActive: Boolean(voucher.isActive ?? voucher.is_active),
+});
+
+const mapNotification = (notification: Record<string, unknown>): AdminNotification => ({
+  id: toNumber(notification.id ?? notification.notificationId),
+  userId: toNullableNumber(notification.userId ?? notification.user_id),
+  userName:
+    typeof notification.userName === "string"
+      ? notification.userName
+      : typeof notification.user_name === "string"
+        ? notification.user_name
+        : null,
+  title: String(notification.title ?? ""),
+  content: String(notification.content ?? ""),
+  notificationType:
+    notification.notificationType === "promotion" ||
+    notification.notificationType === "order" ||
+    notification.notification_type === "promotion" ||
+    notification.notification_type === "order"
+      ? (String(
+          notification.notificationType ?? notification.notification_type,
+        ) as "promotion" | "order")
+      : "system",
+  imageUrl:
+    typeof notification.imageUrl === "string"
+      ? notification.imageUrl
+      : typeof notification.image_url === "string"
+        ? notification.image_url
+        : null,
+  createdAt:
+    typeof notification.createdAt === "string"
+      ? notification.createdAt
+      : typeof notification.created_at === "string"
+        ? notification.created_at
+        : undefined,
+});
+
+const mapReview = (review: Record<string, unknown>): AdminReview => ({
+  id: toNumber(review.id ?? review.reviewId),
+  productId: toNumber(review.productId),
+  productName: String(review.productName ?? "San pham"),
+  userId: toNumber(review.userId),
+  userName: String(review.userName ?? "Khach hang"),
+  userEmail: String(review.userEmail ?? ""),
+  rating: toNumber(review.rating),
+  title: typeof review.title === "string" ? review.title : null,
+  comment: typeof review.comment === "string" ? review.comment : null,
+  isVerifiedPurchase: Boolean(review.isVerifiedPurchase),
+  moderationStatus:
+    review.moderationStatus === "hidden" || review.moderationStatus === "deleted"
+      ? review.moderationStatus
+      : "visible",
+  moderationNote:
+    typeof review.moderationNote === "string" ? review.moderationNote : null,
+  moderatedBy: toNullableNumber(review.moderatedBy),
+  moderatedAt:
+    typeof review.moderatedAt === "string"
+      ? review.moderatedAt
+      : review.moderatedAt instanceof Date
+        ? review.moderatedAt.toISOString()
+        : null,
+  mediaUrls: ensureArray<string>(review.mediaUrls),
+  createdAt:
+    typeof review.createdAt === "string"
+      ? review.createdAt
+      : review.createdAt instanceof Date
+        ? review.createdAt.toISOString()
+        : new Date().toISOString(),
+});
+
 export const adminService = {
   async getDashboardData(token?: string): Promise<AdminDashboardData> {
-    try {
-      const response = await requestAdmin<{ data?: Record<string, unknown> }>(
-        API_ENDPOINTS.admin.dashboard,
-        token,
-      );
-      const data = asRecord(response?.data);
+    const response = await requestAdmin<{ data?: Record<string, unknown> }>(
+      API_ENDPOINTS.admin.dashboard,
+      token,
+    );
+    const data = asRecord(response?.data);
 
-      return {
-        stats: {
-          totalRevenue: `${new Intl.NumberFormat("vi-VN").format(toNumber(data.totalRevenue))} d`,
-          revenueIncrease: String(data.revenueIncrease ?? "+0%"),
-          newOrders: `${toNumber(data.orders)} Don`,
-          outOfStockProducts: `${toNumber(data.outOfStock)} Ma`,
-        },
-        recentOrders: ensureArray<Record<string, unknown>>(data.recentOrders).map(mapRecentOrder),
-        systemSummary: {
-          users: toNumber(data.users),
-          products: toNumber(data.products),
-          ordersByStatus: asRecord(data.ordersByStatus) as Record<string, number>,
-          revenue: toNumber(data.totalRevenue),
-          vouchers: toNumber(data.vouchers),
-          paymentMethods: toNumber(data.paymentMethods),
-          notifications: toNumber(data.notifications),
-        },
-      };
-    } catch (error) {
-      console.warn("Loi tai dashboard admin", error);
-      return {
-        stats: {
-          totalRevenue: "0 d",
-          revenueIncrease: "+0%",
-          newOrders: "0 Don",
-          outOfStockProducts: "0 Ma",
-        },
-        recentOrders: [],
-        systemSummary: {
-          users: 0,
-          products: 0,
-          ordersByStatus: {},
-          revenue: 0,
-          vouchers: 0,
-          paymentMethods: 0,
-          notifications: 0,
-        },
-      };
-    }
+    return {
+      stats: {
+        totalRevenue: `${new Intl.NumberFormat("vi-VN").format(toNumber(data.totalRevenue))} d`,
+        revenueIncrease: String(data.revenueIncrease ?? "+0%"),
+        newOrders: `${toNumber(data.orders)} Don`,
+        outOfStockProducts: `${toNumber(data.outOfStock)} Ma`,
+      },
+      recentOrders: ensureArray<Record<string, unknown>>(data.recentOrders).map(mapRecentOrder),
+      systemSummary: {
+        users: toNumber(data.users),
+        products: toNumber(data.products),
+        ordersByStatus: asRecord(data.ordersByStatus) as Record<string, number>,
+        revenue: toNumber(data.totalRevenue),
+        vouchers: toNumber(data.vouchers),
+        paymentMethods: toNumber(data.paymentMethods),
+        notifications: toNumber(data.notifications),
+      },
+    };
   },
 
   async updateSystemConfig(
     token: string,
     payload: {
-      categoryStatuses?: { categoryId: number; status: "active" | "inactive" }[];
-      paymentMethodStatuses?: {
+      categoryStatuses?: Array<{ categoryId: number; status: "active" | "inactive" }>;
+      paymentMethodStatuses?: Array<{
         paymentMethodId: number;
         status: "active" | "inactive";
-      }[];
-      voucherStatuses?: { voucherId: number; isActive: boolean }[];
+      }>;
+      voucherStatuses?: Array<{ voucherId: number; isActive: boolean }>;
     },
   ) {
     return requestAdmin<{ message: string; data: unknown }>(
@@ -359,9 +394,9 @@ export const adminService = {
     return requestAdmin<{
       message: string;
       data: {
-        categories: { id: number; name: string; status: string }[];
-        paymentMethods: { id: number; code: string; name: string; status: string }[];
-        vouchers: {
+        categories: Array<{ id: number; name: string; status: string }>;
+        paymentMethods: Array<{ id: number; code: string; name: string; status: string }>;
+        vouchers: Array<{
           id: number;
           code: string;
           name: string;
@@ -369,7 +404,7 @@ export const adminService = {
           discountValue: number;
           minOrderValue: number;
           isActive: boolean;
-        }[];
+        }>;
       };
     }>(API_ENDPOINTS.admin.systemConfigOptions, token);
   },
@@ -386,43 +421,30 @@ export const adminService = {
     };
   },
 
-  async createCategory(
-    token: string,
-    payload: {
-      name: string;
-      slug?: string;
-      imageUrl?: string | null;
-      parentId?: number | null;
-      description?: string | null;
-      status?: "active" | "inactive";
-    },
-  ) {
+  async createCategory(token: string, payload: CreateAdminCategoryPayload) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
-      API_ENDPOINTS.admin.categories,
+      API_ENDPOINTS.admin.createCategory,
       token,
       { method: "POST", body: JSON.stringify(payload) },
     );
-    return { ...response, data: mapCategory(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapCategory(asRecord(response.data)),
+    };
   },
 
-  async updateCategory(
-    token: string,
-    categoryId: number,
-    payload: {
-      name?: string;
-      slug?: string | null;
-      imageUrl?: string | null;
-      parentId?: number | null;
-      description?: string | null;
-      status?: "active" | "inactive";
-    },
-  ) {
+  async updateCategory(token: string, categoryId: number, payload: UpdateAdminCategoryPayload) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
-      API_ENDPOINTS.admin.categoryDetail(categoryId),
+      API_ENDPOINTS.admin.updateCategory(categoryId),
       token,
       { method: "PUT", body: JSON.stringify(payload) },
     );
-    return { ...response, data: mapCategory(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapCategory(asRecord(response.data)),
+    };
   },
 
   async updateCategoryStatus(token: string, categoryId: number, status: "active" | "inactive") {
@@ -431,16 +453,24 @@ export const adminService = {
       token,
       { method: "PATCH", body: JSON.stringify({ status }) },
     );
-    return { ...response, data: mapCategory(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapCategory(asRecord(response.data)),
+    };
   },
 
   async deleteCategory(token: string, categoryId: number) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
-      API_ENDPOINTS.admin.categoryDetail(categoryId),
+      API_ENDPOINTS.admin.deleteCategory(categoryId),
       token,
       { method: "DELETE" },
     );
-    return { ...response, data: mapCategory(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapCategory(asRecord(response.data)),
+    };
   },
 
   async listVouchers(token: string) {
@@ -455,22 +485,30 @@ export const adminService = {
     };
   },
 
-  async createVoucher(token: string, payload: Omit<AdminVoucher, "id" | "usedCount">) {
+  async createVoucher(token: string, payload: CreateAdminVoucherPayload) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
-      API_ENDPOINTS.admin.vouchers,
+      API_ENDPOINTS.admin.createVoucher,
       token,
       { method: "POST", body: JSON.stringify(payload) },
     );
-    return { ...response, data: mapVoucher(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapVoucher(asRecord(response.data)),
+    };
   },
 
-  async updateVoucher(token: string, voucherId: number, payload: Partial<AdminVoucher>) {
+  async updateVoucher(token: string, voucherId: number, payload: UpdateAdminVoucherPayload) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
-      API_ENDPOINTS.admin.voucherDetail(voucherId),
+      API_ENDPOINTS.admin.updateVoucher(voucherId),
       token,
       { method: "PUT", body: JSON.stringify(payload) },
     );
-    return { ...response, data: mapVoucher(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapVoucher(asRecord(response.data)),
+    };
   },
 
   async updateVoucherStatus(token: string, voucherId: number, isActive: boolean) {
@@ -479,16 +517,24 @@ export const adminService = {
       token,
       { method: "PATCH", body: JSON.stringify({ isActive }) },
     );
-    return { ...response, data: mapVoucher(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapVoucher(asRecord(response.data)),
+    };
   },
 
   async deleteVoucher(token: string, voucherId: number) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
-      API_ENDPOINTS.admin.voucherDetail(voucherId),
+      API_ENDPOINTS.admin.deleteVoucher(voucherId),
       token,
       { method: "DELETE" },
     );
-    return { ...response, data: mapVoucher(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapVoucher(asRecord(response.data)),
+    };
   },
 
   async listNotifications(token: string) {
@@ -503,21 +549,17 @@ export const adminService = {
     };
   },
 
-  async createNotification(
-    token: string,
-    payload: {
-      title: string;
-      content: string;
-      targetScope: "all_users" | "customer_only" | "admin_only";
-      notificationType?: "promotion" | "order" | "system";
-      imageUrl?: string | null;
-    },
-  ) {
-    return requestAdmin<{ message: string; data: { insertedCount: number; targetScope: string } }>(
-      API_ENDPOINTS.admin.notifications,
+  async createNotification(token: string, payload: CreateAdminNotificationPayload) {
+    const response = await requestAdmin<{ message: string; data: unknown }>(
+      API_ENDPOINTS.admin.createNotification,
       token,
       { method: "POST", body: JSON.stringify(payload) },
     );
+
+    return {
+      ...response,
+      data: mapNotification(asRecord(response.data)),
+    };
   },
 
   async listReviews(token: string) {
@@ -535,15 +577,25 @@ export const adminService = {
   async moderateReview(
     token: string,
     reviewId: number,
-    status: "visible" | "hidden" | "deleted",
-    note?: string | null,
+    moderationStatus: AdminReviewModerationStatus,
+    moderationNote?: string,
   ) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
       API_ENDPOINTS.admin.moderateReview(reviewId),
       token,
-      { method: "PATCH", body: JSON.stringify({ status, note }) },
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: moderationStatus,
+          note: moderationNote?.trim() ? moderationNote.trim() : undefined,
+        }),
+      },
     );
-    return { ...response, data: mapReview(asRecord(response.data)) };
+
+    return {
+      ...response,
+      data: mapReview(asRecord(response.data)),
+    };
   },
 
   async listUsers(token: string) {
@@ -610,33 +662,41 @@ export const adminService = {
     };
   },
 
-  async updateOrderStatus(token: string, orderId: number, status: string, description?: string) {
-    return requestAdmin<{ message: string; data: unknown }>(
+  async updateOrderStatus(
+    token: string,
+    orderId: number,
+    status: AdminOrderStatus,
+    description?: string,
+  ) {
+    const response = await requestAdmin<{ message: string; data: unknown }>(
       API_ENDPOINTS.admin.updateOrderStatus(orderId),
       token,
-      { method: "PATCH", body: JSON.stringify({ status, description }) },
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status, description }),
+      },
     );
+
+    return {
+      ...response,
+      data: mapOrder(asRecord(response.data)),
+    };
   },
 
   async getProductsData(token?: string): Promise<AdminProductsData> {
-    try {
-      const response = await requestAdmin<{ data?: unknown }>(API_ENDPOINTS.admin.products, token);
-      const data = response?.data;
-      const list = Array.isArray(data)
-        ? data
-        : ensureArray<Record<string, unknown>>(asRecord(data).items);
-      const total = Array.isArray(data)
-        ? list.length
-        : toNumber(asRecord(data).total, list.length);
+    const response = await requestAdmin<{ data?: unknown }>(API_ENDPOINTS.admin.products, token);
+    const data = response?.data;
+    const list = Array.isArray(data)
+      ? data
+      : ensureArray<Record<string, unknown>>(asRecord(data).items);
+    const total = Array.isArray(data)
+      ? list.length
+      : toNumber(asRecord(data).total, list.length);
 
-      return {
-        totalCount: total,
-        products: list.map((item, index) => mapProduct(asRecord(item), index)),
-      };
-    } catch (error) {
-      console.warn("Loi tai san pham admin", error);
-      return { totalCount: 0, products: [] };
-    }
+    return {
+      totalCount: total,
+      products: list.map((item, index) => mapProduct(asRecord(item), index)),
+    };
   },
 
   async createProduct(
@@ -653,8 +713,8 @@ export const adminService = {
       comparePrice?: number | null;
       warrantyMonths?: number;
       status?: "draft" | "active" | "out_of_stock" | "inactive";
-      images?: { imageUrl: string; isPrimary?: boolean; sortOrder?: number }[];
-      variants?: {
+      images?: Array<{ imageUrl: string; isPrimary?: boolean; sortOrder?: number }>;
+      variants?: Array<{
         skuVariant?: string;
         color?: string;
         size?: string;
@@ -663,7 +723,7 @@ export const adminService = {
         weight?: number | null;
         imageUrl?: string;
         status?: "active" | "inactive";
-      }[];
+      }>;
     },
   ) {
     return requestAdmin<{ message: string; data: unknown }>(
@@ -688,8 +748,8 @@ export const adminService = {
       comparePrice?: number | null;
       warrantyMonths?: number;
       status?: "draft" | "active" | "out_of_stock" | "inactive";
-      images?: { imageUrl: string; isPrimary?: boolean; sortOrder?: number }[];
-      variants?: {
+      images?: Array<{ imageUrl: string; isPrimary?: boolean; sortOrder?: number }>;
+      variants?: Array<{
         skuVariant?: string;
         color?: string;
         size?: string;
@@ -698,7 +758,7 @@ export const adminService = {
         weight?: number | null;
         imageUrl?: string;
         status?: "active" | "inactive";
-      }[];
+      }>;
     },
   ) {
     return requestAdmin<{ message: string; data: unknown }>(
