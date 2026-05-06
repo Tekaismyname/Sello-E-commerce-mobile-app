@@ -9,7 +9,7 @@ type ProductDescriptionProps = {
 export function ProductDescription({ description, onDescriptionChange }: ProductDescriptionProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
-      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">Mô tả chi tiết</Text>
+      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">Detailed Description</Text>
 
       <View className="overflow-hidden rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7]">
         <View className="flex-row items-center justify-between border-b border-[#E7E8EC] bg-white p-2">
@@ -35,7 +35,7 @@ export function ProductDescription({ description, onDescriptionChange }: Product
 
         <TextInput
           className="h-40 p-4 text-[14px] text-[#191C1F]"
-          placeholder="Mô tả chi tiết sản phẩm để tăng tỷ lệ chuyển đổi..."
+          placeholder="Detail product description to increase conversion..."
           placeholderTextColor="#97A0AB"
           multiline
           textAlignVertical="top"

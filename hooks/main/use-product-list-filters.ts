@@ -1,43 +1,17 @@
-import { Href, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  FilterChipGroup,
-  InlinePromoBanner,
-  ProductListCard,
-  ProductListFooterLoading,
-  ProductListHeaderInfo,
-  SortTabGroup,
-} from "@/components/product";
 import type { FilterChipItem } from "@/components/product/list/filter-chip-group";
-import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
-import { SelloHeader } from "@/components/main/sello-header";
-import { useProductListData } from "@/hooks/main/use-main-data";
-import { ProductCard } from "@/types/main";
+import { ProductCard, ProductListData } from "@/types/main";
+import { normalizeSearchText } from "@/utils/search-text";
 
-type PriceFilterValue = "all" | "lt500" | "500to1000" | "1000to2000" | "gt2000";
-type RatingFilterValue = "all" | "4up" | "45up";
+export type PriceFilterValue = "all" | "lt500" | "500to1000" | "1000to2000" | "gt2000";
+export type RatingFilterValue = "all" | "4up" | "45up";
 
-type DropdownOption = {
+export type DropdownOption = {
   label: string;
   value: string;
 };
 
 const PAGE_SIZE = 8;
-
-const normalizeText = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\u0111/g, "d")
-    .replace(/\u0110/g, "D")
-    .replace(/[ÃƒÃ‚Ã†Ã„Ã¢]/g, "")
-    .replace(/[^a-zA-Z0-9\s]/g, " ")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/(.)\1{2,}/g, "$1")
-    .trim();
 
 const parsePriceNumber = (product: ProductCard) => {
   if (typeof product.priceValue === "number") {
@@ -73,7 +47,7 @@ const getRatingLabel = (value: RatingFilterValue) => {
 };
 
 const getKeywordAliases = (keyword: string) => {
-  const normalized = normalizeText(keyword);
+  const normalized = normalizeSearchText(keyword);
   if (!normalized) return [] as string[];
 
   const aliases = new Set<string>([normalized]);
@@ -97,11 +71,7 @@ const getKeywordAliases = (keyword: string) => {
   return Array.from(aliases);
 };
 
-export default function ProductListScreen() {
-  const { data, loading, errorMessage } = useProductListData();
-  const params = useLocalSearchParams<{ keyword?: string }>();
-  const searchKeyword = params.keyword?.toString().trim() ?? "";
-
+export function useProductListFilters(data: ProductListData | null, searchKeyword: string) {
   const [openChipId, setOpenChipId] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<PriceFilterValue>("all");
   const [ratingFilter, setRatingFilter] = useState<RatingFilterValue>("all");
@@ -123,16 +93,20 @@ export default function ProductListScreen() {
   const brandOptions = useMemo(() => {
     const source = data?.productListItems ?? [];
     const map = new Map<string, string>();
+
     for (const product of source) {
       const label = product.brandName?.trim() || product.subtitle?.trim();
       if (!label) continue;
-      const key = normalizeText(label);
+      const key = normalizeSearchText(label);
       if (!map.has(key)) {
         map.set(key, label);
       }
     }
 
-    return [{ label: "Tất cả", value: "all" }, ...Array.from(map.values()).map((item) => ({ label: item, value: item }))];
+    return [
+      { label: "Tất cả", value: "all" },
+      ...Array.from(map.values()).map((item) => ({ label: item, value: item })),
+    ];
   }, [data?.productListItems]);
 
   const chips = useMemo<FilterChipItem[]>(() => {
@@ -177,7 +151,7 @@ export default function ProductListScreen() {
     const byConditions = source.filter((product) => {
       const price = parsePriceNumber(product);
       const rating = syntheticRating(product);
-      const productSearchText = normalizeText(
+      const productSearchText = normalizeSearchText(
         [
           product.title,
           product.subtitle,
@@ -188,47 +162,31 @@ export default function ProductListScreen() {
       );
 
       const passKeyword = aliases.length === 0 || aliases.some((alias) => productSearchText.includes(alias));
-
       const passPrice =
         priceFilter === "all" ||
         (priceFilter === "lt500" && price < 500_000) ||
         (priceFilter === "500to1000" && price >= 500_000 && price <= 1_000_000) ||
         (priceFilter === "1000to2000" && price > 1_000_000 && price <= 2_000_000) ||
         (priceFilter === "gt2000" && price > 2_000_000);
-
       const passRating =
         ratingFilter === "all" ||
         (ratingFilter === "4up" && rating >= 4) ||
         (ratingFilter === "45up" && rating >= 4.5);
-
-      const productBrand = normalizeText(product.brandName ?? product.subtitle ?? "");
-      const passBrand = brandFilter === "all" || productBrand === normalizeText(brandFilter);
+      const productBrand = normalizeSearchText(product.brandName ?? product.subtitle ?? "");
+      const passBrand = brandFilter === "all" || productBrand === normalizeSearchText(brandFilter);
 
       return passKeyword && passPrice && passRating && passBrand;
     });
 
     if (aliases.length > 0 && byConditions.length === 0) {
       return source.filter((product) => {
-        const category = normalizeText(product.categoryName ?? "");
+        const category = normalizeSearchText(product.categoryName ?? "");
         return aliases.some((alias) => category.includes(alias));
       });
     }
 
     return byConditions;
   }, [brandFilter, data?.productListItems, priceFilter, ratingFilter, searchKeyword]);
-
-  useEffect(() => {
-    if (!data) return;
-
-    const categoryPreview = Array.from(
-      new Set((data.productListItems ?? []).map((item) => item.categoryName || "").filter(Boolean)),
-    ).slice(0, 8);
-
-    console.log("[ProductList] keyword=", searchKeyword || "(empty)");
-    console.log("[ProductList] total source=", data.productListItems.length);
-    console.log("[ProductList] total filtered=", filteredProducts.length);
-    console.log("[ProductList] categories in source=", categoryPreview.join(", "));
-  }, [data, filteredProducts.length, searchKeyword]);
 
   const visibleProducts = filteredProducts.slice(0, displayCount);
   const hasMore = filteredProducts.length > visibleProducts.length;
@@ -253,71 +211,16 @@ export default function ProductListScreen() {
     }, 450);
   };
 
-  return (
-    <SafeAreaView className="flex-1 bg-[#f3f5f8]" edges={["top"]}>
-      <SelloHeader onSearchPress={() => router.push("/main/search" as Href)} />
-
-      {loading ? <MainLoadingState /> : null}
-      {!loading && errorMessage ? <MainErrorState message={errorMessage} /> : null}
-
-      {!loading && data ? (
-        <ScrollView className="flex-1" contentContainerClassName="px-4 pb-6" showsVerticalScrollIndicator={false}>
-          <ProductListHeaderInfo
-            trail="Trang chủ > Danh mục"
-            keyword={searchKeyword || "Tất cả sản phẩm"}
-            totalText={`${filteredProducts.length} sản phẩm được tìm thấy`}
-          />
-
-          <FilterChipGroup chips={chips} openChipId={openChipId} onPressChip={handleOpenChip} />
-
-          {openChipId ? (
-            <View className="mt-2 rounded-[12px] border border-[#dbe1e8] bg-white p-2">
-              {dropdownOptions.map((option) => (
-                <Pressable
-                  key={option.value}
-                  onPress={() => applyDropdownOption(option.value)}
-                  className="h-[38px] flex-row items-center justify-between rounded-[8px] px-3"
-                >
-                  <Text className="text-[13px] font-semibold text-[#3f4a57]">{option.label}</Text>
-                  <Text className="text-[12px] font-bold text-[#8d97a5]">Chọn</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-
-          <SortTabGroup tabs={data.sortTabs} />
-
-          <View className="mt-3 flex-row flex-wrap justify-between gap-y-3">
-            {visibleProducts.map((product, index) => (
-              <ProductListCard key={`${product.id}-${index}`} product={product} />
-            ))}
-          </View>
-
-          {visibleProducts.length === 0 ? (
-            <View className="mt-4 rounded-[12px] bg-white px-4 py-5">
-              <Text className="text-center text-[13px] font-semibold text-[#6b7682]">
-                Không tìm thấy sản phẩm phù hợp với từ khóa này.
-              </Text>
-            </View>
-          ) : null}
-
-          {visibleProducts.length > 2 ? <InlinePromoBanner /> : null}
-
-          {hasMore ? (
-            <Pressable
-              className="mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5]"
-              onPress={handleLoadMore}
-              disabled={loadingMore}
-            >
-              <Text className="text-[14px] font-bold text-[#3077d8]">
-                {loadingMore ? "Đang tải thêm..." : "Xem thêm sản phẩm"}
-              </Text>
-            </Pressable>
-          ) : null}
-
-          <ProductListFooterLoading visible={loadingMore} />
-        </ScrollView>
-      ) : null}
-    </SafeAreaView>
-  );
+  return {
+    chips,
+    dropdownOptions,
+    openChipId,
+    filteredProducts,
+    visibleProducts,
+    hasMore,
+    loadingMore,
+    applyDropdownOption,
+    handleOpenChip,
+    handleLoadMore,
+  };
 }

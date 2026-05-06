@@ -8,7 +8,7 @@ export function AdminSearchFilter({ searchQuery, onSearchQueryChange }: any) {
         <Feather name="search" size={20} color="#6b7682" />
         <TextInput
           className="flex-1 ml-3 text-[14px] text-[#191C1F]"
-          placeholder="Tìm kiếm sản phẩm..."
+          placeholder="Search products..."
           placeholderTextColor="#97a0ab"
           value={searchQuery}
           onChangeText={onSearchQueryChange}
@@ -16,7 +16,7 @@ export function AdminSearchFilter({ searchQuery, onSearchQueryChange }: any) {
       </View>
       <Pressable className="h-12 w-full flex-row items-center justify-center gap-2 rounded-[12px] bg-[#E7E8EC] shadow-sm">
         <Feather name="filter" size={18} color="#191C1F" />
-        <Text className="text-[14px] font-bold text-[#191C1F]">Bộ lọc</Text>
+        <Text className="text-[14px] font-bold text-[#191C1F]">Filters</Text>
       </Pressable>
     </View>
   );

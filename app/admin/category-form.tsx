@@ -25,11 +25,11 @@ export default function AdminCategoryFormScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sửa Danh mục" : "Thêm Danh mục"}</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Edit Category" : "Add Category"}</Text>
       </View>
       {!canSubmit ? (
         <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">Bạn không có quyền lưu danh mục.</Text>
+          <Text className="text-[12px] text-[#9A6400]">You don't have permission to save categories.</Text>
         </View>
       ) : null}
 
@@ -39,7 +39,7 @@ export default function AdminCategoryFormScreen() {
         loading={saving || loading || !canSubmit}
         onSubmit={async (payload) => {
           if (!canSubmit) {
-            Alert.alert("Không có quyền", "Bạn không có quyền lưu danh mục.");
+            Alert.alert("No Permission", "You don't have permission to save categories.");
             return;
           }
           try {
@@ -48,10 +48,10 @@ export default function AdminCategoryFormScreen() {
             } else {
               await createCategory(payload);
             }
-            Alert.alert("Thành công", "Đã lưu danh mục.");
+            Alert.alert("Success", "Category saved.");
             router.back();
           } catch (error: any) {
-            Alert.alert("Lỗi", error?.message ?? "Không thể lưu danh mục.");
+            Alert.alert("Error", error?.message ?? "Cannot save category.");
           }
         }}
       />

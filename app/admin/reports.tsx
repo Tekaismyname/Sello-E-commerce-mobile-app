@@ -39,13 +39,13 @@ export default function AdminReportsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lòng đăng nhập tài khoản admin.");
+      setError("Please log in to admin account.");
       setLoading(false);
       return;
     }
 
     if (!canReadReports) {
-      setError("Bạn không có quyền xem báo cáo.");
+      setError("You don't have permission to view reports.");
       setLoading(false);
       return;
     }
@@ -80,11 +80,11 @@ export default function AdminReportsScreen() {
       setExporting(true);
       const res = await adminService.exportReport(token, "overview", format);
       Alert.alert(
-        "Xuất báo cáo thành công",
+        "Report exported successfully",
         `${res.data.fileName}\n${res.data.filePath}`,
       );
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Error", err.message);
     } finally {
       setExporting(false);
     }
@@ -94,22 +94,18 @@ export default function AdminReportsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Báo cáo" />
+      <AdminHeader title="Reports" />
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Báo cáo và xuất file</Text>
-        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Chọn kỳ theo dõi, xem thống kê tổng hợp và xuất file báo cáo overview.
-        </Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">Reports & Export</Text>
+        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">Select tracking period, view summary stats and export overview report.</Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
-          <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Thời gian hiển thị doanh thu
-          </Text>
+          <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Revenue Display Period</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
             {TIME_RANGE_OPTIONS.map((option) => {
               const isSelected = timeRange === option.key;
@@ -150,9 +146,7 @@ export default function AdminReportsScreen() {
             </Pressable>
           </View>
           {!canExportReports ? (
-            <Text className="mt-2 text-[12px] text-[#9A6400]">
-              Bạn không có quyền export report.
-            </Text>
+            <Text className="mt-2 text-[12px] text-[#9A6400]">You don't have permission to export reports.</Text>
           ) : null}
         </View>
 
@@ -187,7 +181,7 @@ export default function AdminReportsScreen() {
 
             <View className="rounded-[14px] bg-white p-4">
               <View className="flex-row items-center justify-between">
-                <Text className="text-[14px] font-bold text-[#191C1F]">Doanh thu theo kỳ</Text>
+                <Text className="text-[14px] font-bold text-[#191C1F]">Revenue By Period</Text>
                 <Feather name="bar-chart-2" size={18} color="#006397" />
               </View>
               <View className="mt-3 gap-3">
@@ -216,7 +210,7 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Top sản phẩm bán chạy</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">Top Selling Products</Text>
               <View className="mt-3 gap-2">
                 {report.topSellingProducts.map((item, index) => (
                   <View
@@ -229,7 +223,7 @@ export default function AdminReportsScreen() {
                       </Text>
                     </View>
                     <Text className="text-[12px] font-bold text-[#006397]">
-                      {item.totalSold} đã bán
+                      {item.totalSold} sold
                     </Text>
                   </View>
                 ))}
@@ -237,7 +231,7 @@ export default function AdminReportsScreen() {
             </View>
 
             <View className="rounded-[14px] bg-white p-4">
-              <Text className="text-[14px] font-bold text-[#191C1F]">Phân bố trạng thái đơn hàng</Text>
+              <Text className="text-[14px] font-bold text-[#191C1F]">Order Status Distribution</Text>
               <View className="mt-3 gap-2">
                 {report.orderStatusDistribution.map((item) => (
                   <View

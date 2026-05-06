@@ -20,15 +20,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ROLE_FILTERS = ["all", "admin", "customer"] as const;
 const STATUS_FILTERS = ["all", "active", "blocked", "inactive"] as const;
 const ROLE_LABELS: Record<(typeof ROLE_FILTERS)[number], string> = {
-  all: "Tất cả",
-  admin: "Quản trị viên",
-  customer: "Khách hàng",
+  all: "All",
+  admin: "Admin",
+  customer: "Customer",
 };
 const STATUS_LABELS: Record<(typeof STATUS_FILTERS)[number], string> = {
-  all: "Tất cả",
-  active: "Hoạt động",
-  blocked: "Bị khóa",
-  inactive: "Không hoạt động",
+  all: "All",
+  active: "Active",
+  blocked: "Locked",
+  inactive: "Inactive",
 };
 
 type RoleFilter = (typeof ROLE_FILTERS)[number];
@@ -55,13 +55,13 @@ export default function AdminUsersScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lòng đăng nhập tài khoản admin.");
+      setError("Please log in to admin account.");
       setLoading(false);
       return;
     }
 
     if (!canReadUsers) {
-      setError("Bạn không có quyền xem danh sách người dùng.");
+      setError("You don't have permission to view users.");
       setLoading(false);
       return;
     }
@@ -106,7 +106,7 @@ export default function AdminUsersScreen() {
       const res = await adminService.getUserDetail(token, userId);
       setSelectedUser(res.data);
     } catch (err: any) {
-      Alert.alert("Không thể tải chi tiết", err.message);
+      Alert.alert("Cannot load details", err.message);
     } finally {
       setRefreshingDetail(false);
     }
@@ -124,7 +124,7 @@ export default function AdminUsersScreen() {
         await openUserDetail(user.id);
       }
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Error", err.message);
     }
   };
 
@@ -138,7 +138,7 @@ export default function AdminUsersScreen() {
         await openUserDetail(user.id);
       }
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Error", err.message);
     }
   };
 
@@ -167,24 +167,22 @@ export default function AdminUsersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Người dùng" />
+      <AdminHeader title="Users" />
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý người dùng</Text>
-        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Tìm kiếm, lọc, xem chi tiết và cập nhật vai trò/trạng thái tài khoản.
-        </Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">User Management</Text>
+        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">Search, filter, view details and update account role/status.</Text>
 
         <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
           <View className="h-12 flex-row items-center rounded-[12px] bg-[#F4F6F8] px-4">
             <Feather name="search" size={18} color="#6b7682" />
             <TextInput
               className="ml-3 flex-1 text-[14px] text-[#191C1F]"
-              placeholder="Tìm theo tên, email, số điện thoại..."
+              placeholder="Search by name, email, phone..."
               placeholderTextColor="#97a0aa"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -192,7 +190,7 @@ export default function AdminUsersScreen() {
           </View>
 
           <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Lọc theo vai trò
+            Filter by role
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {ROLE_FILTERS.map((value) =>
@@ -200,9 +198,7 @@ export default function AdminUsersScreen() {
             )}
           </ScrollView>
 
-          <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-            Lọc theo trạng thái
-          </Text>
+          <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Filter By Status</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {STATUS_FILTERS.map((value) =>
               renderFilterPill(
@@ -230,9 +226,7 @@ export default function AdminUsersScreen() {
         {!loading && !error && (
           <View className="mt-4 gap-3">
             <View className="rounded-[14px] bg-[#E8F1FB] px-4 py-3">
-              <Text className="text-[13px] font-semibold text-[#0f4d75]">
-                Hiện có {filteredUsers.length}/{users.length} người dùng phù hợp bộ lọc.
-              </Text>
+              <Text className="text-[13px] font-semibold text-[#0f4d75]">Showing {filteredUsers.length}/{users.length} matching users.</Text>
             </View>
 
             {filteredUsers.map((user) => (
@@ -254,9 +248,7 @@ export default function AdminUsersScreen() {
 
                 <View className="mt-3 flex-row flex-wrap gap-2">
                   <View className="rounded-full bg-[#E8F1F8] px-3 py-1">
-                    <Text className="text-[11px] font-bold text-[#0f4d75]">
-                      Vai trò: {ROLE_LABELS[user.role as keyof typeof ROLE_LABELS] ?? user.role}
-                    </Text>
+                    <Text className="text-[11px] font-bold text-[#0f4d75]">Role: {ROLE_LABELS[user.role as keyof typeof ROLE_LABELS] ?? user.role}</Text>
                   </View>
                   <View
                     className={`rounded-full px-3 py-1 ${
@@ -285,9 +277,7 @@ export default function AdminUsersScreen() {
 
             {filteredUsers.length === 0 && (
               <View className="items-center rounded-[14px] bg-white p-6">
-                <Text className="text-[14px] text-[#5b6470]">
-                  Không có người dùng phù hợp với tìm kiếm/bộ lọc hiện tại.
-                </Text>
+                <Text className="text-[14px] text-[#5b6470]">No users match current search/filter.</Text>
               </View>
             )}
           </View>
@@ -298,7 +288,7 @@ export default function AdminUsersScreen() {
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[85%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiết người dùng</Text>
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">User Details</Text>
               <Pressable onPress={() => setSelectedUser(null)} className="h-10 w-10 items-center justify-center">
                 <Feather name="x" size={20} color="#1a232d" />
               </Pressable>
@@ -321,29 +311,27 @@ export default function AdminUsersScreen() {
 
                   <View className="mt-4 gap-2">
                     <Text className="text-[13px] text-[#3f4850]">
-                      Vai trò:{" "}
+                      Role:{" "}
                       <Text className="font-bold">
                         {ROLE_LABELS[selectedUser.role as keyof typeof ROLE_LABELS] ?? selectedUser.role}
                       </Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Trạng thái:{" "}
+                      Status:{" "}
                       <Text className="font-bold">
                         {STATUS_LABELS[selectedUser.status as keyof typeof STATUS_LABELS] ?? selectedUser.status}
                       </Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Cấp admin: <Text className="font-bold">{selectedUser.adminLevel ?? "-"}</Text>
+                      Admin Level: <Text className="font-bold">{selectedUser.adminLevel ?? "-"}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Đã xác minh: <Text className="font-bold">{selectedUser.isVerified ? "Có" : "Chưa"}</Text>
+                      Verified: <Text className="font-bold">{selectedUser.isVerified ? "Yes" : "No"}</Text>
                     </Text>
                   </View>
                 </View>
 
-                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                  Hành động nhanh
-                </Text>
+                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Quick Actions</Text>
                 <View className="mt-3 gap-3">
                   {canUpdateUserStatus ? (
                     <Pressable
@@ -351,7 +339,7 @@ export default function AdminUsersScreen() {
                       className="items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3"
                     >
                       <Text className="text-[13px] font-bold text-[#344252]">
-                        {selectedUser.status === "blocked" ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                        {selectedUser.status === "blocked" ? "Unlock Account" : "Lock Account"}
                       </Text>
                     </Pressable>
                   ) : null}
@@ -362,21 +350,19 @@ export default function AdminUsersScreen() {
                         onPress={() => handleSetRole(selectedUser, "customer")}
                         className="flex-1 items-center justify-center rounded-[12px] bg-[#EEF2F6] py-3"
                       >
-                        <Text className="text-[13px] font-bold text-[#344252]">Đặt vai trò khách hàng</Text>
+                        <Text className="text-[13px] font-bold text-[#344252]">Set Customer Role</Text>
                       </Pressable>
                       <Pressable
                         onPress={() => handleSetRole(selectedUser, "admin")}
                         className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
                       >
-                        <Text className="text-[13px] font-bold text-white">Đặt vai trò quản trị viên</Text>
+                        <Text className="text-[13px] font-bold text-white">Set Admin Role</Text>
                       </Pressable>
                     </View>
                   ) : null}
 
                   {!canUpdateUserRole && !canUpdateUserStatus ? (
-                    <Text className="text-[12px] text-[#9A6400]">
-                      Bạn không có quyền cập nhật người dùng.
-                    </Text>
+                    <Text className="text-[12px] text-[#9A6400]">You don't have permission to update users.</Text>
                   ) : null}
                 </View>
               </ScrollView>

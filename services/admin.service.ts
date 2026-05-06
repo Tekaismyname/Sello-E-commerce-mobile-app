@@ -97,10 +97,10 @@ const toNullableNumber = (value: unknown) => {
 
 const mapRecentOrder = (order: Record<string, unknown>, index: number): AdminRecentOrder => ({
   id: String(order.id ?? `ORD-00${index}`),
-  name: String(order.name ?? order.orderCode ?? `Don hang #${index + 1}`),
+  name: String(order.name ?? order.orderCode ?? `Đơn hàng #${index + 1}`),
   time: String(order.createdAt ?? order.placedAt ?? "Vua xong"),
   price: `${new Intl.NumberFormat("vi-VN").format(toNumber(order.total ?? order.totalAmount))} d`,
-  status: String(order.status ?? order.orderStatus ?? "Cho xu ly"),
+  status: String(order.status ?? order.orderStatus ?? "Pending"),
   statusColor: "bg-[#F3E8FF]",
   statusText: "text-[#873DA6]",
   image:
@@ -131,8 +131,8 @@ const mapProduct = (product: Record<string, unknown>, index: number): AdminProdu
   return {
     id: String(product.id ?? `P-${index}`),
     productId: toNullableNumber(product.id) ?? undefined,
-    name: String(product.name ?? `San pham ${index + 1}`),
-    category: String(product.categoryName ?? product.category ?? "Danh muc"),
+    name: String(product.name ?? `Sản phẩm ${index + 1}`),
+    category: String(product.categoryName ?? product.category ?? "Categories"),
     categoryId: toNullableNumber(product.categoryId),
     brandName: typeof product.brandName === "string" ? product.brandName : null,
     stock: String(product.stockQty ?? product.stock ?? variants[0]?.stockQty ?? 0),
@@ -187,7 +187,7 @@ const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
   orderCode: String(order.orderCode ?? order.id ?? "N/A"),
   user: {
     id: toNumber(asRecord(order.user).id),
-    fullName: String(asRecord(order.user).fullName ?? "Khach hang"),
+    fullName: String(asRecord(order.user).fullName ?? "Customer"),
     email: String(asRecord(order.user).email ?? ""),
   },
   paymentMethodName: String(order.paymentMethodName ?? "Khong ro"),
@@ -207,7 +207,7 @@ const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
     typeof order.shippingAddress === "string" ? order.shippingAddress : undefined,
   items: ensureArray<Record<string, unknown>>(order.items).map((item) => ({
     id: toNullableNumber(item.id) ?? undefined,
-    productName: String(item.productName ?? item.name ?? "San pham"),
+    productName: String(item.productName ?? item.name ?? "Products"),
     quantity: toNumber(item.quantity, 1),
     price: toNumber(item.price),
   })),
@@ -332,9 +332,9 @@ const mapNotification = (notification: Record<string, unknown>): AdminNotificati
 const mapReview = (review: Record<string, unknown>): AdminReview => ({
   id: toNumber(review.id ?? review.reviewId),
   productId: toNumber(review.productId),
-  productName: String(review.productName ?? "San pham"),
+  productName: String(review.productName ?? "Products"),
   userId: toNumber(review.userId),
-  userName: String(review.userName ?? "Khach hang"),
+  userName: String(review.userName ?? "Customer"),
   userEmail: String(review.userEmail ?? ""),
   rating: toNumber(review.rating),
   title: typeof review.title === "string" ? review.title : null,
@@ -849,6 +849,14 @@ export const adminService = {
     );
   },
 
+  async deleteProduct(token: string, productId: number) {
+    return requestAdmin<{ message: string; data: unknown }>(
+      API_ENDPOINTS.admin.deleteProduct(productId),
+      token,
+      { method: "DELETE" },
+    );
+  },
+
   async getProductDetail(token: string, productId: number) {
     const response = await requestAdmin<{ message: string; data: unknown }>(
       API_ENDPOINTS.admin.productDetail(productId),
@@ -880,7 +888,7 @@ export const adminService = {
         topSellingProducts: ensureArray<Record<string, unknown>>(data.topSellingProducts).map(
           (item) => ({
             productId: toNumber(item.productId),
-            name: String(item.name ?? "San pham"),
+            name: String(item.name ?? "Products"),
             totalSold: toNumber(item.totalSold),
           }),
         ),

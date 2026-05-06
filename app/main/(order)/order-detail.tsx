@@ -16,17 +16,17 @@ const getPaymentLabel = (order: Order) => {
   const methodName = order.payment?.methodName;
 
   if (methodCode === "COD") {
-    return `Thanh toan bang COD - ${order.paymentStatus ?? "unpaid"}`;
+    return `Thanh toán bằng COD - ${order.paymentStatus ?? "unpaid"}`;
   }
   if (methodCode === "MOMO") {
-    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua MoMo`;
+    return `${order.paymentStatus === "paid" ? "Đã Thanh Toán" : "Trạng thái"} qua MoMo`;
   }
   if (methodCode === "CARD") {
-    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ngan hang`;
+    return `${order.paymentStatus === "paid" ? "Đã Thanh Toán" : "Trạng thái"} qua ngan hang`;
   }
 
   return methodName
-    ? `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ${methodName}`
+    ? `${order.paymentStatus === "paid" ? "Đã Thanh Toán" : "Trạng thái"} qua ${methodName}`
     : order.payment?.paymentStatus ?? order.paymentStatus ?? "pending";
 };
 
@@ -137,15 +137,11 @@ export default function OrderDetailScreen() {
                 </View>
                 <View className="flex-row items-center justify-between">
                   <Text className="text-[14px] text-[#4B5563]">Phí vận chuyển</Text>
-                  <Text className="text-[14px] font-semibold text-[#1F2934]">
-                    {formatPrice(order.shippingFee ?? 0)}
-                  </Text>
+                  <Text className="text-[14px] font-semibold text-[#1F2934]">{formatPrice(order.shippingFee ?? 0)}</Text>
                 </View>
                 <View className="flex-row items-center justify-between">
                   <Text className="text-[14px] text-[#4B5563]">Giảm giá</Text>
-                  <Text className="text-[14px] font-semibold text-[#12805C]">
-                    -{formatPrice(order.discount ?? 0)}
-                  </Text>
+                  <Text className="text-[14px] font-semibold text-[#12805C]">-{formatPrice(order.discount ?? 0)}</Text>
                 </View>
                 <View className="mt-1 h-[1px] bg-[#E5EBF2]" />
                 <View className="flex-row items-center justify-between">
@@ -153,7 +149,7 @@ export default function OrderDetailScreen() {
                   <Text className="text-[20px] font-extrabold text-[#0369A1]">{formatPrice(order.totalAmount)}</Text>
                 </View>
                 <View className="mt-3 rounded-[12px] bg-[#F8FAFD] p-3">
-                  <Text className="text-[13px] text-[#64748B]">Trang thai thanh toan</Text>
+                  <Text className="text-[13px] text-[#64748B]">Trạng thái thanh toán</Text>
                   <Text className="mt-1 text-[15px] font-extrabold text-[#1F2934]">{getPaymentLabel(order)}</Text>
                 </View>
               </View>

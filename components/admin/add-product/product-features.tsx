@@ -22,10 +22,10 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
       <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-[16px] font-bold text-[#191C1F]">Đặc điểm nổi bật</Text>
+        <Text className="text-[16px] font-bold text-[#191C1F]">Key Features</Text>
         <Pressable onPress={addFeature} className="flex-row items-center gap-1">
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[13px] font-bold text-[#006397]">Thêm đặc điểm</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Add Feature</Text>
         </Pressable>
       </View>
 
@@ -37,7 +37,7 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
             </View>
             <TextInput
               className="flex-1 text-[14px] text-[#191C1F]"
-              placeholder="Nhập đặc điểm nổi bật..."
+              placeholder="Enter key feature..."
               placeholderTextColor="#97A0AB"
               value={feature}
               onChangeText={(value) => updateFeature(index, value)}
@@ -50,14 +50,12 @@ export function ProductFeatures({ features, onChange }: ProductFeaturesProps) {
 
         {features.length === 0 && (
           <View className="rounded-[12px] bg-[#F8F9FA] p-4">
-            <Text className="text-[13px] text-[#6B7682]">Chưa có đặc điểm nào. Bấm Thêm đặc điểm để bổ sung.</Text>
+            <Text className="text-[13px] text-[#6B7682]">No features yet. Click Add Feature to add one.</Text>
           </View>
         )}
       </View>
 
-      <Text className="mt-4 text-[12px] leading-[18px] text-[#97A0AB]">
-        Các đặc điểm này sẽ được lưu vào mô tả ngắn để phục vụ hiển thị nhanh.
-      </Text>
+      <Text className="mt-4 text-[12px] leading-[18px] text-[#97A0AB]">These features will be saved to short description for quick display.</Text>
     </View>
   );
 }

@@ -20,13 +20,13 @@ export function AdminOrderTable({
   onSelectOrder,
 }: AdminOrderTableProps) {
   const orderStatusLabel: Record<string, string> = {
-    pending: "Chờ xử lý",
-    confirmed: "Đã xác nhận",
-    packed: "Đã đóng gói",
-    shipping: "Đang giao",
-    delivered: "Đã giao",
-    cancelled: "Đã hủy",
-    returned: "Đã trả",
+    pending: "Pending",
+    confirmed: "Confirmed",
+    packed: "Packed",
+    shipping: "Shipping",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+    returned: "Returned",
   };
   const from = orders.length ? (page - 1) * pageSize + 1 : 0;
   const to = (page - 1) * pageSize + orders.length;
@@ -34,8 +34,8 @@ export function AdminOrderTable({
   return (
     <View className="rounded-[16px] bg-white p-4">
       <View className="flex-row border-b border-[#E5EBF2] pb-3">
-        <Text className="flex-1 text-[12px] font-bold text-[#4B5563]">MÃ ĐƠN HÀNG</Text>
-        <Text className="flex-[1.5] text-[12px] font-bold text-[#4B5563]">KHÁCH HÀNG</Text>
+        <Text className="flex-1 text-[12px] font-bold text-[#4B5563]">ORDER ID</Text>
+        <Text className="flex-[1.5] text-[12px] font-bold text-[#4B5563]">CUSTOMER</Text>
       </View>
 
       <View>
@@ -48,7 +48,7 @@ export function AdminOrderTable({
             <View className="flex-1">
               <Text className="text-[16px] font-extrabold text-[#0369A1]">#{order.orderCode}</Text>
               <Text className="mt-1 text-[12px] text-[#64748B]">
-                {new Intl.NumberFormat("vi-VN").format(order.totalAmount)} đ
+                {new Intl.NumberFormat("en-US").format(order.totalAmount)} d
               </Text>
             </View>
             <View className="flex-[1.5]">
@@ -67,14 +67,12 @@ export function AdminOrderTable({
 
       {!orders.length && (
         <View className="py-8 items-center">
-          <Text className="text-[14px] text-[#64748B]">Không có đơn hàng phù hợp.</Text>
+          <Text className="text-[14px] text-[#64748B]">No matching orders.</Text>
         </View>
       )}
 
       <View className="mt-4 flex-row items-center justify-between">
-        <Text className="text-[13px] leading-[19px] text-[#4B5563]">
-          Hiển thị {from}-{to} trong số {Math.max(pageCount * pageSize, to)} đơn hàng
-        </Text>
+        <Text className="text-[13px] leading-[19px] text-[#4B5563]">Showing {from}-{to} of {Math.max(pageCount * pageSize, to)} orders</Text>
 
         <View className="flex-row items-center">
           <Pressable

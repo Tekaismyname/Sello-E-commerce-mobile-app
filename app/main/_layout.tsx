@@ -11,25 +11,25 @@ export default function MainLayout() {
         headerShown: false,
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "Trang chủ" }} />
-      <Tabs.Screen name="categories" options={{ title: "Danh mục" }} />
+      <Tabs.Screen name="home" options={{ title: "Trang thái" }} />
+      <Tabs.Screen name="categories" options={{ title: "Danh sách" }} />
       <Tabs.Screen name="cart" options={{ title: "Giỏ hàng" }} />
-      <Tabs.Screen name="orders" options={{ title: "Đơn hàng" }} />
+      <Tabs.Screen name="(order)/orders" options={{ title: "Đơn hàng" }} />
       <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
-      <Tabs.Screen name="search" options={{ href: null }} />
-      <Tabs.Screen name="product-list" options={{ href: null }} />
-      <Tabs.Screen name="checkout" options={{ href: null }} />
-      <Tabs.Screen name="payment" options={{ href: null }} />
-      <Tabs.Screen name="payment-processing" options={{ href: null }} />
-      <Tabs.Screen name="payment-success" options={{ href: null }} />
-      <Tabs.Screen name="payment-failed" options={{ href: null }} />
-      <Tabs.Screen name="order-detail" options={{ href: null }} />
-      <Tabs.Screen name="order-tracking" options={{ href: null }} />
-      <Tabs.Screen name="addresses" options={{ href: null }} />
-      <Tabs.Screen name="address-form" options={{ href: null }} />
-      <Tabs.Screen name="notifications" options={{ href: null }} />
-      <Tabs.Screen name="wishlist" options={{ href: null }} />
-      <Tabs.Screen name="change-password" options={{ href: null }} />
+      <Tabs.Screen name="(catalog)/search" options={{ href: null }} />
+      <Tabs.Screen name="(catalog)/product-list" options={{ href: null }} />
+      <Tabs.Screen name="(checkout)/checkout" options={{ href: null }} />
+      <Tabs.Screen name="(payment)/payment" options={{ href: null }} />
+      <Tabs.Screen name="(payment)/payment-processing" options={{ href: null }} />
+      <Tabs.Screen name="(payment)/payment-success" options={{ href: null }} />
+      <Tabs.Screen name="(payment)/payment-failed" options={{ href: null }} />
+      <Tabs.Screen name="(order)/order-detail" options={{ href: null }} />
+      <Tabs.Screen name="(order)/order-tracking" options={{ href: null }} />
+      <Tabs.Screen name="(address)/addresses" options={{ href: null }} />
+      <Tabs.Screen name="(address)/address-form" options={{ href: null }} />
+      <Tabs.Screen name="(account)/notifications" options={{ href: null }} />
+      <Tabs.Screen name="(account)/wishlist" options={{ href: null }} />
+      <Tabs.Screen name="(account)/change-password" options={{ href: null }} />
     </Tabs>
   );
 }

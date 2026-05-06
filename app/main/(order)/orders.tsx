@@ -84,7 +84,7 @@ export default function OrdersScreen() {
             ))}
 
             {!filteredOrders.length && (
-              <View className="rounded-[16px] bg-white p-6 items-center">
+              <View className="items-center rounded-[16px] bg-white p-6">
                 <Feather name="package" size={42} color="#B6C1CD" />
                 <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chưa có đơn hàng phù hợp</Text>
               </View>

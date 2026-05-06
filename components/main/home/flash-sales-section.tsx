@@ -1,13 +1,48 @@
+import { useEffect, useMemo, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { Image, ScrollView, Text, View } from "react-native";
 import { ProductCard } from "@/types/main";
 
 type FlashSalesSectionProps = {
   countdownValues: string[];
+  flashSaleEndsAt?: string;
   products: ProductCard[];
 };
 
-export function FlashSalesSection({ countdownValues, products }: FlashSalesSectionProps) {
+const pad2 = (value: number) => String(Math.max(0, value)).padStart(2, "0");
+
+const getCountdown = (flashSaleEndsAt?: string) => {
+  if (!flashSaleEndsAt) return null;
+
+  const end = new Date(flashSaleEndsAt).getTime();
+  if (!Number.isFinite(end)) return null;
+
+  const diffMs = Math.max(0, end - Date.now());
+  const totalSeconds = Math.floor(diffMs / 1000);
+
+  return [pad2(Math.floor(totalSeconds / 3600)), pad2(Math.floor((totalSeconds % 3600) / 60)), pad2(totalSeconds % 60)];
+};
+
+export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }: FlashSalesSectionProps) {
+  const [liveCountdown, setLiveCountdown] = useState<string[] | null>(() => getCountdown(flashSaleEndsAt));
+
+  useEffect(() => {
+    setLiveCountdown(getCountdown(flashSaleEndsAt));
+
+    if (!flashSaleEndsAt) return undefined;
+
+    const timer = setInterval(() => {
+      setLiveCountdown(getCountdown(flashSaleEndsAt));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [flashSaleEndsAt]);
+
+  const displayedCountdown = useMemo(
+    () => (liveCountdown && liveCountdown.length === 3 ? liveCountdown : countdownValues),
+    [countdownValues, liveCountdown],
+  );
+
   return (
     <View className="mb-5 rounded-[16px] bg-[#f4eefe] px-3 py-3">
       <View className="mb-2 flex-row items-center justify-between">
@@ -17,7 +52,7 @@ export function FlashSalesSection({ countdownValues, products }: FlashSalesSecti
           <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">SALE</Text>
         </View>
         <View className="flex-row gap-1">
-          {countdownValues.map((value, index) => (
+          {displayedCountdown.map((value, index) => (
             <View key={`${value}-${index}`} className="min-w-[24px] rounded-full bg-[#8f46e9] px-2 py-[3px]">
               <Text className="text-center text-[11px] font-extrabold text-white">{value}</Text>
             </View>

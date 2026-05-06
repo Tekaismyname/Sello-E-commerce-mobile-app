@@ -37,6 +37,7 @@ const slugify = (value: string) =>
 export default function AdminBrandsScreen() {
   const { token } = useAuth();
   const { hasPermission } = usePermissions();
+
   const canRead = hasPermission("brands:read");
   const canCreate = hasPermission("brands:create");
   const canUpdate = hasPermission("brands:update");
@@ -55,16 +56,19 @@ export default function AdminBrandsScreen() {
 
   const [editing, setEditing] = useState<AdminBrand | null>(null);
   const [showForm, setShowForm] = useState(false);
+
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     if (!editing) return;
+
     setForm({
       name: editing.name,
       slug: editing.slug ?? "",
       logoUrl: editing.logoUrl ?? "",
       status: editing.status,
     });
+
     setShowForm(true);
   }, [editing]);
 
@@ -76,6 +80,7 @@ export default function AdminBrandsScreen() {
 
   const openCreate = () => {
     if (!canCreate) return;
+
     setEditing(null);
     setForm(emptyForm);
     setShowForm(true);
@@ -83,8 +88,12 @@ export default function AdminBrandsScreen() {
 
   const submit = async () => {
     const name = form.name.trim();
+
     if (!name) {
-      Alert.alert("Thieu thong tin", "Vui long nhap ten brand.");
+      Alert.alert(
+        "Missing Info",
+        "Please enter brand name."
+      );
       return;
     }
 
@@ -101,31 +110,55 @@ export default function AdminBrandsScreen() {
       } else {
         await createBrand(payload);
       }
+
       resetForm();
     } catch (err: any) {
-      Alert.alert("Loi", err?.message ?? "Khong the luu brand.");
+      Alert.alert(
+        "Error",
+        err?.message ?? "Cannot save brand."
+      );
     }
   };
 
   const toggleStatus = (brand: AdminBrand) => {
     if (!canUpdate) return;
-    const nextStatus = brand.status === "active" ? "inactive" : "active";
+
+    const nextStatus =
+      brand.status === "active" ? "inactive" : "active";
+
     updateBrandStatus(brand.id, nextStatus).catch((err: any) => {
-      Alert.alert("Loi", err?.message ?? "Khong the cap nhat trang thai brand.");
+      Alert.alert(
+        "Error",
+        err?.message ??
+          "Cannot update brand status."
+      );
     });
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
-      <AdminHeader title="Quan ly Brand" />
-      <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
+    <SafeAreaView
+      className="flex-1 bg-[#F3F5FA]"
+      edges={["top", "bottom"]}
+    >
+      <AdminHeader title="Manage Brands" />
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="p-4 pb-24"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="rounded-[16px] bg-white p-4">
           <View className="flex-row items-center gap-3 rounded-[12px] bg-[#F1F3F6] px-3 py-2">
-            <Feather name="search" size={18} color="#6B7280" />
+            <Feather
+              name="search"
+              size={18}
+              color="#6B7280"
+            />
+
             <TextInput
               value={search}
               onChangeText={setSearch}
-              placeholder="Tim brand..."
+              placeholder="Search brands..."
               placeholderTextColor="#9CA3AF"
               className="flex-1 py-1 text-[15px] text-[#191C1F]"
             />
@@ -136,8 +169,15 @@ export default function AdminBrandsScreen() {
               onPress={openCreate}
               className="mt-3 flex-row items-center justify-center gap-2 rounded-[12px] bg-[#0F7BB8] px-4 py-3"
             >
-              <Feather name="plus" size={18} color="#FFFFFF" />
-              <Text className="text-[15px] font-extrabold text-white">Tao brand</Text>
+              <Feather
+                name="plus"
+                size={18}
+                color="#FFFFFF"
+              />
+
+              <Text className="text-[15px] font-extrabold text-white">
+                Create Brand
+              </Text>
             </Pressable>
           ) : null}
         </View>
@@ -146,36 +186,68 @@ export default function AdminBrandsScreen() {
           <View className="mt-4 rounded-[16px] bg-white p-4">
             <View className="flex-row items-center justify-between">
               <Text className="text-[18px] font-extrabold text-[#191C1F]">
-                {editing ? "Sua brand" : "Tao brand moi"}
+                {editing
+                  ? "Edit Brand"
+                  : "Create New Brand"}
               </Text>
-              <Pressable onPress={resetForm} className="h-9 w-9 items-center justify-center rounded-full bg-[#EEF2F7]">
-                <Feather name="x" size={18} color="#4B5563" />
+
+              <Pressable
+                onPress={resetForm}
+                className="h-9 w-9 items-center justify-center rounded-full bg-[#EEF2F7]"
+              >
+                <Feather
+                  name="x"
+                  size={18}
+                  color="#4B5563"
+                />
               </Pressable>
             </View>
 
-            <Text className="mt-4 text-[13px] font-bold text-[#374151]">Ten brand *</Text>
+            <Text className="mt-4 text-[13px] font-bold text-[#374151]">Brand Name *</Text>
+
             <TextInput
               value={form.name}
-              onChangeText={(name) => setForm((current) => ({ ...current, name }))}
-              placeholder="Vi du: Sello Basics"
+              onChangeText={(name) =>
+                setForm((current) => ({
+                  ...current,
+                  name,
+                }))
+              }
+              placeholder="Example: Sello Basics"
               placeholderTextColor="#9CA3AF"
               className="mt-2 rounded-[12px] bg-[#F1F3F6] px-4 py-3 text-[15px] text-[#191C1F]"
             />
 
-            <Text className="mt-4 text-[13px] font-bold text-[#374151]">Slug</Text>
+            <Text className="mt-4 text-[13px] font-bold text-[#374151]">
+              Slug
+            </Text>
+
             <TextInput
               value={form.slug}
-              onChangeText={(slug) => setForm((current) => ({ ...current, slug }))}
-              placeholder="Tu dong tao neu bo trong"
+              onChangeText={(slug) =>
+                setForm((current) => ({
+                  ...current,
+                  slug,
+                }))
+              }
+              placeholder="Auto generated if blank"
               placeholderTextColor="#9CA3AF"
               autoCapitalize="none"
               className="mt-2 rounded-[12px] bg-[#F1F3F6] px-4 py-3 text-[15px] text-[#191C1F]"
             />
 
-            <Text className="mt-4 text-[13px] font-bold text-[#374151]">Logo URL</Text>
+            <Text className="mt-4 text-[13px] font-bold text-[#374151]">
+              URL logo
+            </Text>
+
             <TextInput
               value={form.logoUrl}
-              onChangeText={(logoUrl) => setForm((current) => ({ ...current, logoUrl }))}
+              onChangeText={(logoUrl) =>
+                setForm((current) => ({
+                  ...current,
+                  logoUrl,
+                }))
+              }
               placeholder="https://..."
               placeholderTextColor="#9CA3AF"
               autoCapitalize="none"
@@ -183,66 +255,131 @@ export default function AdminBrandsScreen() {
             />
 
             {form.logoUrl.trim() ? (
-              <Image source={{ uri: form.logoUrl.trim() }} className="mt-3 h-24 w-full rounded-[12px] bg-[#EEF2F7]" resizeMode="contain" />
+              <Image
+                source={{ uri: form.logoUrl.trim() }}
+                className="mt-3 h-24 w-full rounded-[12px] bg-[#EEF2F7]"
+                resizeMode="contain"
+              />
             ) : null}
 
             <View className="mt-4 flex-row items-center justify-between rounded-[12px] bg-[#F8FAFC] px-4 py-3">
               <View>
-                <Text className="text-[14px] font-bold text-[#191C1F]">Trang thai</Text>
+                <Text className="text-[14px] font-bold text-[#191C1F]">
+                  Status
+                </Text>
+
                 <Text className="text-[12px] text-[#607080]">
-                  {form.status === "active" ? "Dang hien thi" : "Dang an"}
+                  {form.status === "active"
+                    ? "Showing"
+                    : "Hidden"}
                 </Text>
               </View>
+
               <Switch
                 value={form.status === "active"}
-                onValueChange={(value) => setForm((current) => ({ ...current, status: value ? "active" : "inactive" }))}
+                onValueChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    status: value
+                      ? "active"
+                      : "inactive",
+                  }))
+                }
               />
             </View>
 
             <Pressable
               onPress={submit}
-              disabled={saving || (!!editing && !canUpdate)}
+              disabled={
+                saving ||
+                (!!editing && !canUpdate)
+              }
               className="mt-4 flex-row items-center justify-center gap-2 rounded-[12px] bg-[#0F7BB8] px-4 py-3 disabled:opacity-50"
             >
-              <Feather name="save" size={18} color="#FFFFFF" />
-              <Text className="text-[15px] font-extrabold text-white">{saving ? "Dang luu..." : "Luu brand"}</Text>
+              <Feather
+                name="save"
+                size={18}
+                color="#FFFFFF"
+              />
+
+              <Text className="text-[15px] font-extrabold text-white">
+                {saving
+                  ? "Saving..."
+                  : "Save Brand"}
+              </Text>
             </Pressable>
           </View>
         ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Ban khong co quyen xem danh sach brand.
-            </Text>
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">You don't have permission to view brands.</Text>
           </View>
         ) : loading ? (
           <View className="mt-8 items-center">
-            <ActivityIndicator size="large" color="#2F95D2" />
+            <ActivityIndicator
+              size="large"
+              color="#2F95D2"
+            />
           </View>
         ) : error ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">{error}</Text>
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">
+              {error}
+            </Text>
           </View>
         ) : (
           <View className="mt-4 gap-3">
             {filteredBrands.map((brand) => (
-              <View key={brand.id} className="rounded-[16px] bg-white p-4">
+              <View
+                key={brand.id}
+                className="rounded-[16px] bg-white p-4"
+              >
                 <View className="flex-row items-center gap-3">
                   {brand.logoUrl ? (
-                    <Image source={{ uri: brand.logoUrl }} className="h-14 w-14 rounded-[12px] bg-[#EEF2F7]" resizeMode="contain" />
+                    <Image
+                      source={{ uri: brand.logoUrl }}
+                      className="h-14 w-14 rounded-[12px] bg-[#EEF2F7]"
+                      resizeMode="contain"
+                    />
                   ) : (
                     <View className="h-14 w-14 items-center justify-center rounded-[12px] bg-[#EAF4FF]">
-                      <Feather name="award" size={22} color="#0F6CBD" />
+                      <Feather
+                        name="award"
+                        size={22}
+                        color="#0F6CBD"
+                      />
                     </View>
                   )}
+
                   <View className="flex-1">
-                    <Text className="text-[17px] font-extrabold text-[#191C1F]">{brand.name}</Text>
-                    <Text className="mt-1 text-[12px] text-[#607080]">{brand.slug || `brand-${brand.id}`}</Text>
+                    <Text className="text-[17px] font-extrabold text-[#191C1F]">
+                      {brand.name}
+                    </Text>
+
+                    <Text className="mt-1 text-[12px] text-[#607080]">
+                      {brand.slug ||
+                        `brand-${brand.id}`}
+                    </Text>
                   </View>
-                  <View className={`rounded-full px-3 py-1 ${brand.status === "active" ? "bg-[#DCFCE7]" : "bg-[#F1F3F6]"}`}>
-                    <Text className={`text-[12px] font-bold ${brand.status === "active" ? "text-[#15803D]" : "text-[#6B7280]"}`}>
-                      {brand.status === "active" ? "Active" : "Hidden"}
+
+                  <View
+                    className={`rounded-full px-3 py-1 ${
+                      brand.status === "active"
+                        ? "bg-[#DCFCE7]"
+                        : "bg-[#F1F3F6]"
+                    }`}
+                  >
+                    <Text
+                      className={`text-[12px] font-bold ${
+                        brand.status === "active"
+                          ? "text-[#15803D]"
+                          : "text-[#6B7280]"
+                      }`}
+                    >
+                      {brand.status === "active"
+                        ? "Showing"
+                        : "Hidden"}
                     </Text>
                   </View>
                 </View>
@@ -251,19 +388,40 @@ export default function AdminBrandsScreen() {
                   {canUpdate ? (
                     <>
                       <Pressable
-                        onPress={() => setEditing(brand)}
+                        onPress={() =>
+                          setEditing(brand)
+                        }
                         className="flex-row items-center gap-2 rounded-[10px] bg-[#EEF2F7] px-3 py-2"
                       >
-                        <Feather name="edit-2" size={15} color="#0F6CBD" />
-                        <Text className="text-[13px] font-bold text-[#0F6CBD]">Sua</Text>
+                        <Feather
+                          name="edit-2"
+                          size={15}
+                          color="#0F6CBD"
+                        />
+
+                        <Text className="text-[13px] font-bold text-[#0F6CBD]">Edit</Text>
                       </Pressable>
+
                       <Pressable
-                        onPress={() => toggleStatus(brand)}
+                        onPress={() =>
+                          toggleStatus(brand)
+                        }
                         className="flex-row items-center gap-2 rounded-[10px] bg-[#FFF7ED] px-3 py-2"
                       >
-                        <Feather name={brand.status === "active" ? "eye-off" : "eye"} size={15} color="#B45309" />
+                        <Feather
+                          name={
+                            brand.status === "active"
+                              ? "eye-off"
+                              : "eye"
+                          }
+                          size={15}
+                          color="#B45309"
+                        />
+
                         <Text className="text-[13px] font-bold text-[#B45309]">
-                          {brand.status === "active" ? "An" : "Hien"}
+                          {brand.status === "active"
+                            ? "Hidden"
+                            : "Visible"}
                         </Text>
                       </Pressable>
                     </>
@@ -274,7 +432,7 @@ export default function AdminBrandsScreen() {
 
             {!filteredBrands.length ? (
               <View className="items-center rounded-[14px] bg-white p-6">
-                <Text className="text-[14px] text-[#6B7280]">Khong tim thay brand phu hop.</Text>
+                <Text className="text-[14px] text-[#6B7280]">No matching brand found.</Text>
               </View>
             ) : null}
           </View>

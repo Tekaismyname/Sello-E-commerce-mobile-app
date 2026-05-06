@@ -40,18 +40,16 @@ export default function AdminVouchersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
-      <AdminHeader title="Quản lý voucher" />
+      <AdminHeader title="Manage Vouchers" />
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
         <AdminVoucherToolbar value={search} onChange={setSearch} onOpenCreate={openCreate} canCreate={canCreate} />
         {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">Bạn không có quyền tạo voucher.</Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">You don't have permission to create vouchers.</Text>
         ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Bạn không có quyền xem danh sách voucher.
-            </Text>
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">You don't have permission to view vouchers.</Text>
           </View>
         ) : loading ? (
           <View className="mt-8 items-center">
@@ -70,18 +68,18 @@ export default function AdminVouchersScreen() {
                 onEdit={canUpdate ? openEdit : undefined}
                 onToggleStatus={canUpdate ? (voucher) => {
                   updateVoucherStatus(voucher.id, !voucher.isActive).catch((err: any) => {
-                    Alert.alert("Lỗi", err?.message ?? "Không thể cập nhật voucher.");
+                    Alert.alert("Error", err?.message ?? "Cannot update voucher.");
                   });
                 } : undefined}
                 onDelete={canDelete ? (voucher) => {
-                  Alert.alert("Xóa voucher", `Xóa voucher ${voucher.code}?`, [
-                    { text: "Hủy", style: "cancel" },
+                  Alert.alert("Delete Voucher", `Delete voucher ${voucher.code}?`, [
+                    { text: "Cancel", style: "cancel" },
                     {
-                      text: "Xóa",
+                      text: "Delete",
                       style: "destructive",
                       onPress: () => {
                         deleteVoucher(voucher.id).catch((err: any) => {
-                          Alert.alert("Lỗi", err?.message ?? "Không thể xóa voucher.");
+                          Alert.alert("Error", err?.message ?? "Cannot delete voucher.");
                         });
                       },
                     },
@@ -92,7 +90,7 @@ export default function AdminVouchersScreen() {
 
             {!filteredVouchers.length && (
               <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Không tìm thấy voucher.</Text>
+                <Text className="text-[14px] text-[#6B7280]">Voucher not found.</Text>
               </View>
             )}
           </View>
@@ -101,7 +99,7 @@ export default function AdminVouchersScreen() {
 
       {saving ? (
         <View className="absolute bottom-5 right-5 rounded-full bg-[#111827] px-4 py-2">
-          <Text className="text-[12px] font-semibold text-white">Đang cập nhật...</Text>
+          <Text className="text-[12px] font-semibold text-white">Updating...</Text>
         </View>
       ) : null}
     </SafeAreaView>

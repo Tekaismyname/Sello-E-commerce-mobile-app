@@ -86,27 +86,27 @@ export default function PaymentProcessingScreen() {
 
           <View className="mt-4 flex-row items-center rounded-full bg-[#E9F8EF] px-3 py-1">
             <ActivityIndicator size="small" color="#12805C" />
-            <Text className="ml-2 text-[12px] font-bold text-[#12805C]">Dang bao mat</Text>
+            <Text className="ml-2 text-[12px] font-bold text-[#12805C]">Đang bảo mật</Text>
           </View>
 
-          <Text className="mt-10 text-center text-[26px] font-extrabold text-[#1F2934]">Dang xu ly thanh toan</Text>
+          <Text className="mt-10 text-center text-[26px] font-extrabold text-[#1F2934]">Đang xử lý thanh toán</Text>
           <Text className="mt-3 text-center text-[15px] leading-[23px] text-[#4B5563]">
-            Vui long khong thoat ung dung. Dang xac thuc giao dich {formatPrice(amount)} qua {method}.
+            Vui lòng không thoát ứng dụng. Đang xác thực giao dịch {formatPrice(amount)} qua {method}.
           </Text>
         </View>
 
         <View className="mt-10 gap-3">
           <View className="flex-row items-center rounded-[14px] bg-[#EEF8F2] px-4 py-3">
             <Feather name="check-circle" size={20} color="#12805C" />
-            <Text className="ml-3 text-[14px] font-bold text-[#1F2934]">Khoi tao don hang thanh cong</Text>
+            <Text className="ml-3 text-[14px] font-bold text-[#1F2934]">Khởi tạo đơn hàng thành công</Text>
           </View>
           <View className="flex-row items-center rounded-[14px] bg-white px-4 py-3">
             <ActivityIndicator size="small" color="#0F6CBD" />
-            <Text className="ml-3 text-[14px] font-bold text-[#0F4C6B]">Xac thuc voi ngan hang...</Text>
+            <Text className="ml-3 text-[14px] font-bold text-[#0F4C6B]">Xác thực với ngân hàng...</Text>
           </View>
           <View className="flex-row items-center rounded-[14px] px-4 py-3 opacity-50">
             <Feather name="more-horizontal" size={20} color="#64748B" />
-            <Text className="ml-3 text-[14px] font-bold text-[#64748B]">Hoan tat giao dich</Text>
+            <Text className="ml-3 text-[14px] font-bold text-[#64748B]">Hoàn tất giao dịch</Text>
           </View>
         </View>
       </View>

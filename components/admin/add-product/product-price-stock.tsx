@@ -19,12 +19,12 @@ export function ProductPriceStock({
 }: ProductPriceStockProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
-      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">3. Giá bán và kho hàng</Text>
+      <Text className="mb-5 text-[16px] font-bold text-[#191C1F]">3. Price & Stock</Text>
 
       <View className="gap-4">
         <View className="flex-row gap-4">
           <View className="flex-1">
-            <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">GIÁ BÁN *</Text>
+            <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">PRICE *</Text>
             <View className="h-12 flex-row items-center justify-between rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7] px-4">
               <TextInput
                 className="flex-1 text-[14px] text-[#191C1F]"
@@ -39,7 +39,7 @@ export function ProductPriceStock({
           </View>
 
           <View className="flex-1">
-            <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">GIÁ GỐC</Text>
+            <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">ORIGINAL PRICE</Text>
             <View className="h-12 flex-row items-center justify-between rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7] px-4">
               <TextInput
                 className="flex-1 text-[14px] text-[#191C1F]"
@@ -55,7 +55,7 @@ export function ProductPriceStock({
         </View>
 
         <View>
-          <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">SỐ LƯỢNG KHO</Text>
+          <Text className="mb-2 text-[11px] font-bold uppercase text-[#6B7682]">STOCK QTY</Text>
           <TextInput
             className="h-12 rounded-[12px] border border-[#E7E8EC] bg-[#F4F5F7] px-4 text-[14px] text-[#191C1F]"
             placeholder="0"

@@ -16,49 +16,49 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   {
     title: "Orders",
-    description: "Theo doi don hang, cap nhat trang thai va xu ly van chuyen.",
+    description: "Track orders, update statuses and process shipments.",
     icon: "truck",
     route: "/admin/orders" as Href,
     permission: "orders:read",
   },
   {
     title: "Users",
-    description: "Quan ly tai khoan, trang thai nguoi dung va quyen admin.",
+    description: "Manage accounts, user status and admin roles.",
     icon: "users",
     route: "/admin/users" as Href,
     permission: "users:read",
   },
   {
     title: "Categories",
-    description: "Tao, sua, an hien danh muc san pham theo backend.",
+    description: "Create, edit, toggle visibility of product categories.",
     icon: "layers",
     route: "/admin/categories" as Href,
     permission: "categories:read",
   },
   {
     title: "Brands",
-    description: "Quan ly thuong hieu rieng cho san pham, logo va trang thai.",
+    description: "Manage product brands, logos, and status.",
     icon: "award",
     route: "/admin/brands" as Href,
     permission: "brands:read",
   },
   {
     title: "Vouchers",
-    description: "Quan ly voucher, dieu kien su dung va thoi han khuyen mai.",
+    description: "Manage vouchers, usage conditions and promotion duration.",
     icon: "tag",
     route: "/admin/vouchers" as Href,
     permission: "vouchers:read",
   },
   {
     title: "Notifications",
-    description: "Gui thong bao den all users, customer hoac admin.",
+    description: "Send notification to all users, customers, or admins.",
     icon: "send",
     route: "/admin/notifications" as Href,
     permission: "notifications:read",
   },
   {
     title: "Reviews",
-    description: "Kiem duyet danh gia: hien, an hoac xoa mem noi dung.",
+    description: "Moderate reviews: show, hide, or delete content.",
     icon: "star",
     route: "/admin/reviews" as Href,
     permission: "reviews:read",
@@ -75,10 +75,8 @@ export default function AdminMenuScreen() {
     <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
       <AdminHeader title="Menu" />
       <ScrollView contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
-        <Text className="text-[28px] font-extrabold text-[#191C1F]">Chuc nang admin</Text>
-        <Text className="mt-1 text-[14px] leading-[21px] text-[#607080]">
-          Cac muc phu duoc gom tai day de thanh dieu huong chinh ngan gon hon.
-        </Text>
+        <Text className="text-[28px] font-extrabold text-[#191C1F]">Admin Functions</Text>
+        <Text className="mt-1 text-[14px] leading-[21px] text-[#607080]">Sub-items are grouped here to keep main navigation concise.</Text>
 
         <View className="mt-5 gap-3">
           {visibleItems.map((item) => (
@@ -101,9 +99,7 @@ export default function AdminMenuScreen() {
           {!visibleItems.length ? (
             <View className="items-center rounded-[16px] bg-white p-8">
               <Feather name="lock" size={32} color="#97A0AB" />
-              <Text className="mt-3 text-center text-[14px] font-semibold text-[#607080]">
-                Tai khoan nay chua co quyen admin phu hop.
-              </Text>
+              <Text className="mt-3 text-center text-[14px] font-semibold text-[#607080]">This account lacks proper admin privileges.</Text>
             </View>
           ) : null}
         </View>

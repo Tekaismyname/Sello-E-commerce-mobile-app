@@ -24,8 +24,8 @@ type ConfigItem = {
 };
 
 const CONFIG_STATUS_LABELS: Record<ConfigItem["status"], string> = {
-  active: "Hoạt động",
-  inactive: "Không hoạt động",
+  active: "Active",
+  inactive: "Inactive",
 };
 
 const emptyConfigItem = (): ConfigItem => ({
@@ -67,13 +67,13 @@ export default function AdminSystemScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lòng đăng nhập tài khoản admin.");
+      setError("Please log in to admin account.");
       setLoading(false);
       return;
     }
 
     if (!canReadSystem) {
-      setError("Bạn không có quyền xem dữ liệu hệ thống.");
+      setError("You don't have permission to view system data.");
       setLoading(false);
       return;
     }
@@ -164,9 +164,9 @@ export default function AdminSystemScreen() {
         paymentMethodStatuses,
         voucherStatuses,
       });
-      Alert.alert("Thành công", "Đã cập nhật cấu hình hệ thống.");
+      Alert.alert("Success", "System config updated.");
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Error", err.message);
     } finally {
       setSaving(false);
     }
@@ -186,7 +186,7 @@ export default function AdminSystemScreen() {
           className="flex-row items-center gap-2 rounded-full bg-[#E8F1FB] px-3 py-2"
         >
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[12px] font-bold text-[#006397]">Thêm dòng</Text>
+          <Text className="text-[12px] font-bold text-[#006397]">Add Row</Text>
         </Pressable>
       </View>
 
@@ -195,7 +195,7 @@ export default function AdminSystemScreen() {
           <View key={`${title}-${index}`} className="rounded-[12px] bg-[#F8F9FB] p-3">
             <TextInput
               className="h-11 rounded-[10px] bg-white px-3 text-[14px] text-[#191C1F]"
-              placeholder="Nhập ID..."
+              placeholder="Enter ID..."
               placeholderTextColor="#97a0aa"
               keyboardType="numeric"
               value={item.id}
@@ -232,7 +232,7 @@ export default function AdminSystemScreen() {
               className="mt-3 flex-row items-center justify-center gap-2 rounded-[10px] border border-[#E7E8EC] py-2"
             >
               <Feather name="trash-2" size={14} color="#9A6400" />
-              <Text className="text-[12px] font-bold text-[#9A6400]">Xóa dòng</Text>
+              <Text className="text-[12px] font-bold text-[#9A6400]">Delete Row</Text>
             </Pressable>
           </View>
         ))}
@@ -242,10 +242,10 @@ export default function AdminSystemScreen() {
 
   const catalogTitle =
     catalogModal === "categories"
-      ? "Danh sách danh mục"
+      ? "Category List"
       : catalogModal === "paymentMethods"
-        ? "Danh sách phương thức thanh toán"
-        : "Danh sách voucher";
+        ? "Payment Method List"
+        : "Voucher List";
 
   const catalogItems =
     catalogModal === "categories"
@@ -256,17 +256,15 @@ export default function AdminSystemScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Hệ thống" />
+      <AdminHeader title="System" />
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerClassName="p-4 pb-24"
       >
-        <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý hệ thống</Text>
-        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-          Xem dashboard hệ thống và cập nhật nhanh voucher, phương thức thanh toán, danh mục.
-        </Text>
+        <Text className="text-[22px] font-extrabold text-[#191C1F]">System Management</Text>
+        <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">View system dashboard and quickly update vouchers, payments, categories.</Text>
 
         {loading && (
           <View className="mt-10 items-center">
@@ -283,36 +281,28 @@ export default function AdminSystemScreen() {
         {!loading && !error && dashboardData?.systemSummary && (
           <>
             <View className="mt-4 rounded-[16px] bg-white p-5 shadow-sm">
-              <Text className="text-[15px] font-bold text-[#191C1F]">Tổng quan hệ thống</Text>
+              <Text className="text-[15px] font-bold text-[#191C1F]">System Overview</Text>
               <View className="mt-4 flex-row flex-wrap gap-3">
                 <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Người dùng
-                  </Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Users</Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
                     {dashboardData.systemSummary.users}
                   </Text>
                 </View>
                 <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Sản phẩm
-                  </Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Products</Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
                     {dashboardData.systemSummary.products}
                   </Text>
                 </View>
                 <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Doanh thu
-                  </Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Revenue</Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
-                    {new Intl.NumberFormat("vi-VN").format(dashboardData.systemSummary.revenue)} đ
+                    {new Intl.NumberFormat("vi-VN").format(dashboardData.systemSummary.revenue)} d
                   </Text>
                 </View>
                 <View className="min-w-[47%] flex-1 rounded-[14px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-                    Voucher / Thanh toán
-                  </Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Vouchers / Payments</Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">
                     {dashboardData.systemSummary.vouchers} / {dashboardData.systemSummary.paymentMethods}
                   </Text>
@@ -321,7 +311,7 @@ export default function AdminSystemScreen() {
 
               {!!orderStatusEntries.length && (
                 <View className="mt-4">
-                  <Text className="text-[13px] font-bold text-[#191C1F]">Tổng quan trạng thái đơn hàng</Text>
+                  <Text className="text-[13px] font-bold text-[#191C1F]">Order Status Overview</Text>
                   <View className="mt-3 flex-row flex-wrap gap-2">
                     {orderStatusEntries.map(([status, total]) => (
                       <View key={status} className="rounded-full bg-[#EEF5FA] px-3 py-2">
@@ -337,10 +327,8 @@ export default function AdminSystemScreen() {
 
             <View className="mt-4 gap-4">
               <View className="rounded-[16px] bg-white p-4 shadow-sm">
-                <Text className="text-[15px] font-bold text-[#191C1F]">Tra nhanh ID để thao tác</Text>
-                <Text className="mt-1 text-[13px] leading-[20px] text-[#5b6470]">
-                  Mở danh sách danh mục, voucher và phương thức thanh toán để xem ID trước khi cập nhật cấu hình.
-                </Text>
+                <Text className="text-[15px] font-bold text-[#191C1F]">Lookup ID quickly for actions</Text>
+                <Text className="mt-1 text-[13px] leading-[20px] text-[#5b6470]">Open categories, vouchers, and payment methods list to see ID before updating config.</Text>
 
                 <View className="mt-4 gap-3">
                   <Pressable
@@ -349,7 +337,7 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="grid" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Quản lý danh mục</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Manage Categories</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
@@ -360,7 +348,7 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="tag" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Quản lý voucher</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Manage Vouchers</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
@@ -371,7 +359,7 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="send" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Gửi thông báo</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Send Notification</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
@@ -382,7 +370,7 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="message-square" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Kiểm duyệt đánh giá</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">Review Moderation</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
@@ -393,7 +381,7 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="layers" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Xem danh mục</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">View Categories</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
@@ -404,7 +392,7 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="credit-card" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Xem phương thức thanh toán</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">View Payment Methods</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
@@ -415,20 +403,20 @@ export default function AdminSystemScreen() {
                   >
                     <View className="flex-row items-center gap-3">
                       <Feather name="tag" size={18} color="#006397" />
-                      <Text className="text-[14px] font-bold text-[#191C1F]">Xem voucher</Text>
+                      <Text className="text-[14px] font-bold text-[#191C1F]">View Vouchers</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color="#97a0aa" />
                   </Pressable>
                 </View>
               </View>
 
-              {renderConfigSection("Cấu hình danh mục", categoryConfigs, setCategoryConfigs, () =>
+              {renderConfigSection("Category Config", categoryConfigs, setCategoryConfigs, () =>
                 setCategoryConfigs([...categoryConfigs, emptyConfigItem()]),
               )}
-              {renderConfigSection("Cấu hình phương thức thanh toán", paymentConfigs, setPaymentConfigs, () =>
+              {renderConfigSection("Payment Method Config", paymentConfigs, setPaymentConfigs, () =>
                 setPaymentConfigs([...paymentConfigs, emptyConfigItem()]),
               )}
-              {renderConfigSection("Cấu hình voucher", voucherConfigs, setVoucherConfigs, () =>
+              {renderConfigSection("Voucher Config", voucherConfigs, setVoucherConfigs, () =>
                 setVoucherConfigs([...voucherConfigs, emptyConfigItem()]),
               )}
             </View>
@@ -440,13 +428,11 @@ export default function AdminSystemScreen() {
                 className="mt-5 items-center justify-center rounded-[14px] bg-[#006397] py-4"
               >
                 <Text className="text-[14px] font-bold text-white">
-                  {saving ? "Đang lưu..." : "Lưu cập nhật hệ thống"}
+                  {saving ? "Saving..." : "Save System Config"}
                 </Text>
               </Pressable>
             ) : (
-              <Text className="mt-5 text-[12px] text-[#9A6400]">
-                Bạn không có quyền cập nhật cấu hình hệ thống.
-              </Text>
+              <Text className="mt-5 text-[12px] text-[#9A6400]">You don't have permission to update system config.</Text>
             )}
           </>
         )}
@@ -476,32 +462,26 @@ export default function AdminSystemScreen() {
                       <Text className="mt-1 text-[13px] font-semibold text-[#44515F]">{item.name}</Text>
                     ) : null}
                     {"code" in item ? (
-                      <Text className="mt-1 text-[12px] text-[#5b6470]">Mã: {item.code}</Text>
+                      <Text className="mt-1 text-[12px] text-[#5b6470]">Code: {item.code}</Text>
                     ) : null}
                     {"status" in item ? (
-                      <Text className="mt-1 text-[12px] text-[#5b6470]">Trạng thái: {item.status}</Text>
+                      <Text className="mt-1 text-[12px] text-[#5b6470]">Status: {item.status}</Text>
                     ) : null}
                     {"discountType" in item ? (
-                      <Text className="mt-1 text-[12px] text-[#5b6470]">
-                        Giảm giá: {item.discountType} - {item.discountValue}
-                      </Text>
+                      <Text className="mt-1 text-[12px] text-[#5b6470]">Discount: {item.discountType} - {item.discountValue}</Text>
                     ) : null}
                     {"minOrderValue" in item ? (
-                      <Text className="mt-1 text-[12px] text-[#5b6470]">
-                        Đơn tối thiểu: {new Intl.NumberFormat("vi-VN").format(item.minOrderValue)} đ
-                      </Text>
+                      <Text className="mt-1 text-[12px] text-[#5b6470]">Min order: {new Intl.NumberFormat("en-US").format(item.minOrderValue)} d</Text>
                     ) : null}
                     {"isActive" in item ? (
-                      <Text className="mt-1 text-[12px] text-[#5b6470]">
-                        Kích hoạt: {item.isActive ? "Có" : "Không"}
-                      </Text>
+                      <Text className="mt-1 text-[12px] text-[#5b6470]">Active: {item.isActive ? "Yes" : "No"}</Text>
                     ) : null}
                   </View>
                 ))}
 
                 {!catalogItems.length && (
                   <View className="items-center rounded-[14px] bg-[#F8F9FB] p-6">
-                    <Text className="text-[14px] text-[#5b6470]">Không có dữ liệu để hiển thị.</Text>
+                    <Text className="text-[14px] text-[#5b6470]">No data to display.</Text>
                   </View>
                 )}
               </View>

@@ -22,9 +22,7 @@ export function AdminOrderActions({
         className="flex-1 h-[56px] rounded-[12px] bg-[#E8EDF3] flex-row items-center justify-center disabled:opacity-50"
       >
         <Feather name="download" size={17} color="#0369A1" />
-        <Text className="ml-2 text-[16px] font-bold text-[#0369A1]">
-          Xuất báo cáo
-        </Text>
+        <Text className="ml-2 text-[16px] font-bold text-[#0369A1]">Export Report</Text>
       </Pressable>
 
       <Pressable
@@ -33,9 +31,7 @@ export function AdminOrderActions({
         className="flex-1 h-[56px] rounded-[12px] bg-[#2F95D2] flex-row items-center justify-center disabled:opacity-50"
       >
         <Feather name="plus" size={17} color="white" />
-        <Text className="ml-2 text-[16px] font-bold text-white">
-          Tạo đơn mới
-        </Text>
+        <Text className="ml-2 text-[16px] font-bold text-white">Create New Order</Text>
       </Pressable>
     </View>
   );

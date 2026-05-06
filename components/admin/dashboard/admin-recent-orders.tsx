@@ -5,8 +5,8 @@ export function AdminRecentOrders({ orders }: { orders: AdminRecentOrder[] }) {
   return (
     <View className="rounded-[16px] bg-white p-5 shadow-sm border border-[#F2F3F7]">
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-[18px] font-extrabold text-[#191C1F]">Đơn hàng gần đây</Text>
-        <Text className="text-[14px] font-bold text-[#006397]">Tất cả</Text>
+        <Text className="text-[18px] font-extrabold text-[#191C1F]">Recent Orders</Text>
+        <Text className="text-[14px] font-bold text-[#006397]">All</Text>
       </View>
 
       <View className="gap-5 mt-2">

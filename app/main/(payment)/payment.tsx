@@ -65,7 +65,7 @@ export default function PaymentScreen() {
         <View className="rounded-[16px] bg-white p-5">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-[13px] font-bold uppercase text-[#64748B]">Ma don hang</Text>
+              <Text className="text-[13px] font-bold uppercase text-[#64748B]">Mã đơn hàng</Text>
               <Text className="mt-1 text-[20px] font-extrabold text-[#1F2934]">#EC-{orderId || "000000"}</Text>
             </View>
             <View className="rounded-full bg-[#EAF5FC] px-3 py-1">
@@ -74,9 +74,9 @@ export default function PaymentScreen() {
           </View>
 
           <View className="mt-5 rounded-[14px] bg-[#F6F8FC] p-4">
-            <Text className="text-[13px] font-bold text-[#64748B]">Tong thanh toan</Text>
+            <Text className="text-[13px] font-bold text-[#64748B]">Tổng thanh toán</Text>
             <Text className="mt-1 text-[30px] font-extrabold text-[#0F6CBD]">{formatPrice(amount)}</Text>
-            <Text className="mt-2 text-[14px] text-[#4B5563]">Phuong thuc: {method}</Text>
+            <Text className="mt-2 text-[14px] text-[#4B5563]">Phương thức: {method}</Text>
           </View>
         </View>
 
@@ -88,7 +88,7 @@ export default function PaymentScreen() {
               </View>
               <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Quet QR de thanh toan</Text>
               <Text className="mt-2 text-center text-[14px] leading-[21px] text-[#64748B]">
-                Sau khi ban da thanh toan tren vi/ngan hang, bam nut Da thanh toan de he thong xac thuc mock payment.
+                Sau khi bạn đã thanh toán trên ví/ngân hàng, bấm nút Đã thanh toán để hệ thống xác thực mock payment.
               </Text>
             </>
           ) : (
@@ -98,7 +98,7 @@ export default function PaymentScreen() {
               </View>
               <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Thanh toan khi nhan hang</Text>
               <Text className="mt-2 text-center text-[14px] leading-[21px] text-[#64748B]">
-                Don hang da duoc tao. Xac nhan de chuyen sang buoc xu ly don hang.
+                Đơn hàng đã được tạo. Xác nhận để chuyển sang bước xử lý đơn hàng.
               </Text>
             </>
           )}
@@ -110,7 +110,7 @@ export default function PaymentScreen() {
             <View className="ml-3 flex-1">
               <Text className="text-[14px] font-extrabold text-[#1F2934]">Mock payment an toan cho demo</Text>
               <Text className="mt-1 text-[13px] leading-[19px] text-[#64748B]">
-                Trang nay chi mo phong viec khach hang da quet QR. Du lieu that duoc cap nhat khi ban bam Da thanh toan.
+                Trang này chỉ mô phỏng việc khách hàng đã quét QR. Dữ liệu thật được cập nhật khi bạn bấm Đã thanh toán.
               </Text>
             </View>
           </View>
@@ -124,7 +124,7 @@ export default function PaymentScreen() {
         >
           <Feather name={isOnlinePayment ? "check-circle" : "truck"} size={18} color="white" />
           <Text className="ml-3 text-[16px] font-extrabold text-white">
-            {isOnlinePayment ? "Da thanh toan" : "Xac nhan don hang"}
+            {isOnlinePayment ? "Đã thanh toán" : "Xác nhận đơn hàng"}
           </Text>
         </Pressable>
       </View>

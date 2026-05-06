@@ -8,11 +8,11 @@ export function AdminStockSummary() {
         <View className="absolute -right-8 -bottom-8 opacity-10">
           <Feather name="box" size={150} color="white" />
         </View>
-        <Text className="text-[14px] text-white/90 mb-1">Tổng tồn kho</Text>
+        <Text className="text-[14px] text-white/90 mb-1">Total Stock</Text>
         <Text className="text-[36px] font-extrabold text-white mb-4">12,840</Text>
         <View className="self-start flex-row items-center gap-1 rounded-[6px] bg-white/20 px-2 py-1">
           <Feather name="trending-up" size={12} color="white" />
-          <Text className="text-[11px] font-bold text-white">+12% so với tháng trước</Text>
+          <Text className="text-[11px] font-bold text-white">+12% vs last month</Text>
         </View>
       </View>
 
@@ -20,7 +20,7 @@ export function AdminStockSummary() {
         <View className="mb-3 h-10 w-10 items-center justify-center rounded-full bg-[#E8F5E9]">
           <Feather name="check-circle" size={20} color="#064E3B" />
         </View>
-        <Text className="text-[13px] text-[#3F4850] mb-0.5">Đang kinh doanh</Text>
+        <Text className="text-[13px] text-[#3F4850] mb-0.5">Active Selling</Text>
         <Text className="text-[24px] font-extrabold text-[#191C1F]">452</Text>
       </View>
 
@@ -28,7 +28,7 @@ export function AdminStockSummary() {
         <View className="mb-3 h-10 w-10 items-center justify-center rounded-full bg-[#FFEAEA]">
           <Feather name="alert-triangle" size={20} color="#DC2626" />
         </View>
-        <Text className="text-[13px] text-[#3F4850] mb-0.5">Sắp hết hàng</Text>
+        <Text className="text-[13px] text-[#3F4850] mb-0.5">Low Stock</Text>
         <Text className="text-[24px] font-extrabold text-[#DC2626]">18</Text>
       </View>
     </View>

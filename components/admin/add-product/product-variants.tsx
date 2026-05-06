@@ -48,10 +48,10 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
   return (
     <View className="mb-6 rounded-[16px] border border-[#F2F3F7] bg-white p-5 shadow-sm">
       <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-[16px] font-bold text-[#191C1F]">Phân loại sản phẩm</Text>
+        <Text className="text-[16px] font-bold text-[#191C1F]">Product Category</Text>
         <Pressable onPress={addVariant} className="flex-row items-center gap-1">
           <Feather name="plus" size={14} color="#006397" />
-          <Text className="text-[13px] font-bold text-[#006397]">Thêm variant</Text>
+          <Text className="text-[13px] font-bold text-[#006397]">Add Variant</Text>
         </Pressable>
       </View>
 
@@ -69,14 +69,14 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
               <View className="flex-row gap-3">
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Màu sắc"
+                  placeholder="Color"
                   placeholderTextColor="#97A0AB"
                   value={variant.color ?? ""}
                   onChangeText={(value) => updateVariant(index, "color", value)}
                 />
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Kích thước"
+                  placeholder="Size"
                   placeholderTextColor="#97A0AB"
                   value={variant.size ?? ""}
                   onChangeText={(value) => updateVariant(index, "size", value)}
@@ -93,7 +93,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
 
               <TextInput
                 className="rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                placeholder="URL ảnh cho variant"
+                placeholder="Image URL for variant"
                 placeholderTextColor="#97A0AB"
                 value={variant.imageUrl ?? ""}
                 onChangeText={(value) => updateVariant(index, "imageUrl", value)}
@@ -102,7 +102,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
               <View className="flex-row gap-3">
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Giá"
+                  placeholder="Price"
                   placeholderTextColor="#97A0AB"
                   keyboardType="numeric"
                   value={String(variant.price ?? "")}
@@ -110,7 +110,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
                 />
                 <TextInput
                   className="flex-1 rounded-[12px] border border-[#E7E8EC] bg-white px-4 py-3 text-[14px] text-[#191C1F]"
-                  placeholder="Tồn kho"
+                  placeholder="Stock"
                   placeholderTextColor="#97A0AB"
                   keyboardType="numeric"
                   value={String(variant.stockQty ?? "")}
@@ -125,7 +125,7 @@ export function ProductVariants({ variants, onChange }: ProductVariantsProps) {
 
         {variants.length === 0 && (
           <View className="rounded-[12px] bg-[#F8F9FA] p-4">
-            <Text className="text-[13px] text-[#6B7682]">Chưa có phân loại nào. Bạn có thể tạo sản phẩm đơn hoặc thêm variant mới.</Text>
+            <Text className="text-[13px] text-[#6B7682]">No variants yet. You can create a single product or add a new variant.</Text>
           </View>
         )}
       </View>

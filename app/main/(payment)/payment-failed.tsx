@@ -44,29 +44,29 @@ export default function PaymentFailedScreen() {
               <Feather name="alert-circle" size={34} color="white" />
             </View>
           </View>
-          <Text className="mt-8 text-center text-[30px] font-extrabold text-[#1F2934]">Thanh toan that bai</Text>
+          <Text className="mt-8 text-center text-[30px] font-extrabold text-[#1F2934]">Thanh toán thất bại</Text>
         </View>
 
         <View className="mt-6 rounded-[16px] bg-white p-5">
-          <Text className="text-center text-[15px] font-bold text-[#1F2934]">Loi: {reason}</Text>
+          <Text className="text-center text-[15px] font-bold text-[#1F2934]">Lỗi: {reason}</Text>
           <Text className="mt-2 text-center text-[14px] leading-[21px] text-[#4B5563]">
-            Rat tiec, giao dich cua ban khong the hoan tat. Vui long thu lai hoac su dung phuong thuc khac.
+            Rất tiếc, giao dịch của bạn không thể hoàn tất. Vui lòng thử lại hoặc sử dụng phương thức khác.
           </Text>
         </View>
 
         <View className="mt-8 rounded-[16px] bg-white p-5">
           <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] text-[#4B5563]">Ma don hang</Text>
+            <Text className="text-[15px] text-[#4B5563]">Mã đơn hàng</Text>
             <Text className="text-[16px] font-extrabold text-[#1F2934]">#EC-{orderId || "992810"}</Text>
           </View>
           <View className="my-4 h-px bg-[#EEF2F6]" />
           <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] text-[#4B5563]">Tong tien</Text>
+            <Text className="text-[15px] text-[#4B5563]">Tổng tiền</Text>
             <Text className="text-[22px] font-extrabold text-[#0F6CBD]">{formatPrice(amount)}</Text>
           </View>
           <View className="my-4 h-px bg-[#EEF2F6]" />
           <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] text-[#4B5563]">Phuong thuc</Text>
+            <Text className="text-[15px] text-[#4B5563]">Phương thức</Text>
             <Text className="text-[16px] font-extrabold text-[#1F2934]">{method}</Text>
           </View>
         </View>
@@ -77,17 +77,17 @@ export default function PaymentFailedScreen() {
             onPress={() => router.replace((`/main/payment-processing?${retryParams}` as unknown) as Href)}
           >
             <Feather name="refresh-cw" size={18} color="white" />
-            <Text className="ml-3 text-[16px] font-extrabold text-white">Thu lai</Text>
+            <Text className="ml-3 text-[16px] font-extrabold text-white">Thử lại</Text>
           </Pressable>
           <Pressable
             className="h-[56px] flex-row items-center justify-center rounded-[12px] bg-[#E9EEF5]"
             onPress={() => router.replace("/main/checkout" as Href)}
           >
             <Feather name="credit-card" size={18} color="#0F4C6B" />
-            <Text className="ml-3 text-[16px] font-extrabold text-[#0F4C6B]">Doi phuong thuc thanh toan</Text>
+            <Text className="ml-3 text-[16px] font-extrabold text-[#0F4C6B]">Đổi phương thức thanh toán</Text>
           </Pressable>
           <Text className="mt-4 text-center text-[13px] text-[#64748B]">
-            Gap su co khac? <Text className="font-bold text-[#0F4C6B]">Lien he ho tro</Text>
+            Gặp sự cố khác? <Text className="font-bold text-[#0F4C6B]">Liên hệ hỗ trợ</Text>
           </Text>
         </View>
       </View>

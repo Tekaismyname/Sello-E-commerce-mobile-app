@@ -18,10 +18,11 @@ const tabs: TabMeta[] = [
 ];
 
 const hiddenRoutes = new Set(["search", "product-list"]);
+const routeKey = (name: string) => name.split("/").pop() ?? name;
 
 export function SelloTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const focusedRouteName = state.routes[state.index]?.name;
+  const focusedRouteName = routeKey(state.routes[state.index]?.name ?? "");
 
   if (focusedRouteName && hiddenRoutes.has(focusedRouteName)) {
     return null;
@@ -34,7 +35,7 @@ export function SelloTabBar({ state, descriptors, navigation }: BottomTabBarProp
     >
       <View className="flex-row items-center justify-between">
         {tabs.map((tab) => {
-          const routeIndex = state.routes.findIndex((route) => route.name === tab.key);
+          const routeIndex = state.routes.findIndex((route) => routeKey(route.name) === tab.key);
 
           if (routeIndex < 0) {
             return <View key={tab.key} className="h-[56px] flex-1" />;

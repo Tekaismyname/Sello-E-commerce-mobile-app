@@ -39,12 +39,12 @@ export default function ResetPasswordScreen() {
     }
 
     if (!newPassword || newPassword.length < 8) {
-      setErrorMessage("Mat khau moi toi thieu 8 ky tu.");
+      setErrorMessage("Mật khẩu mới tối thiểu 8 ký tự.");
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      setErrorMessage("Xac nhan mat khau moi khong khop.");
+      setErrorMessage("Xác nhận mật khẩu mới không khớp.");
       return;
     }
 
@@ -69,16 +69,16 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <AuthScreenShell title="Dat lai mat khau" subtitle={`Tai khoan: ${identifier}`}>
+    <AuthScreenShell title="Đặt lại mật khẩu" subtitle={`Tài khoản: ${identifier}`}>
       <AuthInput
-        placeholder="Mat khau moi"
+        placeholder="Mật khẩu mới"
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}
       />
 
       <AuthInput
-        placeholder="Xac nhan mat khau moi"
+        placeholder="Xác nhận mật khẩu mới"
         secureTextEntry
         value={confirmNewPassword}
         onChangeText={setConfirmNewPassword}

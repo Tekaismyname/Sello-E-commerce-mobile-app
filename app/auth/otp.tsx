@@ -76,7 +76,7 @@ export default function OtpScreen() {
       <AuthMessage kind="error" text={errorMessage} />
 
       <AuthButton
-        title={purpose === "register" ? "Xac thuc tai khoan" : "Tiep tuc dat lai mat khau"}
+        title={purpose === "register" ? "Xác thực tài khoản" : "Tiếp tục đặt lại mật khẩu"}
         loading={loading}
         onPress={submitOtp}
       />

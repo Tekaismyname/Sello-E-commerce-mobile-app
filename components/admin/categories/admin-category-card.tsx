@@ -29,7 +29,7 @@ export function AdminCategoryCard({ category, onEdit, onToggleStatus, onDelete }
                 {category.childCount ? ` • ${category.childCount} danh muc con` : ""}
               </Text>
               {category.parentName ? (
-                <Text className="mt-1 text-[12px] font-semibold text-[#0F6CBD]">Cha: {category.parentName}</Text>
+                <Text className="mt-1 text-[12px] font-semibold text-[#0F6CBD]">Parent: {category.parentName}</Text>
               ) : null}
             </View>
             <View className={`rounded-full px-3 py-1 ${isActive ? "bg-[#DCFCE7]" : "bg-[#FEE2E2]"}`}>
@@ -51,7 +51,7 @@ export function AdminCategoryCard({ category, onEdit, onToggleStatus, onDelete }
         <View className="mt-4 flex-row gap-2 border-t border-[#EEF2F6] pt-3">
           {onEdit ? (
             <Pressable className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#E8F1FB]" onPress={() => onEdit(category)}>
-              <Text className="text-[13px] font-bold text-[#0369A1]">Sua</Text>
+              <Text className="text-[13px] font-bold text-[#0369A1]">Edit</Text>
             </Pressable>
           ) : null}
           {onToggleStatus ? (

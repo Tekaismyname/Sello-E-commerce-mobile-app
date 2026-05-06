@@ -62,7 +62,9 @@ export default function AddProductScreen() {
   const canCreateProduct = hasPermission("products:create");
   const canUpdateProduct = hasPermission("products:update");
   const canReadProduct = hasPermission("products:read");
-  const hasWritePermission = editingProductId ? canUpdateProduct : canCreateProduct;
+  const hasWritePermission = editingProductId
+    ? canUpdateProduct
+    : canCreateProduct;
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("1");
@@ -86,7 +88,10 @@ export default function AddProductScreen() {
 
   useEffect(() => {
     if (!hasWritePermission) {
-      Alert.alert("Không có quyền", "Ban không có quyền thao tác với sản phẩm này.");
+      Alert.alert(
+        "No Permission",
+        "You don't have permission to modify this product.",
+      );
       router.back();
     }
   }, [hasWritePermission, router]);
@@ -101,7 +106,7 @@ export default function AddProductScreen() {
         const response = await adminService.getSystemConfigOptions(token);
         setCategories(response.data.categories ?? []);
       } catch (error) {
-        console.warn("Không thể tải categories cho form sản phẩm", error);
+        console.warn("Cannot load categories for product form.", error);
       }
     };
 
@@ -179,8 +184,8 @@ export default function AddProductScreen() {
         );
       } catch (error: any) {
         Alert.alert(
-          "Không thể tải sản phẩm",
-          error?.message ?? "Đã có lỗi xảy ra.",
+          "Cannot load product",
+          error?.message ?? "An error occurred.",
         );
       } finally {
         setLoadingDetail(false);
@@ -192,12 +197,12 @@ export default function AddProductScreen() {
 
   const handleSave = async () => {
     if (!token) {
-      Alert.alert("Thông báo", "Vui lòng đăng nhập tài khoản admin.");
+      Alert.alert("Notifications", "Please log in to admin account.");
       return;
     }
 
     if (!hasWritePermission) {
-      Alert.alert("Không có quyền", "Ban không có quyền lưu sản phẩm.");
+      Alert.alert("No Permission", "You don't have permission to save products.");
       return;
     }
 
@@ -212,17 +217,17 @@ export default function AddProductScreen() {
       warrantyMonths.trim().length > 0 ? Number(warrantyMonths) : undefined;
 
     if (!name.trim()) {
-      Alert.alert("Thiếu dữ liệu", "Vui lòng nhập tên sản phẩm.");
+      Alert.alert("Missing Data", "Please enter product name.");
       return;
     }
 
     if (!Number.isInteger(categoryIdNumber) || categoryIdNumber <= 0) {
-      Alert.alert("Thiếu dữ liệu", "Category ID phải là số nguyên dương.");
+      Alert.alert("Missing Data", "Category ID must be a positive integer.");
       return;
     }
 
     if (!Number.isFinite(basePriceNumber) || basePriceNumber <= 0) {
-      Alert.alert("Thiếu dữ liệu", "Giá bán phải lớn hơn 0.");
+      Alert.alert("Missing Data", "Price must be greater than 0.");
       return;
     }
 
@@ -310,11 +315,11 @@ export default function AddProductScreen() {
 
       Alert.alert(
         "Thanh cong",
-        editingProductId ? "Đã cập nhật san pham." : "Đã tạo san pham moi.",
+        editingProductId ? "Product updated." : "New product created.",
       );
       router.back();
     } catch (error: any) {
-      Alert.alert("Không thể lưu", error?.message ?? "Đã có lỗi xảy ra.");
+      Alert.alert("Cannot save", error?.message ?? "An error occurred.");
     } finally {
       setSubmitting(false);
     }
@@ -330,7 +335,7 @@ export default function AddProductScreen() {
           <Feather name="arrow-left" size={20} color="#006397" />
         </Pressable>
         <Text className="ml-2 text-[16px] font-bold text-[#191C1F]">
-          {editingProductId ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
+          {editingProductId ? "Edit Product" : "Add New Product"}
         </Text>
       </View>
 
@@ -397,7 +402,7 @@ export default function AddProductScreen() {
               <Feather name="save" size={18} color="white" />
             )}
             <Text className="text-[16px] font-bold text-white">
-              {editingProductId ? "Lưu cập nhật" : "ưu sản phẩm"}
+              {editingProductId ? "Save Changes" : "Save Product"}
             </Text>
           </Pressable>
         </View>
@@ -405,4 +410,3 @@ export default function AddProductScreen() {
     </SafeAreaView>
   );
 }
-

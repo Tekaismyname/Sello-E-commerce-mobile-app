@@ -72,14 +72,14 @@ export default function AdminOrdersScreen() {
 
     try {
       const response = await adminService.exportReport(token, "overview", "csv");
-      Alert.alert("Xuất báo cáo thành công", response.data.fileName);
+      Alert.alert("Report exported successfully", response.data.fileName);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể xuất báo cáo");
+      Alert.alert("Error", err.message ?? "Cannot export report");
     }
   };
 
   const handleCreateOrder = () => {
-    Alert.alert("Thông báo", "Backend hiện tại chưa hỗ trợ tạo đơn mới từ admin.");
+    Alert.alert("Notifications", "Backend doesn't support creating new orders from admin yet.");
   };
 
   const openOrderDetail = async (order: AdminOrder) => {
@@ -90,7 +90,7 @@ export default function AdminOrdersScreen() {
       const response = await adminService.getOrderDetail(token, order.id);
       setSelectedOrder(response.data);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể tải chi tiết đơn hàng.");
+      Alert.alert("Error", err.message ?? "Cannot load order details.");
     } finally {
       setLoadingDetail(false);
     }
@@ -109,9 +109,9 @@ export default function AdminOrdersScreen() {
       );
       setSelectedOrder(response.data);
       await fetchOrders();
-      Alert.alert("Thành công", "Đã cập nhật trạng thái đơn hàng.");
+      Alert.alert("Success", "Order status updated.");
     } catch (err: any) {
-      Alert.alert("ỗi", err.message ?? "Không thể cập nhật trạng thái.");
+      Alert.alert("Error", err.message ?? "Cannot update status.");
     } finally {
       setSavingStatus(false);
     }
@@ -119,19 +119,15 @@ export default function AdminOrdersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
-      <AdminHeader title="Don hang" />
+      <AdminHeader title="Orders" />
 
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-4 pb-24 pt-2"
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">
-          Quản lý Đơn hàng
-        </Text>
-        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
-          Theo dõi và cập nhật trạng thái vận chuyển của khách hàng.
-        </Text>
+        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">Manage Orders</Text>
+        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">Track and update customer shipping status.</Text>
 
         <AdminOrderActions
           onExport={handleExport}
@@ -140,9 +136,7 @@ export default function AdminOrdersScreen() {
           disableCreate
         />
         {!canExportReport ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">
-            Bạn không có quyền xuất báo cáo.
-          </Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">You don't have permission to export reports.</Text>
         ) : null}
 
         {loading ? (
@@ -194,9 +188,7 @@ export default function AdminOrdersScreen() {
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[88%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">
-                Chi tiết đơn hàng
-              </Text>
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">Order Details</Text>
               <Pressable
                 className="h-10 w-10 items-center justify-center"
                 onPress={() => setSelectedOrder(null)}
@@ -218,17 +210,13 @@ export default function AdminOrdersScreen() {
                   <Text className="mt-1 text-[13px] text-[#4B5563]">
                     {selectedOrder.user.fullName} - {selectedOrder.user.email}
                   </Text>
-                  <Text className="mt-1 text-[13px] text-[#4B5563]">
-                    Tổng tiền: {new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)} d
-                  </Text>
-                  <Text className="mt-1 text-[13px] text-[#4B5563]">
-                    Trạng thái hiện tại: {selectedOrder.orderStatus}
-                  </Text>
+                  <Text className="mt-1 text-[13px] text-[#4B5563]">Total: {new Intl.NumberFormat("en-US").format(selectedOrder.totalAmount)} d</Text>
+                  <Text className="mt-1 text-[13px] text-[#4B5563]">Current Status: {selectedOrder.orderStatus}</Text>
                 </View>
 
                 {!!selectedOrder.shippingAddress && (
                   <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                    <Text className="text-[13px] font-bold text-[#191C1F]">Địa chỉ giao</Text>
+                    <Text className="text-[13px] font-bold text-[#191C1F]">Shipping Address</Text>
                     <Text className="mt-1 text-[13px] text-[#4B5563]">
                       {selectedOrder.shippingAddress}
                     </Text>
@@ -237,9 +225,7 @@ export default function AdminOrdersScreen() {
 
                 {canUpdateOrders ? (
                   <View className="mt-4 rounded-[14px] bg-white">
-                    <Text className="text-[13px] font-bold text-[#191C1F]">
-                      Cập nhật trạng thái
-                    </Text>
+                    <Text className="text-[13px] font-bold text-[#191C1F]">Update Status</Text>
                     <View className="mt-3 flex-row flex-wrap gap-2">
                       {ORDER_STATUSES.map((status) => (
                         <Pressable
@@ -263,7 +249,7 @@ export default function AdminOrdersScreen() {
                     <TextInput
                       className="mt-3 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3"
                       multiline
-                      placeholder="Ghi chú cập nhật (tùy chọn)"
+                      placeholder="Update note (optional)"
                       placeholderTextColor="#97a0aa"
                       value={statusNote}
                       onChangeText={setStatusNote}
@@ -275,14 +261,12 @@ export default function AdminOrdersScreen() {
                       onPress={handleUpdateStatus}
                     >
                       <Text className="text-[13px] font-bold text-white">
-                        {savingStatus ? "Đang lưu..." : "Lưu trạng thái"}
+                        {savingStatus ? "Saving..." : "Save Status"}
                       </Text>
                     </Pressable>
                   </View>
                 ) : (
-                  <Text className="mt-4 text-[12px] text-[#9A6400]">
-                    Bạn không có quyền cập nhật trạng thái đơn hàng.
-                  </Text>
+                  <Text className="mt-4 text-[12px] text-[#9A6400]">You don't have permission to update order status.</Text>
                 )}
               </ScrollView>
             ) : null}

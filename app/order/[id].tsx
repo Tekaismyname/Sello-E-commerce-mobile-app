@@ -8,13 +8,13 @@ import { orderService } from "@/services/customer.service";
 import { OrderDetail, OrderStatus, OrderTracking } from "@/types/customer";
 
 const statusLabels: Record<OrderStatus, string> = {
-  pending: "Cho xu ly",
-  confirmed: "Da xac nhan",
-  packed: "Da dong goi",
-  shipping: "Dang giao",
-  delivered: "Da giao",
-  cancelled: "Da huy",
-  returned: "Da tra",
+  pending: "Chờ xử lý",
+  confirmed: "Đã xác nhận",
+  packed: "Đã đóng gói",
+  shipping: "Đang giao",
+  delivered: "Đã giao",
+  cancelled: "Đã hủy",
+  returned: "Đã trả",
 };
 
 const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
@@ -37,14 +37,14 @@ const getPaymentLabel = (order: OrderDetail) => {
     return `Thanh toan bang COD - ${order.paymentStatus ?? "unpaid"}`;
   }
   if (methodCode === "MOMO") {
-    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua MoMo`;
+    return `${order.paymentStatus === "paid" ? "Đã thanh toán" : "Trạng thái"} qua MoMo`;
   }
   if (methodCode === "CARD") {
-    return `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ngan hang`;
+    return `${order.paymentStatus === "paid" ? "Đã thanh toán" : "Trạng thái"} qua ngan hang`;
   }
 
   return methodName
-    ? `${order.paymentStatus === "paid" ? "Da thanh toan" : "Trang thai"} qua ${methodName}`
+    ? `${order.paymentStatus === "paid" ? "Đã thanh toán" : "Trạng thái"} qua ${methodName}`
     : order.payment?.paymentStatus ?? order.paymentStatus ?? "pending";
 };
 
@@ -99,7 +99,7 @@ export default function OrderDetailScreen() {
       return;
     }
 
-    Alert.alert("Huy don hang", `Ban co chac muon huy don #${order.orderCode}?`, [
+    Alert.alert("Hủy đơn hàng", `Bạn có chắc muốn hủy đơn #${order.orderCode}?`, [
       { text: "Khong", style: "cancel" },
       {
         text: "Huy don",
@@ -226,7 +226,7 @@ export default function OrderDetailScreen() {
         </View>
 
         <View className="mt-4 rounded-[16px] bg-white p-4">
-          <Text className="text-[16px] font-bold text-[#102033]">San pham</Text>
+          <Text className="text-[16px] font-bold text-[#102033]">Sản phẩm</Text>
 
           <View className="mt-3 gap-3">
             {order.items.map((item) => (
@@ -291,7 +291,7 @@ export default function OrderDetailScreen() {
                 Ma van don: {tracking?.shipment?.trackingCode ?? order.shipment?.trackingCode ?? "Chua co"}
               </Text>
               <Text className="text-[13px] text-[#334A5C]">
-                Trang thai: {tracking?.shipment?.shipmentStatus ?? order.shipment?.shipmentStatus ?? "pending"}
+                Trạng thái: {tracking?.shipment?.shipmentStatus ?? order.shipment?.shipmentStatus ?? "pending"}
               </Text>
             </View>
           </View>

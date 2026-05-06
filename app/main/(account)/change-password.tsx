@@ -14,8 +14,8 @@ export default function ChangePasswordScreen() {
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
-    if (!token) {
-      Alert.alert("Lỗi", "Vui long dang nhap lai.");
+      if (!token) {
+        Alert.alert("Lỗi", "Vui long dang nhap lai.");
       return;
     }
 
@@ -61,7 +61,7 @@ export default function ChangePasswordScreen() {
 
       <View className="p-4">
         <View className="rounded-[14px] bg-white p-4">
-          <Text className="text-[13px] font-bold text-[#111827]">Mat khau hien tai</Text>
+          <Text className="text-[13px] font-bold text-[#111827]">Mật khẩu hiện tại</Text>
           <TextInput
             className="mt-2 h-12 rounded-[10px] bg-[#F3F5FA] px-3"
             secureTextEntry
@@ -69,7 +69,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setCurrentPassword}
           />
 
-          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Mat khau moi</Text>
+          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Mật khẩu mới</Text>
           <TextInput
             className="mt-2 h-12 rounded-[10px] bg-[#F3F5FA] px-3"
             secureTextEntry
@@ -77,7 +77,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setNewPassword}
           />
 
-          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Xac nhan mat khau moi</Text>
+          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Xác nhận mật khẩu mới</Text>
           <TextInput
             className="mt-2 h-12 rounded-[10px] bg-[#F3F5FA] px-3"
             secureTextEntry

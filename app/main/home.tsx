@@ -50,7 +50,11 @@ export default function HomeScreen() {
           />
           <HomePromoBanner />
           <FeaturedCategoriesSection categories={data.quickCategories} />
-          <FlashSalesSection countdownValues={data.countdownValues} products={data.flashSaleProducts} />
+          <FlashSalesSection
+            countdownValues={data.countdownValues}
+            flashSaleEndsAt={data.flashSaleEndsAt}
+            products={data.flashSaleProducts}
+          />
           <SuggestedProductsSection
             products={visibleSuggestedProducts}
             hasMore={hasMoreSuggested}

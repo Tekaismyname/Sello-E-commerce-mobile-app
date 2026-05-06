@@ -6,7 +6,7 @@ export function AdminProductList({ products, totalCount }: { products: AdminProd
   return (
     <View className="rounded-[16px] bg-white pt-5 pb-2 shadow-sm border border-[#F2F3F7]">
       <View className="flex-row items-center justify-between px-5 mb-4">
-        <Text className="text-[18px] font-extrabold text-[#191C1F]">Danh sách mặt hàng</Text>
+        <Text className="text-[18px] font-extrabold text-[#191C1F]">Item List</Text>
         <View className="flex-row gap-2">
           <Pressable className="h-8 w-8 items-center justify-center rounded-[6px] bg-[#E8F1FB]">
             <Feather name="list" size={16} color="#006397" />
@@ -18,9 +18,9 @@ export function AdminProductList({ products, totalCount }: { products: AdminProd
       </View>
 
       <View className="flex-row items-center justify-between px-5 py-3 border-y border-[#F2F3F7] bg-[#F8F9FA]">
-        <Text className="text-[11px] font-bold text-[#6b7682] uppercase tracking-wider flex-1">Sản phẩm</Text>
-        <Text className="text-[11px] font-bold text-[#6b7682] uppercase tracking-wider w-20 text-center">Danh mục</Text>
-        <Text className="text-[11px] font-bold text-[#6b7682] uppercase tracking-wider w-12 text-right">Kho</Text>
+        <Text className="text-[11px] font-bold text-[#6b7682] uppercase tracking-wider flex-1">Products</Text>
+        <Text className="text-[11px] font-bold text-[#6b7682] uppercase tracking-wider w-20 text-center">Categories</Text>
+        <Text className="text-[11px] font-bold text-[#6b7682] uppercase tracking-wider w-12 text-right">Stock</Text>
       </View>
 
       <View>
@@ -48,7 +48,7 @@ export function AdminProductList({ products, totalCount }: { products: AdminProd
       </View>
 
       <View className="flex-row items-center justify-between px-5 py-4">
-        <Text className="text-[12px] text-[#6b7682] flex-1">Hiển thị {products.length > 0 ? 1 : 0} - {products.length} trong tổng số {totalCount} sản phẩm</Text>
+        <Text className="text-[12px] text-[#6b7682] flex-1">Showing {products.length > 0 ? 1 : 0} - {products.length} of {totalCount} products</Text>
         <View className="flex-row items-center gap-2">
           <Pressable className="h-7 w-7 items-center justify-center rounded border border-[#E7E8EC]">
             <Feather name="chevron-left" size={14} color="#CCD1D9" />

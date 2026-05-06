@@ -15,7 +15,7 @@ export function AdminCategoryToolbar({ value, onChange, onOpenCreate, canCreate 
         <Feather name="search" size={18} color="#6B7280" />
         <TextInput
           className="ml-2 flex-1 text-[14px] text-[#111827]"
-          placeholder="Tìm kiếm danh mục..."
+          placeholder="Search categories..."
           placeholderTextColor="#9CA3AF"
           value={value}
           onChangeText={onChange}
@@ -27,7 +27,7 @@ export function AdminCategoryToolbar({ value, onChange, onOpenCreate, canCreate 
           className="mt-2 h-[44px] items-center justify-center rounded-[12px] bg-[#2F95D2]"
           onPress={onOpenCreate}
         >
-          <Text className="text-[14px] font-bold text-white">+ Thêm danh mục</Text>
+          <Text className="text-[14px] font-bold text-white">+ Add Category</Text>
         </Pressable>
       ) : null}
     </View>

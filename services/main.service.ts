@@ -23,12 +23,39 @@ const fallbackImages = [
   "https://images.unsplash.com/photo-1589003077984-894e133dabab?auto=format&fit=crop&w=900&q=80",
 ];
 
-const countdownValues = ["02", "45", "12"];
+const countdownValues = ["00", "00", "00"];
 
 let cachedHomePromise: Promise<BackendHomeResponse> | null = null;
 let cachedHomeData: BackendHomeResponse | null = null;
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+const pad2 = (value: number) => String(Math.max(0, value)).padStart(2, "0");
+
+const getNextFlashSaleEndAt = (now = new Date()) => {
+  const current = new Date(now);
+  const hour = current.getHours();
+  const nextBoundaryHour = Math.floor(hour / 4) * 4 + 4;
+
+  if (nextBoundaryHour >= 24) {
+    current.setDate(current.getDate() + 1);
+    current.setHours(0, 0, 0, 0);
+    return current;
+  }
+
+  current.setHours(nextBoundaryHour, 0, 0, 0);
+  return current;
+};
+
+const getCountdownValues = (flashSaleEndAt: string, now = new Date()) => {
+  const end = new Date(flashSaleEndAt).getTime();
+  const diffMs = Math.max(0, end - now.getTime());
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [pad2(hours), pad2(minutes), pad2(seconds)];
+};
 
 const uniqueList = (items: string[], max: number) => {
   const seen = new Set<string>();
@@ -111,22 +138,47 @@ const mapQuickCategories = (payload: BackendHomeResponse): QuickCategory[] =>
 
 const mapHomeData = (payload: BackendHomeResponse): HomeData => {
   const categoryMap = new Map<number, string>(payload.categories.map((c) => [c.id, c.name]));
+  const now = new Date();
+  const flashSaleEndAt = getNextFlashSaleEndAt(now).toISOString();
+  const categoryCounts = new Map<number, number>();
+
+  for (const item of payload.featuredProducts) {
+    categoryCounts.set(item.categoryId, (categoryCounts.get(item.categoryId) ?? 0) + 1);
+  }
 
   const mappedProducts = payload.featuredProducts.map((product, index) =>
     mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index),
   );
 
-  const flashSaleProducts = payload.featuredProducts
-    .slice(0, 4)
-    .map((product, index) =>
-      mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index, true),
-    );
+  const sortedForFlashSale = payload.featuredProducts
+    .filter((product) => (product.status ?? "").toLowerCase() === "active")
+    .map((product, index) => {
+      const idValue = Number(product.id) || 0;
+      const ageScore = idValue > 0 ? 1 / idValue : 0;
+      const priceScore = (Number(product.basePrice) || 0) / 1_000_000;
+      const categoryPressure = categoryCounts.get(product.categoryId) ?? 0;
+      const score = ageScore * 1000 + priceScore + categoryPressure * 0.2;
+
+      return { product, index, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+
+  const fallbackFlashSale = payload.featuredProducts.slice(0, 4).map((product, index) => ({
+    product,
+    index,
+  }));
+
+  const flashSaleProducts = (sortedForFlashSale.length ? sortedForFlashSale : fallbackFlashSale).map(({ product, index }) =>
+    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index, true),
+  );
 
   const suggestedProducts = mappedProducts;
 
   return {
     quickCategories: mapQuickCategories(payload),
-    countdownValues,
+    flashSaleEndsAt: flashSaleEndAt,
+    countdownValues: getCountdownValues(flashSaleEndAt, now),
     flashSaleProducts,
     suggestedProducts,
   };

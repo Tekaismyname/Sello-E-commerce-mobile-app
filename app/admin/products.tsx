@@ -34,6 +34,7 @@ export default function AdminProductsScreen() {
   const canCreateProducts = hasPermission("products:create");
   const canUpdateProducts = hasPermission("products:update");
   const canUpdateProductStatus = hasPermission("products:status:update");
+  const canDeleteProducts = hasPermission("products:delete");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProductStatusFilter>("all");
@@ -48,13 +49,13 @@ export default function AdminProductsScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lòng đăng nhập tài khoản admin.");
+      setError("Please log in to admin account.");
       setLoading(false);
       return;
     }
 
     if (!canReadProducts) {
-      setError("Bạn không có quyền xem danh sách sản phẩm.");
+      setError("You don't have permission to view products.");
       setLoading(false);
       return;
     }
@@ -63,7 +64,7 @@ export default function AdminProductsScreen() {
       const res = await adminService.getProductsData(token);
       setData(res);
     } catch (err: any) {
-      setError(err.message ?? "Không thể tải danh sách sản phẩm.");
+      setError(err.message ?? "Cannot load product list.");
     } finally {
       setLoading(false);
     }
@@ -121,7 +122,7 @@ export default function AdminProductsScreen() {
 
   const handleUpdateStatus = async (product: AdminProduct, nextStatus: ProductStatusValue) => {
     if (!token || !product.productId || !canUpdateProductStatus) {
-      Alert.alert("Không thể cập nhật", "Bạn không có quyền hoặc thiếu product id hợp lệ.");
+      Alert.alert("Cannot update", "You don't have permission or missing valid product ID.");
       return;
     }
 
@@ -133,32 +134,57 @@ export default function AdminProductsScreen() {
         current ? { ...current, status: nextStatus } : current,
       );
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Không thể cập nhật trạng thái.");
+      Alert.alert("Loi", err.message ?? "Cannot update status.");
     } finally {
       setUpdating(false);
     }
   };
 
+  const handleDeleteProduct = (product: AdminProduct) => {
+    if (!token || !canDeleteProducts || !product.productId) {
+      Alert.alert("Khong the xoa", "Ban khong co quyen hoac thieu product id hop le.");
+      return;
+    }
+
+    Alert.alert("Delete Product", `Ban chac chan muon xoa \"${product.name}\"?`, [
+      { text: "Huy", style: "cancel" },
+      {
+        text: "Xoa",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setUpdating(true);
+            await adminService.deleteProduct(token, product.productId!);
+            setSelectedProduct(null);
+            await fetchProducts();
+          } catch (err: any) {
+            Alert.alert("Loi", err.message ?? "Khong the xoa san pham.");
+          } finally {
+            setUpdating(false);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <AdminHeader title="Sản phẩm" />
+      <AdminHeader title="Products" />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="relative flex-1"
       >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4 pb-24">
-          <Text className="text-[22px] font-extrabold text-[#191C1F]">Quản lý sản phẩm</Text>
-          <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">
-            Tìm kiếm, lọc theo trạng thái, xem nhanh và cập nhật sản phẩm.
-          </Text>
+          <Text className="text-[22px] font-extrabold text-[#191C1F]">Manage Products</Text>
+          <Text className="mt-1 text-[14px] leading-[22px] text-[#5b6470]">Search, filter by status, quick view and update products.</Text>
 
           <View className="mt-4 rounded-[16px] bg-white p-4 shadow-sm">
             <View className="h-12 flex-row items-center rounded-[12px] bg-[#F4F6F8] px-4">
               <Feather name="search" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[14px] text-[#191C1F]"
-                placeholder="Tìm theo tên, SKU, danh mục..."
+                placeholder="Search by name, SKU, category..."
                 placeholderTextColor="#97a0aa"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -166,7 +192,7 @@ export default function AdminProductsScreen() {
             </View>
 
             <Text className="mt-4 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">
-              Trạng thái
+              Status
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
               {PRODUCT_STATUS_OPTIONS.map((status) => {
@@ -198,11 +224,11 @@ export default function AdminProductsScreen() {
             <>
               <View className="mt-4 flex-row gap-3">
                 <View className="flex-1 rounded-[16px] bg-white p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Tổng số sản phẩm</Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Total Products</Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#191C1F]">{data?.totalCount ?? 0}</Text>
                 </View>
                 <View className="flex-1 rounded-[16px] bg-white p-4">
-                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Tồn kho thấp</Text>
+                  <Text className="text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Low Stock</Text>
                   <Text className="mt-2 text-[22px] font-extrabold text-[#C66400]">{lowStockCount}</Text>
                 </View>
               </View>
@@ -223,17 +249,15 @@ export default function AdminProductsScreen() {
                     </View>
 
                     <View className="mt-3 flex-row items-center justify-between">
-                      <Text className="text-[12px] text-[#5b6470]">
-                        Gia: {new Intl.NumberFormat("vi-VN").format(product.basePrice ?? 0)} d
-                      </Text>
-                      <Text className="text-[12px] font-bold text-[#191C1F]">Kho: {product.stockQty ?? product.stock}</Text>
+                      <Text className="text-[12px] text-[#5b6470]">Price: {new Intl.NumberFormat("en-US").format(product.basePrice ?? 0)} d</Text>
+                      <Text className="text-[12px] font-bold text-[#191C1F]">Stock: {product.stockQty ?? product.stock}</Text>
                     </View>
                   </Pressable>
                 ))}
 
                 {!filteredProducts.length && (
                   <View className="items-center rounded-[14px] bg-white p-6">
-                    <Text className="text-[14px] text-[#5b6470]">Không có sản phẩm phù hợp với bộ lọc hiện tại.</Text>
+                    <Text className="text-[14px] text-[#5b6470]">No products match current filter.</Text>
                   </View>
                 )}
               </View>
@@ -248,7 +272,7 @@ export default function AdminProductsScreen() {
         <View className="flex-1 justify-end bg-black/30">
           <View className="max-h-[86%] rounded-t-[24px] bg-white px-5 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-[18px] font-extrabold text-[#191C1F]">Chi tiết sản phẩm</Text>
+              <Text className="text-[18px] font-extrabold text-[#191C1F]">Product Details</Text>
               <Pressable onPress={() => setSelectedProduct(null)} className="h-10 w-10 items-center justify-center">
                 <Feather name="x" size={20} color="#1a232d" />
               </Pressable>
@@ -270,7 +294,7 @@ export default function AdminProductsScreen() {
                       Ton kho: <Text className="font-bold">{selectedProduct.stockQty ?? selectedProduct.stock}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Trang thai: <Text className="font-bold">{selectedProduct.status ?? "active"}</Text>
+                      Status: <Text className="font-bold">{selectedProduct.status ?? "active"}</Text>
                     </Text>
                   </View>
                 </View>
@@ -281,14 +305,25 @@ export default function AdminProductsScreen() {
                       onPress={() => handleEditProduct(selectedProduct)}
                       className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
                     >
-                      <Text className="text-[13px] font-bold text-white">Sửa thông tin</Text>
+                      <Text className="text-[13px] font-bold text-white">Edit Info</Text>
                     </Pressable>
+                    {canDeleteProducts ? (
+                      <Pressable
+                        disabled={updating}
+                        onPress={() => handleDeleteProduct(selectedProduct)}
+                        className={`flex-1 items-center justify-center rounded-[12px] py-3 ${
+                          updating ? "bg-[#f4c7c5]" : "bg-[#d93025]"
+                        }`}
+                      >
+                        <Text className="text-[13px] font-bold text-white">Delete Product</Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 ) : null}
 
                 {canUpdateProductStatus ? (
                   <>
-                    <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Chuyển trạng thái</Text>
+                    <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Change Status</Text>
                     <View className="mt-3 flex-row flex-wrap gap-2">
                       {PRODUCT_STATUS_OPTIONS.filter((status) => status !== "all").map((status) => {
                         const typedStatus = status as ProductStatusValue;
@@ -310,8 +345,8 @@ export default function AdminProductsScreen() {
                   </>
                 ) : null}
 
-                {!canUpdateProducts && !canUpdateProductStatus ? (
-                  <Text className="mt-5 text-[12px] text-[#9A6400]">Bạn không có quyền cập nhật sản phẩm.</Text>
+                {!canUpdateProducts && !canUpdateProductStatus && !canDeleteProducts ? (
+                  <Text className="mt-5 text-[12px] text-[#9A6400]">You don't have permission to update products.</Text>
                 ) : null}
               </ScrollView>
             ) : null}

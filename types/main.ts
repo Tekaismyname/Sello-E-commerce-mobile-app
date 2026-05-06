@@ -31,6 +31,7 @@ export type CategoryTile = {
 export type HomeData = {
   quickCategories: QuickCategory[];
   countdownValues: string[];
+  flashSaleEndsAt?: string;
   flashSaleProducts: ProductCard[];
   suggestedProducts: ProductCard[];
 };

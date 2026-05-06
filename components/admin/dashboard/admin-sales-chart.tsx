@@ -16,11 +16,11 @@ export function AdminSalesChart() {
     <View className="rounded-[16px] bg-white p-5 shadow-sm border border-[#F2F3F7]">
       <View className="flex-row items-center justify-between mb-8">
         <View>
-          <Text className="text-[18px] font-extrabold text-[#191C1F]">Phân tích doanh thu</Text>
-          <Text className="text-[12px] text-[#6b7682] mt-0.5">Biểu đồ so sánh doanh thu theo tuần</Text>
+          <Text className="text-[18px] font-extrabold text-[#191C1F]">Revenue Analysis</Text>
+          <Text className="text-[12px] text-[#6b7682] mt-0.5">Weekly Revenue Comparison Chart</Text>
         </View>
         <View className="flex-row items-center gap-1 rounded-[8px] bg-[#F4F5F7] px-3 py-1.5">
-          <Text className="text-[12px] font-bold text-[#3F4850]">Tháng này</Text>
+          <Text className="text-[12px] font-bold text-[#3F4850]">This Month</Text>
           <Feather name="chevron-down" size={14} color="#3F4850" />
         </View>
       </View>

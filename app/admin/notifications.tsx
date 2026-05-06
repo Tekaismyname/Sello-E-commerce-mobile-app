@@ -21,9 +21,7 @@ export default function AdminNotificationsScreen() {
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">
-              Bạn không có quyền xem thông báo của admin.
-            </Text>
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">You don't have permission to view admin notifications.</Text>
           </View>
         ) : loading ? (
           <View className="mt-8 items-center">
@@ -42,17 +40,15 @@ export default function AdminNotificationsScreen() {
                 onSubmit={async (payload) => {
                   try {
                     await createNotification(payload);
-                    Alert.alert("Thành công", "Đã gửi thông báo.");
+                    Alert.alert("Success", "Notification sent.");
                   } catch (err: any) {
-                    Alert.alert("Lỗi", err?.message ?? "Không thể gửi thông báo.");
+                    Alert.alert("Error", err?.message ?? "Cannot send notification.");
                   }
                 }}
               />
             ) : (
               <View className="mb-3 rounded-[12px] bg-white p-3">
-                <Text className="text-[13px] text-[#9A6400]">
-                  Bạn không có quyền tạo thông báo mới.
-                </Text>
+                <Text className="text-[13px] text-[#9A6400]">You don't have permission to create notifications.</Text>
               </View>
             )}
             <AdminNotificationHistory notifications={notifications} />

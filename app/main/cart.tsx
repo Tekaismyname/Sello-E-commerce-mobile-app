@@ -1,12 +1,20 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { Href, router, useFocusEffect } from "expo-router";
+import {
+  CartEmptyState,
+  CartErrorState,
+  CartItemCard,
+  CartLoadingState,
+  CartSummaryCard,
+} from "@/components/main/cart";
 import { SelloHeader } from "@/components/main/sello-header";
+import { useAuth } from "@/contexts/auth-context";
 import { cartService } from "@/services/customer.service";
 import { Cart, CartItem } from "@/types/customer";
-import { useAuth } from "@/contexts/auth-context";
-import { Href, router, useFocusEffect } from "expo-router";
+
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
 export default function CartScreen() {
   const { token } = useAuth();
@@ -94,12 +102,8 @@ export default function CartScreen() {
     ]);
   };
 
-  const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
   const selectedItems = cart?.items.filter((item) => item.selected) ?? [];
-  const selectedSubtotal = selectedItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
+  const selectedSubtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
@@ -107,93 +111,31 @@ export default function CartScreen() {
       <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
         <Text className="text-[30px] font-extrabold text-[#1f2934]">Giỏ hàng</Text>
 
-        {loading && (
-          <View className="mt-10 items-center">
-            <ActivityIndicator size="large" color="#006397" />
-            <Text className="mt-3 text-[13px] text-[#7d8896]">Đang tải giỏ hàng...</Text>
-          </View>
-        )}
+        {loading ? <CartLoadingState /> : null}
+        {!loading && error ? <CartErrorState message={error} /> : null}
+        {!loading && !error && cart && cart.items.length === 0 ? <CartEmptyState /> : null}
 
-        {!loading && error && (
-          <View className="mt-6 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#465362]">{error}</Text>
-          </View>
-        )}
-
-        {!loading && !error && cart && cart.items.length === 0 && (
-          <View className="mt-6 rounded-[14px] bg-white p-6 items-center">
-            <Feather name="shopping-cart" size={48} color="#c5cdd6" />
-            <Text className="mt-3 text-[15px] font-semibold text-[#465362]">Giỏ hàng trống</Text>
-            <Text className="mt-1 text-[12px] text-[#7d8896]">ãy thêm sản phẩm vào giỏ hàng!</Text>
-          </View>
-        )}
-
-        {!loading && !error && cart && cart.items.length > 0 && (
+        {!loading && !error && cart && cart.items.length > 0 ? (
           <View className="mt-4 gap-3">
             {cart.items.map((item) => (
-              <View key={item.id} className="flex-row items-center rounded-[14px] bg-white p-3 gap-3">
-                <Pressable onPress={() => handleToggleSelect(item)}>
-                  <View className={`h-5 w-5 rounded-[4px] border-2 items-center justify-center ${item.selected ? "bg-[#006397] border-[#006397]" : "border-[#c5cdd6]"}`}>
-                    {item.selected && <Feather name="check" size={12} color="white" />}
-                  </View>
-                </Pressable>
-
-                <Image
-                  source={{ uri: item.productImage || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80" }}
-                  className="h-16 w-16 rounded-[8px]"
-                />
-
-                <View className="flex-1">
-                  <Text className="text-[14px] font-semibold text-[#1f2934]" numberOfLines={2}>
-                    {item.productName}
-                  </Text>
-                  <Text className="mt-1 text-[15px] font-bold text-[#006397]">{formatPrice(item.price)}</Text>
-
-                  <View className="mt-2 flex-row items-center gap-2">
-                    <Pressable
-                      className="h-7 w-7 items-center justify-center rounded-full bg-[#f2f4f7]"
-                      onPress={() => handleUpdateQuantity(item, -1)}
-                    >
-                      <Feather name="minus" size={14} color="#465362" />
-                    </Pressable>
-                    <Text className="text-[14px] font-semibold text-[#1f2934] w-6 text-center">{item.quantity}</Text>
-                    <Pressable
-                      className="h-7 w-7 items-center justify-center rounded-full bg-[#f2f4f7]"
-                      onPress={() => handleUpdateQuantity(item, 1)}
-                    >
-                      <Feather name="plus" size={14} color="#465362" />
-                    </Pressable>
-                  </View>
-                </View>
-
-                <Pressable onPress={() => handleDelete(item)} className="p-2">
-                  <Feather name="trash-2" size={16} color="#BA1A1A" />
-                </Pressable>
-              </View>
+              <CartItemCard
+                key={item.id}
+                item={item}
+                formatPrice={formatPrice}
+                onToggleSelect={handleToggleSelect}
+                onUpdateQuantity={handleUpdateQuantity}
+                onDelete={handleDelete}
+              />
             ))}
 
-            <View className="mt-2 rounded-[14px] bg-white p-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-[13px] font-semibold text-[#5E6A78]">
-                  Da chon {selectedItems.length} sản phẩm
-                </Text>
-                <Text className="text-[16px] font-extrabold text-[#006397]">
-                  {formatPrice(selectedSubtotal)}
-                </Text>
-              </View>
-
-              <Pressable
-                disabled={!selectedItems.length}
-                onPress={() => router.push("/main/checkout" as Href)}
-                className={`mt-3 h-[48px] items-center justify-center rounded-[12px] ${
-                  selectedItems.length ? "bg-[#006397]" : "bg-[#AFC8D8]"
-                }`}
-              >
-                <Text className="text-[14px] font-extrabold text-white">Tiến hành thanh toán</Text>
-              </Pressable>
-            </View>
+            <CartSummaryCard
+              selectedCount={selectedItems.length}
+              selectedSubtotal={selectedSubtotal}
+              formatPrice={formatPrice}
+              onCheckout={() => router.push("/main/checkout" as Href)}
+            />
           </View>
-        )}
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

@@ -95,7 +95,7 @@ export default function OrderTrackingScreen() {
               <View className="absolute right-[48px] top-[118px] h-10 w-10 items-center justify-center rounded-full bg-[#E53935]">
                 <Feather name="map-pin" size={18} color="white" />
               </View>
-              <View className="absolute bottom-3 left-3 right-3 rounded-[12px] bg-white p-3 flex-row items-center justify-between">
+              <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white p-3">
                 <View>
                   <Text className="text-[13px] text-[#64748B]">Tài xế hiện tại</Text>
                   <Text className="text-[15px] font-extrabold text-[#1F2934]">
@@ -114,9 +114,7 @@ export default function OrderTrackingScreen() {
                   <Feather name="map-pin" size={16} color="#BA1A1A" />
                   <View className="ml-2 flex-1">
                     <Text className="text-[13px] font-bold text-[#1F2934]">Diem giao hang</Text>
-                    <Text className="mt-1 text-[13px] leading-[19px] text-[#4B5563]">
-                      {tracking.destination.address}
-                    </Text>
+                    <Text className="mt-1 text-[13px] leading-[19px] text-[#4B5563]">{tracking.destination.address}</Text>
                   </View>
                 </View>
                 <View className="mt-2 flex-row items-center">
@@ -143,9 +141,7 @@ export default function OrderTrackingScreen() {
             </Text>
             <View className="mt-2 flex-row justify-between">
               <Text className="text-[14px] text-[#4B5563]">Mã vận đơn</Text>
-              <Text className="text-[14px] font-semibold text-[#1F2934]">
-                {tracking.shipment?.trackingCode ?? "N/A"}
-              </Text>
+              <Text className="text-[14px] font-semibold text-[#1F2934]">{tracking.shipment?.trackingCode ?? "N/A"}</Text>
             </View>
             <View className="mt-1 flex-row justify-between">
               <Text className="text-[14px] text-[#4B5563]">Hình thức</Text>

@@ -8,10 +8,10 @@ export function AdminHeader({ title }: { title?: string }) {
   const { refreshToken, signOut } = useAuth();
 
   const handleLogout = async () => {
-    Alert.alert("Đăng xuất", "Bạn muốn đăng xuất khỏi tài khoản admin?", [
-      { text: "Hủy", style: "cancel" },
+    Alert.alert("Log out", "Do you want to log out of admin account?", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: "Đăng xuất",
+        text: "Log out",
         style: "destructive",
         onPress: async () => {
           try {

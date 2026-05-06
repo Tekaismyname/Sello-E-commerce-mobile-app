@@ -53,18 +53,18 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
   return (
     <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
       <View className="rounded-[16px] bg-white p-4">
-        <Text className="text-[14px] font-bold text-[#111827]">Anh bia danh muc</Text>
+        <Text className="text-[14px] font-bold text-[#111827]">Category Cover Image</Text>
         <View className="mt-2 overflow-hidden rounded-[14px] bg-[#EEF2F6]">
           <Image source={{ uri: previewImage }} className="h-[150px] w-full" resizeMode="cover" />
         </View>
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Ten danh muc</Text>
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Category Name</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={name} onChangeText={setName} placeholder="VD: Thoi trang" />
 
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Slug</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={slug} onChangeText={setSlug} placeholder="thoi-trang" />
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Danh muc cha</Text>
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Parent Category</Text>
         <View className="mt-2 rounded-[12px] bg-[#F3F5FA]">
           <View className="h-12 flex-row items-center px-3">
             <Feather name="search" size={16} color="#6B7280" />
@@ -127,7 +127,7 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
           </View>
         ) : null}
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Anh bia URL</Text>
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Cover Image URL</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={imageUrl} onChangeText={setImageUrl} placeholder="https://..." />
 
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Mo ta</Text>
@@ -135,8 +135,8 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
 
         <View className="mt-4 flex-row items-center justify-between rounded-[12px] bg-[#F8FAFC] px-3 py-3">
           <View className="flex-1 pr-4">
-            <Text className="text-[14px] font-semibold text-[#111827]">Trang thai hoat dong</Text>
-            <Text className="mt-1 text-[12px] text-[#6B7280]">Danh muc bi an se khong xuat hien trong cua hang.</Text>
+            <Text className="text-[14px] font-semibold text-[#111827]">Active Status</Text>
+            <Text className="mt-1 text-[12px] text-[#6B7280]">Hidden categories won't appear in the store.</Text>
           </View>
           <Switch value={active} onValueChange={setActive} />
         </View>
@@ -156,7 +156,7 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
           });
         }}
       >
-        <Text className="text-[15px] font-bold text-white">Luu danh muc</Text>
+        <Text className="text-[15px] font-bold text-white">Save Category</Text>
       </Pressable>
     </ScrollView>
   );

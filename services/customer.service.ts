@@ -172,7 +172,7 @@ const mapOrderStatus = (value: unknown): Order["status"] => {
 const mapOrderItem = (item: Record<string, unknown>): Order["items"][number] => ({
   id: toNumber(item.id ?? item.orderItemId),
   productId: toNumber(item.productId),
-  productName: String(item.productName ?? "San pham"),
+  productName: String(item.productName ?? "Sản phẩm"),
   variantId: item.variantId ? toNumber(item.variantId) : null,
   variantLabel:
     typeof item.variantLabel === "string"
@@ -302,7 +302,7 @@ const mapCartFromBackend = (raw: Record<string, unknown>): Cart => {
     id: toNumber(item.id),
     productId: toNumber(item.productId),
     variantId: item.variantId ? toNumber(item.variantId) : null,
-    productName: String(asRecord(item.product).name ?? "San pham"),
+    productName: String(asRecord(item.product).name ?? "Sản phẩm"),
     productImage: String(asRecord(item.product).primaryImageUrl ?? ""),
     price: toNumber(item.unitPrice),
     quantity: toNumber(item.quantity, 1),
@@ -322,7 +322,7 @@ const mapCheckoutPreview = (raw: Record<string, unknown>): CheckoutPreview => ({
     id: toNumber(item.id),
     productId: toNumber(item.productId),
     variantId: item.variantId ? toNumber(item.variantId) : null,
-    productName: String(asRecord(item.product).name ?? "San pham"),
+    productName: String(asRecord(item.product).name ?? "Sản phẩm"),
     productImage: String(asRecord(item.product).primaryImageUrl ?? ""),
     price: toNumber(item.unitPrice),
     quantity: toNumber(item.quantity, 1),
@@ -379,7 +379,7 @@ const mapNotification = (raw: Record<string, unknown>): Notification => ({
 const mapWishlistItem = (raw: Record<string, unknown>): WishlistItem => ({
   id: toNumber(raw.id),
   productId: toNumber(raw.productId),
-  productName: String(raw.productName ?? "San pham"),
+  productName: String(raw.productName ?? "Sản phẩm"),
   productImage: typeof raw.primaryImageUrl === "string" ? raw.primaryImageUrl : null,
   productPrice: toNumber(raw.basePrice ?? raw.productPrice),
   createdAt: raw.createdAt ? toDateString(raw.createdAt) : undefined,

@@ -8,7 +8,7 @@ type Props = {
 export function AdminNotificationHistory({ notifications }: Props) {
   return (
     <View className="mt-3 rounded-[16px] bg-white p-4">
-      <Text className="text-[16px] font-extrabold text-[#111827]">Thông báo gần đây</Text>
+      <Text className="text-[16px] font-extrabold text-[#111827]">Recent Notifications</Text>
       <View className="mt-3 gap-2">
         {notifications.slice(0, 6).map((item) => (
           <View key={item.id} className="rounded-[12px] bg-[#F8FAFD] p-3">
@@ -19,7 +19,7 @@ export function AdminNotificationHistory({ notifications }: Props) {
         ))}
 
         {!notifications.length && (
-          <Text className="text-[13px] text-[#6B7280]">Chưa có thông báo nào.</Text>
+          <Text className="text-[13px] text-[#6B7280]">No notifications yet.</Text>
         )}
       </View>
     </View>

@@ -2,7 +2,7 @@ import { AdminVoucher } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
-const formatCurrency = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+const formatCurrency = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
 type Props = {
   voucher: AdminVoucher;
@@ -19,7 +19,7 @@ export function AdminVoucherCard({ voucher, onEdit, onToggleStatus, onDelete }: 
       <View className="flex-row items-center justify-between">
         <View className={`rounded-full px-3 py-1 ${voucher.isActive ? "bg-[#DCFCE7]" : "bg-[#FEE2E2]"}`}>
           <Text className={`text-[11px] font-bold ${voucher.isActive ? "text-[#15803D]" : "text-[#B91C1C]"}`}>
-            {voucher.isActive ? "Hoạt động" : "Không hoạt động"}
+            {voucher.isActive ? "Active" : "Inactive"}
           </Text>
         </View>
         <Text className="text-[12px] text-[#6B7280]">ID: {voucher.id}</Text>
@@ -29,23 +29,23 @@ export function AdminVoucherCard({ voucher, onEdit, onToggleStatus, onDelete }: 
       <Text className="mt-1 text-[20px] font-bold text-[#111827]">
         {voucher.discountType === "percent" ? `${voucher.discountValue}%` : formatCurrency(voucher.discountValue)}
       </Text>
-      <Text className="mt-1 text-[14px] text-[#4B5563]">Đơn tối thiểu {formatCurrency(voucher.minOrderValue)}</Text>
+      <Text className="mt-1 text-[14px] text-[#4B5563]">Min order {formatCurrency(voucher.minOrderValue)}</Text>
 
       <View className="mt-4 h-2 rounded-full bg-[#E5E7EB]">
         <View className="h-2 rounded-full bg-[#2F95D2]" style={{ width: `${ratio * 100}%` }} />
       </View>
-      <Text className="mt-1 text-[12px] text-[#6B7280]">Đã dùng: {voucher.usedCount}/{voucher.usageLimit}</Text>
+      <Text className="mt-1 text-[12px] text-[#6B7280]">Used: {voucher.usedCount}/{voucher.usageLimit}</Text>
 
       {onEdit || onToggleStatus || onDelete ? (
         <View className="mt-4 flex-row gap-2">
           {onEdit ? (
             <Pressable className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#E8F1FB]" onPress={() => onEdit(voucher)}>
-              <Text className="text-[13px] font-bold text-[#0369A1]">Sửa</Text>
+              <Text className="text-[13px] font-bold text-[#0369A1]">Edit</Text>
             </Pressable>
           ) : null}
           {onToggleStatus ? (
             <Pressable className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#F3F4F6]" onPress={() => onToggleStatus(voucher)}>
-              <Text className="text-[13px] font-bold text-[#374151]">{voucher.isActive ? "Tắt" : "Bật"}</Text>
+              <Text className="text-[13px] font-bold text-[#374151]">{voucher.isActive ? "Off" : "On"}</Text>
             </Pressable>
           ) : null}
           {onDelete ? (

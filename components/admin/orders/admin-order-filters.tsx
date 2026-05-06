@@ -10,9 +10,9 @@ type AdminOrderFiltersProps = {
 };
 
 const OPTIONS: { value: AdminOrderFilter; label: string }[] = [
-  { value: "all", label: "Tất cả" },
-  { value: "pending", label: "Chờ xử lý" },
-  { value: "shipping", label: "Đang giao" },
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "shipping", label: "Shipping" },
 ];
 
 export function AdminOrderFilters({
@@ -27,7 +27,7 @@ export function AdminOrderFilters({
         <Feather name="search" size={17} color="#6B7280" />
         <TextInput
           className="ml-2 flex-1 text-[14px] text-[#1F2934]"
-          placeholder="Tìm mã đơn, tên khách hàng..."
+          placeholder="Search order ID, customer name..."
           placeholderTextColor="#9CA3AF"
           value={search}
           onChangeText={onSearchChange}

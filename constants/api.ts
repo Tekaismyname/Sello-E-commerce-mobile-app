@@ -182,6 +182,7 @@ export const API_ENDPOINTS = {
     createProduct: "/admin/products",
     updateProduct: (productId: number) => `/admin/products/${productId}`,
     updateProductStatus: (productId: number) => `/admin/products/${productId}/status`,
+    deleteProduct: (productId: number) => `/admin/products/${productId}`,
     reportsOverview: "/admin/reports/overview",
     exportReport: "/admin/reports/export",
   },
