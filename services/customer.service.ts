@@ -12,6 +12,7 @@ import {
   CreateOrderPayload,
   CreateReviewPayload,
   MockPaymentCallbackPayload,
+  MockPaymentStatus,
   Notification,
   Order,
   OrderTracking,
@@ -722,6 +723,11 @@ export const orderService = {
     );
 
     const data = asRecord(response.data);
+    const map = asRecord(data.map);
+    const mapOrigin = asRecord(map.origin);
+    const mapDestination = asRecord(map.destination);
+    const mapRoute = asRecord(map.route);
+    const mapRouteGeometry = asRecord(mapRoute.geometry);
     return {
       ...response,
       data: {
@@ -788,6 +794,42 @@ export const orderService = {
               address: String(asRecord(data.destination).address ?? ""),
               latitude: toNumber(asRecord(data.destination).latitude),
               longitude: toNumber(asRecord(data.destination).longitude),
+              source:
+                typeof asRecord(data.destination).source === "string"
+                  ? String(asRecord(data.destination).source)
+                  : null,
+            }
+          : null,
+        map: data.map
+          ? {
+              origin: {
+                label: typeof mapOrigin.label === "string" ? String(mapOrigin.label) : undefined,
+                latitude: toNumber(mapOrigin.latitude),
+                longitude: toNumber(mapOrigin.longitude),
+              },
+              destination: {
+                label: typeof mapDestination.label === "string" ? String(mapDestination.label) : undefined,
+                recipientName:
+                  typeof mapDestination.recipientName === "string" ? String(mapDestination.recipientName) : null,
+                phone: typeof mapDestination.phone === "string" ? String(mapDestination.phone) : null,
+                address: String(mapDestination.address ?? ""),
+                latitude: toNumber(mapDestination.latitude),
+                longitude: toNumber(mapDestination.longitude),
+                source: typeof mapDestination.source === "string" ? String(mapDestination.source) : null,
+              },
+              route: {
+                provider: String(mapRoute.provider ?? "fallback"),
+                status: String(mapRoute.status ?? "straight_line"),
+                distanceMeters: toNullableNumber(mapRoute.distanceMeters),
+                durationSeconds: toNullableNumber(mapRoute.durationSeconds),
+                geometry: mapRoute.geometry
+                  ? {
+                      type: "LineString",
+                      coordinates: asArray<number[]>(mapRouteGeometry.coordinates),
+                    }
+                  : null,
+              },
+              attribution: typeof map.attribution === "string" ? String(map.attribution) : undefined,
             }
           : null,
         timeline: asArray<Record<string, unknown>>(data.timeline).map((item) => ({
@@ -809,5 +851,28 @@ export const orderService = {
         body: JSON.stringify(payload),
       },
     );
+  },
+
+  async getMockPaymentStatus(paymentId: number) {
+    const response = await requestPublic<ApiResponse<unknown>>(
+      API_ENDPOINTS.orders.mockPaymentStatus(paymentId),
+    );
+    const data = asRecord(response.data);
+
+    return {
+      ...response,
+      data: {
+        paymentId: toNumber(data.paymentId),
+        orderId: toNumber(data.orderId),
+        orderCode: String(data.orderCode ?? ""),
+        amount: toNumber(data.amount),
+        paymentStatus: String(data.paymentStatus ?? "pending"),
+        orderStatus: String(data.orderStatus ?? "pending"),
+        orderPaymentStatus: String(data.orderPaymentStatus ?? "unpaid"),
+        paidAt: typeof data.paidAt === "string" ? toDateString(data.paidAt) : null,
+        failReason: typeof data.failReason === "string" ? String(data.failReason) : null,
+        expiresAt: typeof data.expiresAt === "string" ? toDateString(data.expiresAt) : null,
+      } satisfies MockPaymentStatus,
+    };
   },
 };

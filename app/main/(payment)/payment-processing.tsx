@@ -1,31 +1,30 @@
-import { useAuth } from "@/contexts/auth-context";
 import { orderService } from "@/services/customer.service";
 import { Feather } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 import { Href, router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
 export default function PaymentProcessingScreen() {
-  const { token } = useAuth();
   const params = useLocalSearchParams<{
     orderId?: string;
     paymentId?: string;
     amount?: string;
     method?: string;
     paymentType?: string;
-    result?: "success" | "failed";
   }>();
+  const isFocused = useIsFocused();
   const handledRef = useRef(false);
+  const [attemptText, setAttemptText] = useState("Dang khoi tao");
 
   const orderId = Number(params.orderId ?? 0);
   const paymentId = Number(params.paymentId ?? 0);
   const amount = Number(params.amount ?? 0);
   const method = params.method ?? "Thanh toan";
   const paymentType = params.paymentType ?? "online";
-  const targetResult = params.result ?? "success";
 
   const nextParams = useMemo(
     () =>
@@ -39,33 +38,62 @@ export default function PaymentProcessingScreen() {
   );
 
   useEffect(() => {
+    if (!isFocused) return;
     if (handledRef.current) return;
     handledRef.current = true;
+    let cancelled = false;
+    const replaceIfActive = (href: Href) => {
+      if (!cancelled) router.replace(href);
+    };
 
     const runPayment = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1300));
-
-        if (paymentType !== "cod" && paymentId > 0) {
-          await orderService.mockPaymentCallback(paymentId, { result: targetResult });
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        if (targetResult === "failed") {
-          router.replace((`/main/payment-failed?${nextParams}&reason=So%20du%20khong%20du` as unknown) as Href);
+        if (paymentType === "cod") {
+          setAttemptText("Xac nhan don COD");
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          replaceIfActive((`/main/payment-success?${nextParams}` as unknown) as Href);
           return;
         }
 
-        router.replace((`/main/payment-success?${nextParams}` as unknown) as Href);
+        if (!paymentId) {
+          replaceIfActive((`/main/payment-failed?${nextParams}&reason=Khong%20tim%20thay%20ma%20thanh%20toan` as unknown) as Href);
+          return;
+        }
+
+        const maxAttempts = 40;
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+          if (cancelled) return;
+          setAttemptText(`Kiem tra trang thai lan ${attempt + 1}/${maxAttempts}`);
+          const statusResponse = await orderService.getMockPaymentStatus(paymentId);
+          if (cancelled) return;
+          const paymentStatus = statusResponse.data.paymentStatus;
+
+          if (paymentStatus === "success" || paymentStatus === "paid") {
+            replaceIfActive((`/main/payment-success?${nextParams}` as unknown) as Href);
+            return;
+          }
+
+          if (paymentStatus === "failed" || paymentStatus === "expired") {
+            const reason = encodeURIComponent(statusResponse.data.failReason ?? "Giao dich khong duoc xac nhan");
+            replaceIfActive((`/main/payment-failed?${nextParams}&reason=${reason}` as unknown) as Href);
+            return;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+
+        replaceIfActive((`/main/payment-failed?${nextParams}&reason=Het%20thoi%20gian%20cho%20xac%20nhan%20QR` as unknown) as Href);
       } catch (error: any) {
         const reason = encodeURIComponent(error?.message ?? "Khong the hoan tat giao dich");
-        router.replace((`/main/payment-failed?${nextParams}&reason=${reason}` as unknown) as Href);
+        replaceIfActive((`/main/payment-failed?${nextParams}&reason=${reason}` as unknown) as Href);
       }
     };
 
     runPayment();
-  }, [nextParams, paymentId, paymentType, targetResult, token]);
+    return () => {
+      cancelled = true;
+    };
+  }, [isFocused, nextParams, paymentId, paymentType]);
 
   return (
     <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
@@ -86,27 +114,30 @@ export default function PaymentProcessingScreen() {
 
           <View className="mt-4 flex-row items-center rounded-full bg-[#E9F8EF] px-3 py-1">
             <ActivityIndicator size="small" color="#12805C" />
-            <Text className="ml-2 text-[12px] font-bold text-[#12805C]">Đang bảo mật</Text>
+            <Text className="ml-2 text-[12px] font-bold text-[#12805C]">Dang doi QR</Text>
           </View>
 
-          <Text className="mt-10 text-center text-[26px] font-extrabold text-[#1F2934]">Đang xử lý thanh toán</Text>
+          <Text className="mt-10 text-center text-[26px] font-extrabold text-[#1F2934]">Cho xac nhan thanh toan</Text>
           <Text className="mt-3 text-center text-[15px] leading-[23px] text-[#4B5563]">
-            Vui lòng không thoát ứng dụng. Đang xác thực giao dịch {formatPrice(amount)} qua {method}.
+            He thong dang kiem tra giao dich {formatPrice(amount)} qua {method}. Don hang chi duoc xac nhan sau khi Sello Mock Bank gui ket qua ve backend.
           </Text>
         </View>
 
         <View className="mt-10 gap-3">
           <View className="flex-row items-center rounded-[14px] bg-[#EEF8F2] px-4 py-3">
             <Feather name="check-circle" size={20} color="#12805C" />
-            <Text className="ml-3 text-[14px] font-bold text-[#1F2934]">Khởi tạo đơn hàng thành công</Text>
+            <Text className="ml-3 text-[14px] font-bold text-[#1F2934]">Don hang da duoc tao</Text>
           </View>
           <View className="flex-row items-center rounded-[14px] bg-white px-4 py-3">
             <ActivityIndicator size="small" color="#0F6CBD" />
-            <Text className="ml-3 text-[14px] font-bold text-[#0F4C6B]">Xác thực với ngân hàng...</Text>
+            <View className="ml-3 flex-1">
+              <Text className="text-[14px] font-bold text-[#0F4C6B]">Dang cho xac nhan QR</Text>
+              <Text className="mt-1 text-[12px] font-semibold text-[#64748B]">{attemptText}</Text>
+            </View>
           </View>
           <View className="flex-row items-center rounded-[14px] px-4 py-3 opacity-50">
             <Feather name="more-horizontal" size={20} color="#64748B" />
-            <Text className="ml-3 text-[14px] font-bold text-[#64748B]">Hoàn tất giao dịch</Text>
+            <Text className="ml-3 text-[14px] font-bold text-[#64748B]">Cap nhat don hang</Text>
           </View>
         </View>
       </View>

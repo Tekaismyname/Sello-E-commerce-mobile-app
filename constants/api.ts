@@ -145,6 +145,7 @@ export const API_ENDPOINTS = {
     cancel: (orderId: number) => `/orders/${orderId}/cancel`,
     tracking: (orderId: number) => `/orders/${orderId}/tracking`,
     mockPaymentCallback: (paymentId: number) => `/payments/mock/${paymentId}/callback`,
+    mockPaymentStatus: (paymentId: number) => `/payments/mock/${paymentId}/status`,
   },
   admin: {
     dashboard: "/admin/system/dashboard",

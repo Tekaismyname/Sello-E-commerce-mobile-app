@@ -281,12 +281,53 @@ export interface OrderTracking {
     address: string;
     latitude: number;
     longitude: number;
+    source?: string | null;
+  } | null;
+  map?: {
+    origin: {
+      label?: string;
+      latitude: number;
+      longitude: number;
+    };
+    destination: {
+      label?: string;
+      recipientName?: string | null;
+      phone?: string | null;
+      address: string;
+      latitude: number;
+      longitude: number;
+      source?: string | null;
+    };
+    route: {
+      provider: string;
+      status: string;
+      distanceMeters: number | null;
+      durationSeconds: number | null;
+      geometry?: {
+        type: "LineString";
+        coordinates: number[][];
+      } | null;
+    };
+    attribution?: string;
   } | null;
   timeline: OrderStatusEvent[];
 }
 
 export interface MockPaymentCallbackPayload {
   result: "success" | "failed";
+}
+
+export interface MockPaymentStatus {
+  paymentId: number;
+  orderId: number;
+  orderCode: string;
+  amount: number;
+  paymentStatus: string;
+  orderStatus: string;
+  orderPaymentStatus: string;
+  paidAt: string | null;
+  failReason: string | null;
+  expiresAt: string | null;
 }
 
 // ─── Product Detail (Public) ──────────────────────────────
