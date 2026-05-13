@@ -1,0 +1,13 @@
+section,key,value
+summary,users,8
+summary,orders,11
+revenue,2026-03,1500000
+revenue,2026-04,25870000
+top_selling,Admin Test Product Updated,13
+top_selling,adidas Giày Superstar II Cloud White / Core Black,9
+top_selling,Quần Nike 1,1
+top_selling,Giày Nike 1,1
+top_selling,Áo thun Nike 2,0
+order_status,cancelled,8
+order_status,delivered,2
+order_status,confirmed,1

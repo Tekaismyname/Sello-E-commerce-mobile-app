@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { createHash, randomBytes } from 'node:crypto';
 import {
   createPool,
   Pool,
@@ -282,6 +283,50 @@ interface ReviewListRow extends RowDataPacket {
   media_urls?: string | null;
 }
 
+interface GeoPoint {
+  latitude: number;
+  longitude: number;
+}
+
+interface TrackingDestination extends GeoPoint {
+  recipientName: string;
+  phone: string;
+  address: string;
+  source?: 'database' | 'photon' | 'fallback';
+}
+
+interface PhotonFeature {
+  geometry?: {
+    coordinates?: [number, number];
+    type?: string;
+  };
+  properties?: {
+    name?: string;
+    street?: string;
+    housenumber?: string;
+    district?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+}
+
+interface PhotonResponse {
+  features?: PhotonFeature[];
+}
+
+interface OsrmRouteResponse {
+  code?: string;
+  routes?: Array<{
+    distance?: number;
+    duration?: number;
+    geometry?: {
+      type: 'LineString';
+      coordinates: number[][];
+    };
+  }>;
+}
+
 @Injectable()
 export class MySqlDatabaseService implements OnModuleDestroy {
   private readonly logger = new Logger(MySqlDatabaseService.name);
@@ -339,6 +384,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     await this.pool.query(`SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci`);
     await this.ensureRefreshTokenTable();
     await this.ensureAdminFeatureColumns();
+    await this.ensureMockPaymentColumns();
     this.logger.log('Connected to MySQL successfully');
   }
 
@@ -998,6 +1044,8 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       );
 
       const paymentId = paymentResult.insertId;
+      const mockPaymentToken = this.createMockPaymentToken();
+      const mockPaymentExpiresAt = this.getMockPaymentExpiryDate();
 
       if (paymentMethod.method_code === 'COD') {
         await connection.execute(
@@ -1028,6 +1076,19 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         };
       }
 
+      await connection.execute(
+        `
+          UPDATE payments
+          SET mock_confirm_token_hash = ?, mock_confirm_expires_at = ?
+          WHERE payment_id = ?
+        `,
+        [
+          this.hashMockPaymentToken(mockPaymentToken),
+          mockPaymentExpiresAt,
+          paymentId,
+        ],
+      );
+
       await connection.commit();
 
       return {
@@ -1037,7 +1098,13 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         paymentType: 'online',
         paymentStatus: 'pending',
         orderStatus: 'pending',
-        ...this.buildMockPaymentQr(paymentId, orderCode, totalAmount),
+        ...this.buildMockPaymentQr(
+          paymentId,
+          orderCode,
+          totalAmount,
+          mockPaymentToken,
+          mockPaymentExpiresAt,
+        ),
       };
     } catch (error) {
       await connection.rollback();
@@ -1138,6 +1205,78 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     } finally {
       connection.release();
     }
+  }
+
+  async getMockPaymentStatus(paymentId: number) {
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT p.payment_id, p.order_id, p.amount, p.payment_status, p.paid_at,
+               p.fail_reason, p.mock_confirm_expires_at, o.order_code,
+               o.order_status, o.payment_status AS order_payment_status
+        FROM payments p
+        INNER JOIN orders o ON o.order_id = p.order_id
+        WHERE p.payment_id = ?
+        LIMIT 1
+      `,
+      [paymentId],
+    );
+
+    const payment = rows[0];
+    if (!payment) {
+      return undefined;
+    }
+
+    const expiresAt = payment.mock_confirm_expires_at
+      ? new Date(payment.mock_confirm_expires_at)
+      : null;
+    const isExpired =
+      payment.payment_status === 'pending' &&
+      expiresAt !== null &&
+      expiresAt.getTime() < Date.now();
+
+    return {
+      paymentId: payment.payment_id,
+      orderId: payment.order_id,
+      orderCode: payment.order_code,
+      amount: Number(payment.amount),
+      paymentStatus: isExpired ? 'expired' : payment.payment_status,
+      orderStatus: payment.order_status,
+      orderPaymentStatus: payment.order_payment_status,
+      paidAt: payment.paid_at ? new Date(payment.paid_at) : null,
+      failReason: payment.fail_reason,
+      expiresAt,
+    };
+  }
+
+  async getMockPaymentConfirmPage(paymentId: number, token: string) {
+    const payment = await this.getMockPaymentForToken(paymentId, token);
+
+    if (!payment) {
+      return this.buildMockPaymentPage({
+        title: 'Lien ket khong hop le',
+        message: 'QR thanh toan khong hop le hoac da het han.',
+        allowAction: false,
+      });
+    }
+
+    return this.buildMockPaymentPage({
+      title: 'Sello Mock Bank',
+      message: 'Xac nhan giao dich thanh toan cho don hang.',
+      allowAction: payment.payment_status === 'pending',
+      paymentId,
+      token,
+      orderCode: payment.order_code,
+      amount: Number(payment.amount),
+      status: payment.payment_status,
+    });
+  }
+
+  async confirmMockPayment(paymentId: number, token: string) {
+    return this.completeMockPayment(paymentId, token, 'success');
+  }
+
+  async declineMockPayment(paymentId: number, token: string) {
+    return this.completeMockPayment(paymentId, token, 'failed');
   }
 
   async getUserOrders(userId: number) {
@@ -1384,10 +1523,10 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }
   }
 
-  async getOrderTracking(userId: number, orderId: number) {
+  async getOrderTracking(userId: number, orderId: number): Promise<any> {
     const [orderRows] = await this.pool.query<RowDataPacket[]>(
       `
-        SELECT o.order_id, o.order_code, o.order_status, o.placed_at,
+        SELECT o.order_id, o.order_code, o.order_status, o.placed_at, o.address_id,
                a.recipient_name, a.phone, a.province, a.district, a.ward,
                a.detail_address, a.latitude, a.longitude
         FROM orders o
@@ -1425,13 +1564,14 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       ),
     ]);
 
-    const destination = this.buildMockDestination(order);
+    const destination = await this.resolveTrackingDestination(order);
     const currentLocation = this.buildMockDriverLocation(
       destination.latitude,
       destination.longitude,
       order.order_status,
     );
     const shipment = shipmentRows[0][0];
+    const map = await this.buildTrackingMap(currentLocation, destination);
 
     return {
       shipment: shipment
@@ -1483,6 +1623,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
               order.order_status === 'delivered' ? new Date() : null,
           },
       destination,
+      map,
       timeline: historyRows[0].map((row) => ({
         id: row.history_id,
         status: row.status,
@@ -4288,6 +4429,29 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }
   }
 
+  private async ensureMockPaymentColumns() {
+    if (!(await this.hasColumn('payments', 'mock_confirm_token_hash'))) {
+      await this.pool.execute(`
+        ALTER TABLE payments
+        ADD COLUMN mock_confirm_token_hash VARCHAR(255) NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('payments', 'mock_confirm_expires_at'))) {
+      await this.pool.execute(`
+        ALTER TABLE payments
+        ADD COLUMN mock_confirm_expires_at DATETIME NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('payments', 'mock_confirmed_at'))) {
+      await this.pool.execute(`
+        ALTER TABLE payments
+        ADD COLUMN mock_confirmed_at DATETIME NULL
+      `);
+    }
+  }
+
   private mapAdminCategory(row: CategoryRow) {
     return {
       id: row.category_id,
@@ -4521,8 +4685,17 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     paymentId: number,
     orderCode: string,
     amount: number,
+    token?: string,
+    expiresAt?: Date,
   ) {
-    const paymentUrl = `https://mock-gateway.local/payments/${paymentId}`;
+    const baseUrl = (
+      process.env.MOCK_PAYMENT_PUBLIC_BASE_URL ??
+      process.env.BACKEND_PUBLIC_URL ??
+      `http://localhost:${process.env.PORT ?? 3000}`
+    ).replace(/\/+$/, '');
+    const paymentUrl = token
+      ? `${baseUrl}/payments/mock/${paymentId}/confirm-page?token=${encodeURIComponent(token)}`
+      : `${baseUrl}/payments/mock/${paymentId}/status`;
     const qrPayload = JSON.stringify({
       type: 'SELLO_MOCK_PAYMENT',
       paymentId,
@@ -4530,6 +4703,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       amount,
       currency: 'VND',
       paymentUrl,
+      expiresAt: expiresAt?.toISOString() ?? null,
     });
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrPayload)}`;
 
@@ -4537,10 +4711,318 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       paymentUrl,
       qrPayload,
       qrCodeUrl,
+      expiresAt: expiresAt ?? null,
     };
   }
 
-  private buildMockDestination(order: RowDataPacket) {
+  private createMockPaymentToken() {
+    return randomBytes(32).toString('base64url');
+  }
+
+  private hashMockPaymentToken(token: string) {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private getMockPaymentExpiryDate() {
+    const ttlMinutes = Number(process.env.MOCK_PAYMENT_TTL_MINUTES ?? 15);
+    return new Date(Date.now() + Math.max(1, ttlMinutes) * 60 * 1000);
+  }
+
+  private async getMockPaymentForToken(paymentId: number, token: string) {
+    if (!token?.trim()) {
+      return undefined;
+    }
+
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT p.payment_id, p.order_id, p.amount, p.payment_status,
+               p.mock_confirm_expires_at, p.mock_confirm_token_hash,
+               o.order_code, o.order_status
+        FROM payments p
+        INNER JOIN orders o ON o.order_id = p.order_id
+        WHERE p.payment_id = ?
+        LIMIT 1
+      `,
+      [paymentId],
+    );
+    const payment = rows[0];
+
+    if (!payment) {
+      return undefined;
+    }
+
+    const tokenHash = this.hashMockPaymentToken(token);
+    const expiresAt = payment.mock_confirm_expires_at
+      ? new Date(payment.mock_confirm_expires_at)
+      : null;
+
+    if (
+      payment.mock_confirm_token_hash !== tokenHash ||
+      !expiresAt ||
+      expiresAt.getTime() < Date.now()
+    ) {
+      return undefined;
+    }
+
+    return payment;
+  }
+
+  private async completeMockPayment(
+    paymentId: number,
+    token: string,
+    result: 'success' | 'failed',
+  ) {
+    const connection = await this.pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const [rows] = await connection.query<RowDataPacket[]>(
+        `
+          SELECT p.payment_id, p.order_id, p.amount, p.payment_status,
+                 p.mock_confirm_expires_at, p.mock_confirm_token_hash,
+                 o.order_code, o.user_id
+          FROM payments p
+          INNER JOIN orders o ON o.order_id = p.order_id
+          WHERE p.payment_id = ?
+          LIMIT 1
+        `,
+        [paymentId],
+      );
+      const payment = rows[0];
+
+      if (!payment) {
+        await connection.rollback();
+        return undefined;
+      }
+
+      const expiresAt = payment.mock_confirm_expires_at
+        ? new Date(payment.mock_confirm_expires_at)
+        : null;
+
+      if (
+        payment.mock_confirm_token_hash !== this.hashMockPaymentToken(token) ||
+        !expiresAt ||
+        expiresAt.getTime() < Date.now()
+      ) {
+        await connection.rollback();
+        throw new BadRequestException('Payment QR is invalid or expired');
+      }
+
+      if (payment.payment_status !== 'pending') {
+        await connection.rollback();
+        return this.getMockPaymentStatus(paymentId);
+      }
+
+      await connection.execute(
+        `
+          UPDATE payments
+          SET payment_status = ?,
+              paid_at = ${result === 'success' ? 'CURRENT_TIMESTAMP' : 'NULL'},
+              mock_confirmed_at = CURRENT_TIMESTAMP,
+              fail_reason = ?
+          WHERE payment_id = ?
+        `,
+        [
+          result === 'success' ? 'success' : 'failed',
+          result === 'success' ? null : 'Customer declined mock bank confirmation',
+          paymentId,
+        ],
+      );
+
+      await connection.execute(
+        `
+          UPDATE orders
+          SET payment_status = ? ${result === 'success' ? ", order_status = 'confirmed'" : ''}
+          WHERE order_id = ?
+        `,
+        [result === 'success' ? 'paid' : 'failed', payment.order_id],
+      );
+
+      if (result === 'success') {
+        const [cartRows] = await connection.query<CartRow[]>(
+          `
+            SELECT cart_id, user_id, status
+            FROM carts
+            WHERE user_id = ?
+            LIMIT 1
+          `,
+          [payment.user_id],
+        );
+
+        if (cartRows[0]) {
+          await connection.execute(
+            `
+              DELETE FROM cart_items
+              WHERE cart_id = ? AND selected = TRUE
+            `,
+            [cartRows[0].cart_id],
+          );
+        }
+      }
+
+      await connection.execute(
+        `
+          INSERT INTO notifications (user_id, title, content, notification_type)
+          VALUES (?, ?, ?, 'order')
+        `,
+        [
+          payment.user_id,
+          result === 'success'
+            ? `Payment for ${payment.order_code} confirmed`
+            : `Payment for ${payment.order_code} declined`,
+          result === 'success'
+            ? 'Your mock bank confirmation has been received successfully'
+            : 'Your mock bank confirmation was declined',
+        ],
+      );
+
+      await connection.commit();
+      return this.getMockPaymentStatus(paymentId);
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
+  private buildMockPaymentPage(input: {
+    title: string;
+    message: string;
+    allowAction: boolean;
+    paymentId?: number;
+    token?: string;
+    orderCode?: string;
+    amount?: number;
+    status?: string;
+  }) {
+    const amount = new Intl.NumberFormat('vi-VN').format(input.amount ?? 0);
+    const confirmAction =
+      input.paymentId && input.token
+        ? `/payments/mock/${input.paymentId}/confirm`
+        : '#';
+    const declineAction =
+      input.paymentId && input.token
+        ? `/payments/mock/${input.paymentId}/decline`
+        : '#';
+    const hiddenToken = input.token
+      ? `<input type="hidden" name="token" value="${this.escapeHtml(input.token)}" />`
+      : '';
+
+    return `
+      <!doctype html>
+      <html lang="vi">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>${this.escapeHtml(input.title)}</title>
+          <style>
+            body { margin: 0; font-family: Arial, sans-serif; background: #eef4f8; color: #16202a; }
+            main { min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+            section { width: 100%; max-width: 420px; background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 16px 40px rgba(15, 76, 107, .14); }
+            h1 { margin: 0; font-size: 24px; color: #0f4c6b; }
+            p { color: #52616f; line-height: 1.55; }
+            dl { margin: 22px 0; }
+            div.row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid #edf1f5; }
+            dt { color: #718096; }
+            dd { margin: 0; font-weight: 800; text-align: right; }
+            button { width: 100%; height: 52px; border: 0; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; }
+            .confirm { background: #12805c; color: #fff; }
+            .decline { margin-top: 10px; background: #f2f5f8; color: #ba1a1a; }
+          </style>
+        </head>
+        <body>
+          <main>
+            <section>
+              <h1>${this.escapeHtml(input.title)}</h1>
+              <p>${this.escapeHtml(input.message)}</p>
+              <dl>
+                <div class="row"><dt>Don hang</dt><dd>${this.escapeHtml(input.orderCode ?? 'N/A')}</dd></div>
+                <div class="row"><dt>So tien</dt><dd>${amount} VND</dd></div>
+                <div class="row"><dt>Trang thai</dt><dd>${this.escapeHtml(input.status ?? 'pending')}</dd></div>
+              </dl>
+              ${
+                input.allowAction
+                  ? `
+                    <form method="post" action="${confirmAction}">
+                      ${hiddenToken}
+                      <button class="confirm" type="submit">Xac nhan thanh toan</button>
+                    </form>
+                    <form method="post" action="${declineAction}">
+                      ${hiddenToken}
+                      <button class="decline" type="submit">Tu choi giao dich</button>
+                    </form>
+                  `
+                  : ''
+              }
+            </section>
+          </main>
+        </body>
+      </html>
+    `;
+  }
+
+  private escapeHtml(value: string) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private async resolveTrackingDestination(
+    order: RowDataPacket,
+  ): Promise<TrackingDestination> {
+    const address = this.formatOrderAddress(order);
+
+    const savedLatitude =
+      order.latitude !== null && order.latitude !== undefined
+        ? Number(order.latitude)
+        : null;
+    const savedLongitude =
+      order.longitude !== null && order.longitude !== undefined
+        ? Number(order.longitude)
+        : null;
+
+    if (
+      savedLatitude !== null &&
+      savedLongitude !== null &&
+      this.isValidCoordinate(savedLatitude, savedLongitude)
+    ) {
+      return {
+        recipientName: order.recipient_name,
+        phone: order.phone,
+        address,
+        latitude: savedLatitude,
+        longitude: savedLongitude,
+        source: 'database',
+      };
+    }
+
+    const geocoded = await this.geocodeAddress(address);
+    if (geocoded) {
+      await this.saveAddressCoordinates(
+        Number(order.address_id),
+        geocoded.latitude,
+        geocoded.longitude,
+      );
+
+      return {
+        recipientName: order.recipient_name,
+        phone: order.phone,
+        address,
+        latitude: geocoded.latitude,
+        longitude: geocoded.longitude,
+        source: 'photon',
+      };
+    }
+
+    return this.buildMockDestination(order);
+  }
+
+  private buildMockDestination(order: RowDataPacket): TrackingDestination {
     const province = String(order.province ?? '').toLowerCase();
     const fallback =
       province.includes('ha noi') || province.includes('hanoi')
@@ -4549,26 +5031,244 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           ? { latitude: 16.0544, longitude: 108.2022 }
           : { latitude: 10.7769, longitude: 106.7009 };
 
+    const latitude =
+      order.latitude !== null && order.latitude !== undefined
+        ? Number(order.latitude)
+        : fallback.latitude;
+    const longitude =
+      order.longitude !== null && order.longitude !== undefined
+        ? Number(order.longitude)
+        : fallback.longitude;
+    const validFallback = this.isValidCoordinate(latitude, longitude)
+      ? { latitude, longitude }
+      : fallback;
+
     return {
       recipientName: order.recipient_name,
       phone: order.phone,
-      address: [
-        order.detail_address,
-        order.ward,
-        order.district,
-        order.province,
-      ]
-        .filter(Boolean)
-        .join(', '),
-      latitude:
-        order.latitude !== null && order.latitude !== undefined
-          ? Number(order.latitude)
-          : fallback.latitude,
-      longitude:
-        order.longitude !== null && order.longitude !== undefined
-          ? Number(order.longitude)
-          : fallback.longitude,
+      address: this.formatOrderAddress(order),
+      latitude: validFallback.latitude,
+      longitude: validFallback.longitude,
+      source: 'fallback',
     };
+  }
+
+  private formatOrderAddress(order: RowDataPacket) {
+    return [
+      order.detail_address,
+      order.ward,
+      order.district,
+      order.province,
+      'Vietnam',
+    ]
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  private async geocodeAddress(address: string): Promise<GeoPoint | null> {
+    const baseUrl = process.env.PHOTON_BASE_URL ?? 'https://photon.komoot.io';
+    const url = new URL('/api/', baseUrl);
+    url.searchParams.set('q', address);
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('lang', process.env.PHOTON_LANG ?? 'vi');
+
+    const biasLat = Number(process.env.PHOTON_BIAS_LAT ?? 10.7769);
+    const biasLon = Number(process.env.PHOTON_BIAS_LON ?? 106.7009);
+    if (this.isValidCoordinate(biasLat, biasLon)) {
+      url.searchParams.set('lat', String(biasLat));
+      url.searchParams.set('lon', String(biasLon));
+    }
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent':
+            process.env.MAP_USER_AGENT ?? 'Sello-Ecommerce-Backend/1.0',
+        },
+        signal: AbortSignal.timeout(
+          Number(process.env.MAP_REQUEST_TIMEOUT_MS ?? 5000),
+        ),
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`Photon geocode failed: ${response.status}`);
+        return null;
+      }
+
+      const payload = (await response.json()) as PhotonResponse;
+      const coordinates = payload.features?.[0]?.geometry?.coordinates;
+      if (!coordinates || coordinates.length < 2) {
+        return null;
+      }
+
+      const [longitude, latitude] = coordinates.map(Number);
+      return this.isValidCoordinate(latitude, longitude)
+        ? { latitude, longitude }
+        : null;
+    } catch (error) {
+      this.logger.warn(
+        `Photon geocode unavailable: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return null;
+    }
+  }
+
+  private async saveAddressCoordinates(
+    addressId: number,
+    latitude: number,
+    longitude: number,
+  ) {
+    if (!Number.isInteger(addressId)) {
+      return;
+    }
+
+    await this.pool.execute(
+      `
+        UPDATE addresses
+        SET latitude = ?, longitude = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE address_id = ?
+      `,
+      [latitude, longitude, addressId],
+    );
+  }
+
+  private async buildTrackingMap(
+    origin: GeoPoint,
+    destination: TrackingDestination,
+  ) {
+    const fallbackGeometry = {
+      type: 'LineString' as const,
+      coordinates: [
+        [origin.longitude, origin.latitude],
+        [destination.longitude, destination.latitude],
+      ],
+    };
+
+    const route = await this.fetchOsrmRoute(origin, destination);
+
+    return {
+      origin: {
+        label: 'Vi tri shipper',
+        latitude: origin.latitude,
+        longitude: origin.longitude,
+      },
+      destination: {
+        label: 'Diem giao hang',
+        recipientName: destination.recipientName,
+        phone: destination.phone,
+        address: destination.address,
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+        source: destination.source,
+      },
+      route: route ?? {
+        provider: 'fallback',
+        status: 'straight_line',
+        distanceMeters: this.calculateDistanceMeters(origin, destination),
+        durationSeconds: null,
+        geometry: fallbackGeometry,
+      },
+      providers: {
+        map: 'OpenStreetMap',
+        geocoder: 'Photon',
+        router: 'OSRM',
+      },
+      attribution:
+        'Map data © OpenStreetMap contributors. Geocoding by Photon. Routing by OSRM.',
+    };
+  }
+
+  private async fetchOsrmRoute(
+    origin: GeoPoint,
+    destination: GeoPoint,
+  ): Promise<{
+    provider: 'OSRM';
+    status: 'routed';
+    distanceMeters: number;
+    durationSeconds: number;
+    geometry: { type: 'LineString'; coordinates: number[][] };
+  } | null> {
+    const baseUrl =
+      process.env.OSRM_BASE_URL ?? 'https://router.project-osrm.org';
+    const coordinates = `${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}`;
+    const url = new URL(`/route/v1/driving/${coordinates}`, baseUrl);
+    url.searchParams.set('overview', 'full');
+    url.searchParams.set('geometries', 'geojson');
+    url.searchParams.set('steps', 'false');
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent':
+            process.env.MAP_USER_AGENT ?? 'Sello-Ecommerce-Backend/1.0',
+        },
+        signal: AbortSignal.timeout(
+          Number(process.env.MAP_REQUEST_TIMEOUT_MS ?? 5000),
+        ),
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`OSRM route failed: ${response.status}`);
+        return null;
+      }
+
+      const payload = (await response.json()) as OsrmRouteResponse;
+      const route = payload.routes?.[0];
+      if (
+        payload.code !== 'Ok' ||
+        !route?.geometry ||
+        !Array.isArray(route.geometry.coordinates)
+      ) {
+        return null;
+      }
+
+      return {
+        provider: 'OSRM',
+        status: 'routed',
+        distanceMeters: Number(route.distance ?? 0),
+        durationSeconds: Number(route.duration ?? 0),
+        geometry: route.geometry,
+      };
+    } catch (error) {
+      this.logger.warn(
+        `OSRM route unavailable: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return null;
+    }
+  }
+
+  private calculateDistanceMeters(origin: GeoPoint, destination: GeoPoint) {
+    const earthRadiusMeters = 6371000;
+    const toRadians = (value: number) => (value * Math.PI) / 180;
+    const deltaLat = toRadians(destination.latitude - origin.latitude);
+    const deltaLng = toRadians(destination.longitude - origin.longitude);
+    const lat1 = toRadians(origin.latitude);
+    const lat2 = toRadians(destination.latitude);
+    const a =
+      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+      Math.cos(lat1) *
+        Math.cos(lat2) *
+        Math.sin(deltaLng / 2) *
+        Math.sin(deltaLng / 2);
+
+    return Math.round(
+      earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)),
+    );
+  }
+
+  private isValidCoordinate(latitude: number, longitude: number) {
+    return (
+      Number.isFinite(latitude) &&
+      Number.isFinite(longitude) &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180
+    );
   }
 
   private buildMockDriverLocation(

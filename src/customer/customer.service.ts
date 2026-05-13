@@ -131,22 +131,48 @@ export class CustomerService {
     paymentId: number,
     payload: MockPaymentCallbackDto,
   ) {
-    const result = await this.database.handleMockPaymentCallback(
-      paymentId,
-      payload.result,
+    void paymentId;
+    void payload;
+    throw new BadRequestException(
+      'Mock payment callback is disabled. Please confirm payment through the QR confirmation page.',
     );
+  }
+
+  async getMockPaymentStatus(paymentId: number) {
+    const result = await this.database.getMockPaymentStatus(paymentId);
 
     if (!result) {
       throw new NotFoundException('Payment not found');
     }
 
     return {
-      message:
-        payload.result === 'success'
-          ? 'Payment callback processed successfully'
-          : 'Payment failure processed successfully',
+      message: 'Mock payment status fetched successfully',
       data: result,
     };
+  }
+
+  getMockPaymentConfirmPage(paymentId: number, token: string) {
+    return this.database.getMockPaymentConfirmPage(paymentId, token);
+  }
+
+  async confirmMockPayment(paymentId: number, token: string) {
+    const result = await this.database.confirmMockPayment(paymentId, token);
+
+    if (!result) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    return result;
+  }
+
+  async declineMockPayment(paymentId: number, token: string) {
+    const result = await this.database.declineMockPayment(paymentId, token);
+
+    if (!result) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    return result;
   }
 
   async getMyOrders(userId: number) {

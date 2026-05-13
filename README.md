@@ -201,6 +201,19 @@ POST /admin/reports/export
 
 Admin API được bảo vệ bằng JWT guard, role/admin guard và permission guard. Frontend nên dựa vào `permissions`, không hard-code theo role string.
 
+## User Action Logs
+
+Backend logs authenticated user activity through a global interceptor. Logs include user identity, role, action name, method, path, response status, and request duration. Request bodies and tokens are not logged.
+
+Example:
+
+```txt
+[UserAction] userId=1 role=customer email=a@gmail.com action="view_order_tracking" method=GET path=/orders/12/tracking status=200 durationMs=184
+[AuthService] userId=1 role=customer email=a@gmail.com action="login_success"
+```
+
+For unauthenticated public endpoints, the log uses `user=guest`. Failed requests are logged with warning level and the returned status code.
+
 ## Admin Permission Matrix
 
 | Capability | Level 1 | Level 2 | Level 3 |
@@ -251,7 +264,7 @@ Admin API được bảo vệ bằng JWT guard, role/admin guard và permission 
 
 ### Mock Payment QR
 
-Online payment hien la mock flow de demo va test, khong tich hop cong thanh toan tra phi. Khi `payment_method.method_code` khac `COD`, backend tra them:
+Online payment hien la mock bank QR flow de demo va test, khong tich hop cong thanh toan tra phi. Khi `payment_method.method_code` khac `COD`, backend tao token xac nhan, QR tro den trang Sello Mock Bank, va tra them:
 
 ```json
 {
@@ -261,22 +274,27 @@ Online payment hien la mock flow de demo va test, khong tich hop cong thanh toan
   "paymentType": "online",
   "paymentStatus": "pending",
   "orderStatus": "pending",
-  "paymentUrl": "https://mock-gateway.local/payments/456",
-  "qrPayload": "{\"type\":\"SELLO_MOCK_PAYMENT\",\"paymentId\":456,\"orderCode\":\"ORD1770000000000\",\"amount\":230000,\"currency\":\"VND\",\"paymentUrl\":\"https://mock-gateway.local/payments/456\"}",
-  "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=..."
+  "paymentUrl": "http://192.168.1.10:3000/payments/mock/456/confirm-page?token=...",
+  "qrPayload": "{\"type\":\"SELLO_MOCK_PAYMENT\",\"paymentId\":456,\"orderCode\":\"ORD1770000000000\",\"amount\":230000,\"currency\":\"VND\",\"paymentUrl\":\"http://192.168.1.10:3000/payments/mock/456/confirm-page?token=...\",\"expiresAt\":\"...\"}",
+  "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=...",
+  "expiresAt": "2026-05-13T05:30:00.000Z"
 }
 ```
 
-`qrCodeUrl` la anh QR tao tu public free QR API. Frontend co the hien thi truc tiep URL nay bang image component. De gia lap thanh toan thanh cong, goi:
+`qrCodeUrl` la anh QR tao tu public free QR API. Frontend hien thi QR va poll trang thai thanh toan. De gia lap thanh toan nhu ngan hang:
+
+1. Quet QR bang dien thoai khac hoac mo `paymentUrl`.
+2. Trang `Sello Mock Bank` hien thi don hang, so tien, nut `Xac nhan thanh toan` va `Tu choi giao dich`.
+3. Chi khi bam `Xac nhan thanh toan`, backend moi cap nhat `payments.payment_status = success`, `orders.payment_status = paid`, `orders.order_status = confirmed`.
+4. Neu khong xac nhan, don hang van `pending`.
+
+Kiem tra trang thai:
 
 ```http
-POST /payments/mock/:paymentId/callback
-Content-Type: application/json
-
-{
-  "result": "success"
-}
+GET /payments/mock/:paymentId/status
 ```
+
+Luu y khi test tren dien thoai that: `MOCK_PAYMENT_PUBLIC_BASE_URL` phai la IP LAN cua may chay backend, vi QR mo tren dien thoai khong truy cap duoc `localhost` cua may tinh.
 
 ## Reports
 
@@ -317,7 +335,7 @@ Nếu repo đang có khác biệt line-ending/Prettier cũ, nên kiểm tra diff
 
 Current collection file: `Sello-Auth.postman_collection.json`.
 
-For online payment QR testing, the collection's `Create Order` request uses `paymentMethodId: 2` by default. Its test script stores `paymentId`, `paymentUrl`, `paymentQrPayload`, and `paymentQrCodeUrl`; run `Open Mock Payment QR Code` to view the generated QR image.
+For online payment QR testing, the collection's `Create Order` request uses `paymentMethodId: 2` by default. Its test script stores `paymentId`, `paymentUrl`, `paymentQrPayload`, `paymentQrCodeUrl`, `mockPaymentToken`, and `mockPaymentExpiresAt`.
 
 Collection hiện nằm tại frontend repo:
 
@@ -340,6 +358,62 @@ Thứ tự test nhanh:
 10. Get Order Detail.
 11. Get Order Tracking.
 
+### Test Mock Payment QR
+
+Happy path:
+
+1. Run `Login Customer`.
+2. Run `Create Address`.
+3. Run `Add Cart Item`.
+4. Run `Select Cart Item`.
+5. Run `Checkout Preview`.
+6. Run `Create Order`. The default body uses `paymentMethodId: 2`.
+7. Run `Open Mock Payment QR Code` to view the QR image, or run `Open Mock Bank Confirm Page` to open the HTML confirmation page directly.
+8. Run `Get Mock Payment Status`; it should be `pending`.
+9. Run `Confirm Mock Bank Payment`.
+10. Run `Get Mock Payment Status` again; it should be `success`.
+11. Run `Get Order Detail`; order payment should be `paid` and order status should be `confirmed`.
+
+Decline path:
+
+1. Create a new online order.
+2. Run `Decline Mock Bank Payment`.
+3. Run `Get Mock Payment Status`; it should be `failed`.
+
+`Legacy Mock Payment Callback (Disabled)` is kept only to show the old callback endpoint is no longer accepted. The new mock payment flow must go through the QR confirmation token.
+
+### Test Order Tracking Map
+
+Before testing the map-enriched tracking response, make sure backend `.env` has the free provider defaults:
+
+```env
+PHOTON_BASE_URL=https://photon.komoot.io
+OSRM_BASE_URL=https://router.project-osrm.org
+MAP_REQUEST_TIMEOUT_MS=5000
+MAP_USER_AGENT=Sello-Ecommerce-Backend/1.0
+```
+
+Postman test flow:
+
+1. Run `Login Customer` to set `accessToken`.
+2. Run `Create Address`. For best demo results, use a specific Ho Chi Minh City address. If `latitude` and `longitude` are omitted, backend will geocode with Photon and cache the coordinates.
+3. Run `Add Cart Item`.
+4. Run `Select Cart Item`.
+5. Run `Checkout Preview`.
+6. Run `Create Order`; the test script stores `orderId` and, for online payment, `paymentId`.
+7. If the order uses online mock payment, run `Mock Payment Callback Success`.
+8. Run `Get Order Tracking`.
+
+`Get Order Tracking` now includes a Postman test script that stores:
+
+- `trackingOriginLat`, `trackingOriginLng`
+- `trackingDestinationLat`, `trackingDestinationLng`
+- `trackingRouteProvider`, `trackingRouteStatus`
+- `trackingRouteDistanceMeters`, `trackingRouteDurationSeconds`
+- `trackingRouteGeoJson`
+
+Open the `Visualize` tab after `Get Order Tracking` to preview the route on an OpenStreetMap tile map. If OSRM is unavailable, the response still works and shows a straight-line fallback route with `trackingRouteProvider=fallback`.
+
 ## Android Emulator Note
 
 Khi frontend chạy trên Android Emulator và backend chạy local, có thể dùng ADB reverse:
@@ -359,4 +433,26 @@ Xóa mapping:
 
 ```powershell
 & "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse --remove tcp:3000
+```
+
+## Free Map Tracking Providers
+
+`GET /orders/:orderId/tracking` enriches the existing mock shipper tracking with real map data when possible:
+
+- Geocoder: Photon (`PHOTON_BASE_URL`, default `https://photon.komoot.io`).
+- Router: OSRM (`OSRM_BASE_URL`, default `https://router.project-osrm.org`).
+- Map data attribution: OpenStreetMap contributors.
+
+The backend first uses saved `addresses.latitude` and `addresses.longitude`. If they are missing, it geocodes the order address with Photon and caches the coordinates back to MySQL. It then requests an OSRM GeoJSON route from the mock shipper location to the destination. If either public service is unavailable, the API still returns tracking data with a straight-line fallback route.
+
+Useful `.env` keys:
+
+```env
+PHOTON_BASE_URL=https://photon.komoot.io
+PHOTON_LANG=vi
+PHOTON_BIAS_LAT=10.7769
+PHOTON_BIAS_LON=106.7009
+OSRM_BASE_URL=https://router.project-osrm.org
+MAP_REQUEST_TIMEOUT_MS=5000
+MAP_USER_AGENT=Sello-Ecommerce-Backend/1.0
 ```

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -48,6 +49,8 @@ type AuthRedirectState = {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly database: MySqlDatabaseService,
     private readonly otpService: OtpService,
@@ -183,6 +186,10 @@ export class AuthService {
       expiresAt: this.getRefreshTokenExpiryDate(refreshToken),
     });
 
+    this.logger.log(
+      `userId=${user.id} role=${user.role} email=${user.email} action="login_success"`,
+    );
+
     return {
       message: 'Login successful',
       tokens: {
@@ -253,6 +260,10 @@ export class AuthService {
       tokenHash: this.hashToken(refreshToken),
       expiresAt: this.getRefreshTokenExpiryDate(refreshToken),
     });
+
+    this.logger.log(
+      `userId=${user.id} role=${user.role} email=${user.email} action="oauth_login_success"`,
+    );
 
     return {
       message: 'OAuth Login successful',

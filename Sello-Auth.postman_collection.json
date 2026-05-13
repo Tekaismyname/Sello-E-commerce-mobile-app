@@ -137,6 +137,66 @@
     {
       "key": "wishlistItemId",
       "value": ""
+    },
+    {
+      "key": "trackingOriginLat",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingOriginLng",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingDestinationLat",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingDestinationLng",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteProvider",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteStatus",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteDistanceMeters",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteDurationSeconds",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteGeoJson",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mockPaymentToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mockPaymentStatus",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mockPaymentExpiresAt",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -922,6 +982,13 @@
                   "  if (payment.paymentUrl) pm.collectionVariables.set('paymentUrl', payment.paymentUrl);",
                   "  if (payment.qrPayload) pm.collectionVariables.set('paymentQrPayload', payment.qrPayload);",
                   "  if (payment.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', payment.qrCodeUrl);",
+                  "}",
+                  "if (pm.collectionVariables.get('paymentUrl')) {",
+                  "  try {",
+                  "    const url = new URL(pm.collectionVariables.get('paymentUrl')); ",
+                  "    const token = url.searchParams.get('token');",
+                  "    if (token) pm.collectionVariables.set('mockPaymentToken', token);",
+                  "  } catch (error) {}",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1455,6 +1522,14 @@
                   "  if (data.paymentUrl) pm.collectionVariables.set('paymentUrl', data.paymentUrl);",
                   "  if (data.qrPayload) pm.collectionVariables.set('paymentQrPayload', data.qrPayload);",
                   "  if (data.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', data.qrCodeUrl);",
+                  "  if (data.expiresAt) pm.collectionVariables.set('mockPaymentExpiresAt', data.expiresAt);",
+                  "}",
+                  "if (pm.collectionVariables.get('paymentUrl')) {",
+                  "  try {",
+                  "    const url = new URL(pm.collectionVariables.get('paymentUrl')); ",
+                  "    const token = url.searchParams.get('token');",
+                  "    if (token) pm.collectionVariables.set('mockPaymentToken', token);",
+                  "  } catch (error) {}",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1485,7 +1560,8 @@
               "path": [
                 "orders"
               ]
-            }
+            },
+            "description": "Creates an order from selected cart items.\n\nDefault body uses `paymentMethodId: 2` for online mock bank QR payment.\nThe test script stores `orderId`, `paymentId`, `paymentUrl`, `paymentQrPayload`, `paymentQrCodeUrl`, `mockPaymentToken`, and `mockPaymentExpiresAt`."
           },
           "response": []
         }
@@ -1495,7 +1571,147 @@
       "name": "Customer Orders",
       "item": [
         {
-          "name": "Mock Payment Callback Success",
+          "name": "Open Mock Payment QR Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentQrCodeUrl}}",
+              "host": [
+                "{{paymentQrCodeUrl}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Open Mock Bank Confirm Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentUrl}}",
+              "host": [
+                "{{paymentUrl}}"
+              ]
+            },
+            "description": "Open the Sello Mock Bank confirmation page generated inside the QR code. In Postman this returns HTML; in a browser it shows Confirm/Decline buttons."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mock Payment Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "status"
+              ]
+            },
+            "description": "Poll mock bank payment status. Expected pending before confirmation, success after Confirm, failed after Decline, expired after token TTL."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status request succeeded', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "if (data.paymentStatus) pm.collectionVariables.set('mockPaymentStatus', data.paymentStatus);",
+                  "if (data.expiresAt) pm.collectionVariables.set('mockPaymentExpiresAt', data.expiresAt);",
+                  "pm.test('mock payment has a known status', function () {",
+                  "  pm.expect(['pending', 'success', 'paid', 'failed', 'expired']).to.include(data.paymentStatus);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm Mock Bank Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "token",
+                  "value": "{{mockPaymentToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "confirm"
+              ]
+            },
+            "description": "Simulate pressing Confirm on the Sello Mock Bank page. This changes payment to success and order to confirmed."
+          },
+          "response": []
+        },
+        {
+          "name": "Decline Mock Bank Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "token",
+                  "value": "{{mockPaymentToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "decline"
+              ]
+            },
+            "description": "Simulate pressing Decline on the Sello Mock Bank page. This changes payment/order payment status to failed."
+          },
+          "response": []
+        },
+        {
+          "name": "Legacy Mock Payment Callback (Disabled)",
           "request": {
             "method": "POST",
             "header": [
@@ -1519,9 +1735,23 @@
                 "{{paymentId}}",
                 "callback"
               ]
-            }
+            },
+            "description": "Legacy endpoint kept for compatibility, but backend now rejects it. Use Open Mock Bank Confirm Page or Confirm Mock Bank Payment instead."
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('legacy callback is disabled', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get My Orders",
@@ -1605,20 +1835,6 @@
           "response": []
         },
         {
-          "name": "Open Mock Payment QR Code",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{paymentQrCodeUrl}}",
-              "host": [
-                "{{paymentQrCodeUrl}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Get Order Tracking",
           "request": {
             "method": "GET",
@@ -1638,9 +1854,98 @@
                 "{{orderId}}",
                 "tracking"
               ]
-            }
+            },
+            "description": "Fetch customer order tracking data with map enrichment.\n\nBackend behavior:\n- Uses saved address latitude/longitude when available.\n- Geocodes the destination with Photon when coordinates are missing, then caches them in MySQL.\n- Requests an OSRM GeoJSON route from the mock shipper location to the destination.\n- Falls back to a straight line if Photon or OSRM is unavailable.\n\nExpected map payload: `data.map.origin`, `data.map.destination`, and `data.map.route.geometry.coordinates`."
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('tracking request succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const map = data.map || {};",
+                  "const origin = map.origin || {};",
+                  "const destination = map.destination || data.destination || {};",
+                  "const route = map.route || {};",
+                  "const coordinates = route.geometry && Array.isArray(route.geometry.coordinates)",
+                  "  ? route.geometry.coordinates",
+                  "  : [];",
+                  "",
+                  "pm.test('tracking map payload is present', function () {",
+                  "  pm.expect(origin.latitude, 'origin latitude').to.be.a('number');",
+                  "  pm.expect(origin.longitude, 'origin longitude').to.be.a('number');",
+                  "  pm.expect(destination.latitude, 'destination latitude').to.be.a('number');",
+                  "  pm.expect(destination.longitude, 'destination longitude').to.be.a('number');",
+                  "  pm.expect(coordinates.length, 'route coordinates').to.be.above(1);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('trackingOriginLat', String(origin.latitude ?? ''));",
+                  "pm.collectionVariables.set('trackingOriginLng', String(origin.longitude ?? ''));",
+                  "pm.collectionVariables.set('trackingDestinationLat', String(destination.latitude ?? ''));",
+                  "pm.collectionVariables.set('trackingDestinationLng', String(destination.longitude ?? ''));",
+                  "pm.collectionVariables.set('trackingRouteProvider', route.provider || '');",
+                  "pm.collectionVariables.set('trackingRouteStatus', route.status || '');",
+                  "pm.collectionVariables.set('trackingRouteDistanceMeters', String(route.distanceMeters ?? ''));",
+                  "pm.collectionVariables.set('trackingRouteDurationSeconds', String(route.durationSeconds ?? ''));",
+                  "pm.collectionVariables.set('trackingRouteGeoJson', JSON.stringify(route.geometry || null));",
+                  "",
+                  "const leafletPoints = coordinates.map(function (point) {",
+                  "  return [point[1], point[0]];",
+                  "});",
+                  "",
+                  "pm.visualizer.set(`",
+                  "  <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\" />",
+                  "  <style>",
+                  "    body { margin: 0; font-family: Arial, sans-serif; }",
+                  "    #map { height: 420px; width: 100%; }",
+                  "    .summary { padding: 10px 12px; font-size: 13px; line-height: 1.45; }",
+                  "    .summary strong { display: inline-block; min-width: 92px; }",
+                  "  </style>",
+                  "  <div id=\"map\"></div>",
+                  "  <div class=\"summary\">",
+                  "    <div><strong>Provider</strong>{{provider}} / {{status}}</div>",
+                  "    <div><strong>Distance</strong>{{distanceKm}} km</div>",
+                  "    <div><strong>Duration</strong>{{durationMin}} min</div>",
+                  "    <div><strong>Destination</strong>{{address}}</div>",
+                  "  </div>",
+                  "  <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script>",
+                  "  <script>",
+                  "    const origin = [{{originLat}}, {{originLng}}];",
+                  "    const destination = [{{destinationLat}}, {{destinationLng}}];",
+                  "    const routePoints = {{{routePoints}}};",
+                  "    const map = L.map('map');",
+                  "    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {",
+                  "      maxZoom: 19,",
+                  "      attribution: '&copy; OpenStreetMap contributors'",
+                  "    }).addTo(map);",
+                  "    L.marker(origin).addTo(map).bindPopup('Shipper / origin');",
+                  "    L.marker(destination).addTo(map).bindPopup('Customer destination');",
+                  "    const line = L.polyline(routePoints.length ? routePoints : [origin, destination], { color: '#0b84d8', weight: 5 }).addTo(map);",
+                  "    map.fitBounds(line.getBounds(), { padding: [28, 28] });",
+                  "  </script>",
+                  "`, {",
+                  "  provider: route.provider || 'fallback',",
+                  "  status: route.status || '',",
+                  "  distanceKm: route.distanceMeters ? (route.distanceMeters / 1000).toFixed(2) : 'n/a',",
+                  "  durationMin: route.durationSeconds ? Math.round(route.durationSeconds / 60) : 'n/a',",
+                  "  address: destination.address || '',",
+                  "  originLat: origin.latitude || 0,",
+                  "  originLng: origin.longitude || 0,",
+                  "  destinationLat: destination.latitude || 0,",
+                  "  destinationLng: destination.longitude || 0,",
+                  "  routePoints: JSON.stringify(leafletPoints),",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Cancel Order",
