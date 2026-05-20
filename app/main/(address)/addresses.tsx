@@ -7,6 +7,22 @@ import { Href, router } from "expo-router";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const toFriendlyAddressError = (message?: string) => {
+  if (!message) {
+    return "Không thể xóa địa chỉ.";
+  }
+
+  const normalized = message.toLowerCase();
+  if (
+    normalized.includes("cannot delete address that is used by existing orders") ||
+    normalized.includes("used by existing orders")
+  ) {
+    return "Không thể xóa địa chỉ này vì đang được sử dụng trong một đơn hàng khác.";
+  }
+
+  return message;
+};
+
 export default function AddressesScreen() {
   const { token } = useAuth();
   const { addresses, loading, saving, error, setDefaultAddress, deleteAddress } = useAddressesView(token);
@@ -30,7 +46,9 @@ export default function AddressesScreen() {
 
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
         <Text className="text-[32px] font-extrabold leading-[38px] text-[#111827]">Địa chỉ nhận hàng</Text>
-        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">Quản lý các địa điểm giao hàng thường xuyên của bạn.</Text>
+        <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
+          Quản lý các địa điểm giao hàng thường xuyên của bạn.
+        </Text>
 
         {loading ? (
           <View className="mt-8 items-center">
@@ -60,7 +78,7 @@ export default function AddressesScreen() {
                       style: "destructive",
                       onPress: () => {
                         deleteAddress(address.id).catch((err: any) => {
-                          Alert.alert("Lỗi", err?.message ?? "Không thể xóa địa chỉ.");
+                          Alert.alert("Lỗi", toFriendlyAddressError(err?.message));
                         });
                       },
                     },
@@ -70,8 +88,8 @@ export default function AddressesScreen() {
             ))}
 
             {!addresses.length && (
-              <View className="rounded-[14px] bg-white p-6 items-center">
-                <Text className="text-[14px] text-[#6B7280]">Ban chua co dia chi nao.</Text>
+              <View className="items-center rounded-[14px] bg-white p-6">
+                <Text className="text-[14px] text-[#6B7280]">Bạn chưa có địa chỉ nào.</Text>
               </View>
             )}
           </View>

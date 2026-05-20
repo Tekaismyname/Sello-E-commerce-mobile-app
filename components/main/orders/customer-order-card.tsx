@@ -10,16 +10,23 @@ type CustomerOrderCardProps = {
 };
 
 const statusConfig = {
-  delivered: { label: "ĐÃ GIAO HÀNG", color: "#15803D", icon: "check-circle" as const },
-  shipping: { label: "ĐANG VẬN CHUYỂN", color: "#0369A1", icon: "truck" as const },
-  packed: { label: "ĐANG ĐÓNG GÓI", color: "#0369A1", icon: "truck" as const },
-  confirmed: { label: "CHỜ XÁC NHẬN", color: "#4B5563", icon: "clock" as const },
-  pending: { label: "CHỜ XÁC NHẬN", color: "#4B5563", icon: "clock" as const },
-  cancelled: { label: "ĐÃ HỦY", color: "#B91C1C", icon: "x-circle" as const },
-  returned: { label: "ĐÃ TRẢ", color: "#92400E", icon: "rotate-ccw" as const },
+  delivered: { label: "DA GIAO HANG", color: "#15803D", icon: "check-circle" as const },
+  shipping: { label: "DANG VAN CHUYEN", color: "#0369A1", icon: "truck" as const },
+  packed: { label: "DANG DONG GOI", color: "#0369A1", icon: "package" as const },
+  confirmed: { label: "CHO XAC NHAN", color: "#7C3AED", icon: "clock" as const },
+  pending: { label: "CHO XAC NHAN", color: "#7C3AED", icon: "clock" as const },
+  cancelled: { label: "DA HUY", color: "#B91C1C", icon: "x-circle" as const },
+  returned: { label: "DA TRA", color: "#92400E", icon: "rotate-ccw" as const },
 };
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
 export function CustomerOrderCard({
   order,
@@ -27,20 +34,24 @@ export function CustomerOrderCard({
   onOpenTracking,
   onCancel,
 }: CustomerOrderCardProps) {
-  const item = order.items[0];
   const status = statusConfig[order.status] ?? statusConfig.pending;
+  const normalizedItems = order.items.map((item) => ({
+    ...item,
+    quantity: Math.max(item.quantity ?? 1, 1),
+  }));
+  const primaryItem = normalizedItems[0];
   const imageSource =
-    item?.productImage && item.productImage.trim()
-      ? item.productImage
+    primaryItem?.productImage && primaryItem.productImage.trim()
+      ? primaryItem.productImage
       : "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80";
+  const orderLabel = order.orderCode?.trim() ? order.orderCode : `DON #${order.id}`;
+  const itemCount = normalizedItems.reduce((total, current) => total + current.quantity, 0);
+  const hasMultipleItems = normalizedItems.length > 1;
 
   const renderActions = () => {
     if (order.status === "pending" || order.status === "confirmed") {
       return (
-        <Pressable
-          className="rounded-[10px] bg-[#FDECEC] px-5 py-2.5"
-          onPress={() => onCancel(order)}
-        >
+        <Pressable className="rounded-[12px] bg-[#FDECEC] px-4 py-2.5" onPress={() => onCancel(order)}>
           <Text className="text-[13px] font-bold text-[#BA1A1A]">Hủy đơn</Text>
         </Pressable>
       );
@@ -48,20 +59,14 @@ export function CustomerOrderCard({
 
     if (order.status === "shipping" || order.status === "packed") {
       return (
-        <Pressable
-          className="rounded-[10px] bg-[#E8EDF3] px-5 py-2.5"
-          onPress={() => onOpenTracking(order)}
-        >
-          <Text className="text-[13px] font-bold text-[#0369A1]">Theo dõi đơn hàng</Text>
+        <Pressable className="rounded-[12px] bg-[#E8F1FB] px-4 py-2.5" onPress={() => onOpenTracking(order)}>
+          <Text className="text-[13px] font-bold text-[#0369A1]">Theo dõi đơn</Text>
         </Pressable>
       );
     }
 
     return (
-      <Pressable
-        className="rounded-[10px] bg-[#2F95D2] px-5 py-2.5"
-        onPress={() => onOpenDetail(order)}
-      >
+      <Pressable className="rounded-[12px] bg-[#0F6CBD] px-4 py-2.5" onPress={() => onOpenDetail(order)}>
         <Text className="text-[13px] font-bold text-white">Mua lại</Text>
       </Pressable>
     );
@@ -72,34 +77,73 @@ export function CustomerOrderCard({
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <Feather name={status.icon} size={14} color={status.color} />
-          <Text className="ml-2 text-[13px] font-extrabold" style={{ color: status.color }}>
+          <Text className="ml-2 text-[12px] font-extrabold tracking-[0.4px]" style={{ color: status.color }}>
             {status.label}
           </Text>
         </View>
-        <Text className="text-[12px] text-[#6B7280]">
-          {new Date(order.createdAt).toLocaleDateString("vi-VN")}
-        </Text>
+        <Text className="text-[12px] font-medium text-[#6B7280]">{formatDate(order.createdAt)}</Text>
       </View>
 
       <Pressable className="mt-3 flex-row" onPress={() => onOpenDetail(order)}>
-        <Image source={{ uri: imageSource }} className="h-[84px] w-[96px] rounded-[10px]" />
+        <Image source={{ uri: imageSource }} className="h-[92px] w-[92px] rounded-[14px] bg-[#F3F4F6]" />
         <View className="ml-4 flex-1">
-          <Text className="text-[18px] font-extrabold leading-[24px] text-[#1F2934]" numberOfLines={2}>
-            {item?.productName ?? `Đơn #${order.id}`}
-          </Text>
-          {!!item?.variantSnapshot && (
-            <Text className="mt-1 text-[14px] text-[#64748B]" numberOfLines={1}>
-              {item.variantSnapshot}
-            </Text>
+          <Text className="text-[12px] font-bold uppercase tracking-[0.5px] text-[#64748B]">{orderLabel}</Text>
+
+          {!hasMultipleItems ? (
+            <>
+              <Text className="mt-1 text-[17px] font-extrabold leading-[23px] text-[#1F2934]" numberOfLines={2}>
+                {primaryItem?.productName ?? `Đơn hàng #${order.id}`}
+              </Text>
+              {!!primaryItem?.variantSnapshot && (
+                <Text className="mt-1 text-[13px] text-[#64748B]" numberOfLines={1}>
+                  {primaryItem.variantSnapshot}
+                </Text>
+              )}
+              <Text className="mt-1 text-[13px] font-medium text-[#64748B]">Số lượng: {primaryItem?.quantity ?? 1}</Text>
+            </>
+          ) : (
+            <View className="mt-1 gap-1">
+              {normalizedItems.slice(0, 3).map((item) => (
+                <Text
+                  key={`${order.id}-${item.id}-${item.productId}`}
+                  className="text-[13px] font-semibold leading-[18px] text-[#1F2934]"
+                  numberOfLines={1}
+                >
+                  {item.productName} x{item.quantity}
+                </Text>
+              ))}
+              {normalizedItems.length > 3 ? (
+                <Text className="text-[12px] font-medium text-[#64748B]">
+                  +{normalizedItems.length - 3} sản phẩm khác
+                </Text>
+              ) : null}
+            </View>
           )}
-          <Text className="mt-1 text-[15px] font-extrabold text-[#0369A1]">
-            {formatPrice(order.totalAmount)}
-          </Text>
+
+          <View className="mt-2 flex-row flex-wrap items-center gap-2">
+            <View className="rounded-full bg-[#EEF5FB] px-2.5 py-1">
+              <Text className="text-[11px] font-bold text-[#0F6CBD]">{itemCount} món</Text>
+            </View>
+            {order.paymentStatus ? (
+              <View className="rounded-full bg-[#F4F4F5] px-2.5 py-1">
+                <Text className="text-[11px] font-bold uppercase text-[#52525B]">{order.paymentStatus}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <Text className="mt-3 text-[18px] font-extrabold text-[#0369A1]">{formatPrice(order.totalAmount)}</Text>
         </View>
       </Pressable>
 
-      <View className="mt-3 flex-row items-center justify-end">
-        <Pressable className="mr-3" onPress={() => onOpenDetail(order)}>
+      <View className="mt-4 rounded-[14px] bg-[#F8FAFC] px-3 py-2.5">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-[12px] font-semibold text-[#64748B]">Mã đơn hàng</Text>
+          <Text className="text-[12px] font-extrabold text-[#1F2934]">{orderLabel}</Text>
+        </View>
+      </View>
+
+      <View className="mt-4 flex-row items-center justify-between">
+        <Pressable onPress={() => onOpenDetail(order)}>
           <Text className="text-[13px] font-bold text-[#0369A1]">Xem chi tiết</Text>
         </Pressable>
         {renderActions()}
