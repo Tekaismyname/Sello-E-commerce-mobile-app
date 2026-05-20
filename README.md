@@ -12,6 +12,7 @@ Backend NestJS cho Sello E-commerce, dùng MySQL và JWT. API hiện phục vụ
 - Public catalog: home, product detail, product reviews.
 - Customer flows: cart, checkout, voucher apply, order, order cancel/tracking, payment mock callback.
 - Customer account: profile, password, addresses, wishlist, notifications, contact admin, reviews.
+- Order tracking map: backend geocodes destination with Photon, computes route and distance with OSRM, and returns map payload for the mobile frontend Leaflet + OpenStreetMap view.
 - Admin flows: dashboard, users, orders, products, reports, categories, vouchers, notifications, review moderation.
 - MySQL UTF-8/UTF-8MB4 support for Vietnamese text.
 
@@ -262,6 +263,18 @@ For unauthenticated public endpoints, the log uses `user=guest`. Failed requests
 - `POST /me/contact-admin`: user gửi nội dung hỗ trợ tới admin dưới dạng notification.
 - `POST /reviews`: chỉ cho review khi user đã mua sản phẩm và đơn đã `delivered`.
 
+### Address Delete Behavior
+
+- `DELETE /addresses/:addressId` only deletes an address that belongs to the current user.
+- If the address is already referenced by an existing order, the API returns `409 Conflict`.
+- Current message:
+
+```txt
+Cannot delete address that is used by existing orders
+```
+
+This is consumed by the mobile frontend and mapped to a friendlier Vietnamese error for the user.
+
 ### Mock Payment QR
 
 Online payment hien la mock bank QR flow de demo va test, khong tich hop cong thanh toan tra phi. Khi `payment_method.method_code` khac `COD`, backend tao token xac nhan, QR tro den trang Sello Mock Bank, va tra them:
@@ -414,6 +427,13 @@ Postman test flow:
 
 Open the `Visualize` tab after `Get Order Tracking` to preview the route on an OpenStreetMap tile map. If OSRM is unavailable, the response still works and shows a straight-line fallback route with `trackingRouteProvider=fallback`.
 
+Frontend currently consumes the tracking response for:
+
+- destination coordinates from `data.map.destination`
+- route geometry from `data.map.route.geometry.coordinates`
+- route distance and duration from `data.map.route.distanceMeters` and `data.map.route.durationSeconds`
+- rendering OpenStreetMap tiles and Leaflet polyline in the mobile app
+
 ## Android Emulator Note
 
 Khi frontend chạy trên Android Emulator và backend chạy local, có thể dùng ADB reverse:
@@ -444,6 +464,52 @@ Xóa mapping:
 - Map data attribution: OpenStreetMap contributors.
 
 The backend first uses saved `addresses.latitude` and `addresses.longitude`. If they are missing, it geocodes the order address with Photon and caches the coordinates back to MySQL. It then requests an OSRM GeoJSON route from the mock shipper location to the destination. If either public service is unavailable, the API still returns tracking data with a straight-line fallback route.
+
+Typical response fields used by the frontend:
+
+```json
+{
+  "destination": {
+    "address": "90/29 Au Duong Lan, Phuong 3, Quan 8, TP. Ho Chi Minh, Vietnam",
+    "latitude": 10.78,
+    "longitude": 106.65
+  },
+  "map": {
+    "origin": {
+      "label": "Vi tri shipper",
+      "latitude": 10.81,
+      "longitude": 106.65
+    },
+    "destination": {
+      "label": "Diem giao hang",
+      "address": "90/29 Au Duong Lan, Phuong 3, Quan 8, TP. Ho Chi Minh, Vietnam",
+      "latitude": 10.78,
+      "longitude": 106.65,
+      "source": "database"
+    },
+    "route": {
+      "provider": "OSRM",
+      "status": "routed",
+      "distanceMeters": 8100,
+      "durationSeconds": 720,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [106.65, 10.81],
+          [106.651, 10.809]
+        ]
+      }
+    }
+  }
+}
+```
+
+Frontend rendering stack:
+
+- Photon for destination geocoding when saved coordinates are missing
+- OSRM for route, distance, duration, and polyline geometry
+- OpenStreetMap tiles for base map rendering
+- Leaflet in the mobile WebView to draw the route directly on the map
 
 Useful `.env` keys:
 

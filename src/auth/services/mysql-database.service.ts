@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 import {
   createPool,
@@ -1879,6 +1885,27 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   }
 
   async deleteUserAddress(userId: number, addressId: number) {
+    const address = await this.getAddressByUser(userId, addressId);
+
+    if (!address) {
+      return false;
+    }
+
+    const [orderRows] = await this.pool.query<CountRow[]>(
+      `
+        SELECT COUNT(*) AS total
+        FROM orders
+        WHERE address_id = ?
+      `,
+      [addressId],
+    );
+
+    if (Number(orderRows[0]?.total ?? 0) > 0) {
+      throw new ConflictException(
+        'Cannot delete address that is used by existing orders',
+      );
+    }
+
     const [result] = await this.pool.execute<ResultSetHeader>(
       `
         DELETE FROM addresses
