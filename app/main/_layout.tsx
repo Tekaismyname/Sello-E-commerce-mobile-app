@@ -15,6 +15,7 @@ export default function MainLayout() {
       <Tabs.Screen name="categories" options={{ title: "Danh sách" }} />
       <Tabs.Screen name="cart" options={{ title: "Giỏ hàng" }} />
       <Tabs.Screen name="(order)/orders" options={{ title: "Đơn hàng" }} />
+      <Tabs.Screen name="chat" options={{ title: "Hỗ trợ" }} />
       <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
       <Tabs.Screen name="(catalog)/search" options={{ href: null }} />
       <Tabs.Screen name="(catalog)/product-list" options={{ href: null }} />

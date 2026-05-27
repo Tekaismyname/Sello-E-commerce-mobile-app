@@ -188,7 +188,8 @@ export type OrderStatus =
   | "shipping"
   | "delivered"
   | "cancelled"
-  | "returned";
+  | "returned"
+  | "return_requested";
 
 export interface OrderItem {
   id: number;

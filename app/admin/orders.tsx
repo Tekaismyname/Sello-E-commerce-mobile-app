@@ -29,6 +29,7 @@ const ORDER_STATUSES: AdminOrderStatus[] = [
   "delivered",
   "cancelled",
   "returned",
+  "return_requested",
 ];
 
 export default function AdminOrdersScreen() {
@@ -117,6 +118,45 @@ export default function AdminOrdersScreen() {
     }
   };
 
+  const handleQuickUpdateStatus = async (orderId: number, nextStatus: AdminOrderStatus, note = "Cập nhật trạng thái nhanh bởi Admin") => {
+    if (!token || !canUpdateOrders) return;
+    try {
+      setSavingStatus(true);
+      await adminService.updateOrderStatus(token, orderId, nextStatus, note);
+      await fetchOrders();
+      Alert.alert("Thành công", "Đã cập nhật trạng thái đơn hàng.");
+    } catch (err: any) {
+      Alert.alert("Lỗi", err.message ?? "Không thể cập nhật trạng thái.");
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
+  const handleProcessReturn = async (action: "approve" | "reject") => {
+    if (!token || !selectedOrder || !canUpdateOrders) return;
+    if (!statusNote.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập ghi chú phản hồi bắt buộc.");
+      return;
+    }
+
+    try {
+      setSavingStatus(true);
+      const response = await adminService.processOrderReturn(
+        token,
+        selectedOrder.id,
+        action,
+        statusNote.trim(),
+      );
+      setSelectedOrder(response.data);
+      await fetchOrders();
+      Alert.alert("Thành công", `Đã ${action === "approve" ? "phê duyệt" : "từ chối"} yêu cầu trả hàng.`);
+    } catch (err: any) {
+      Alert.alert("Lỗi", err.message ?? "Không thể xử lý yêu cầu trả hàng.");
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
       <AdminHeader title="Orders" />
@@ -162,6 +202,7 @@ export default function AdminOrdersScreen() {
                 filter={filter}
                 onSearchChange={setSearch}
                 onFilterChange={setFilter}
+                counts={metrics.counts}
               />
             </View>
 
@@ -173,6 +214,7 @@ export default function AdminOrdersScreen() {
                 pageSize={pageSize}
                 onPageChange={setPage}
                 onSelectOrder={canReadOrders ? openOrderDetail : undefined}
+                onQuickUpdateStatus={canUpdateOrders ? handleQuickUpdateStatus : undefined}
               />
             </View>
           </>
@@ -224,47 +266,88 @@ export default function AdminOrdersScreen() {
                 )}
 
                 {canUpdateOrders ? (
-                  <View className="mt-4 rounded-[14px] bg-white">
-                    <Text className="text-[13px] font-bold text-[#191C1F]">Update Status</Text>
-                    <View className="mt-3 flex-row flex-wrap gap-2">
-                      {ORDER_STATUSES.map((status) => (
+                  selectedOrder.orderStatus === "return_requested" ? (
+                    <View className="mt-4 rounded-[14px] bg-[#FEF2F2] p-4 border border-[#FEE2E2]">
+                      <Text className="text-[14px] font-extrabold text-[#991B1B]">Yêu cầu trả hàng cần xử lý</Text>
+                      {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
+                        <View className="mt-2 rounded-[8px] bg-white p-2.5 border border-[#FCA5A5]/30">
+                          <Text className="text-[12px] font-bold text-[#7F1D1D]">Lý do từ khách hàng:</Text>
+                          <Text className="text-[12px] text-[#B91C1C] mt-1 leading-[18px]">
+                            {selectedOrder.statusHistory.find((h) => h.status === "return_requested")?.description || "Không có lý do chi tiết"}
+                          </Text>
+                        </View>
+                      )}
+                      
+                      <TextInput
+                        className="mt-3 min-h-[80px] rounded-[12px] bg-white border border-[#EF4444]/20 px-3 py-2 text-[13px] text-[#1F2934]"
+                        multiline
+                        placeholder="Ghi chú phản hồi duyệt/từ chối (bắt buộc)"
+                        placeholderTextColor="#9CA3AF"
+                        value={statusNote}
+                        onChangeText={setStatusNote}
+                        textAlignVertical="top"
+                      />
+
+                      <View className="mt-3 flex-row gap-3">
                         <Pressable
-                          key={status}
-                          onPress={() => setStatusDraft(status)}
-                          className={`rounded-full px-3 py-2 ${
-                            statusDraft === status ? "bg-[#0369A1]" : "bg-[#E8EDF2]"
-                          }`}
+                          className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#EF4444] active:opacity-85 disabled:opacity-50"
+                          disabled={savingStatus}
+                          onPress={() => handleProcessReturn("reject")}
                         >
-                          <Text
-                            className={`text-[12px] font-bold ${
-                              statusDraft === status ? "text-white" : "text-[#334155]"
+                          <Text className="text-[13px] font-bold text-white">Từ chối</Text>
+                        </Pressable>
+                        <Pressable
+                          className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#10B981] active:opacity-85 disabled:opacity-50"
+                          disabled={savingStatus}
+                          onPress={() => handleProcessReturn("approve")}
+                        >
+                          <Text className="text-[13px] font-bold text-white">Phê duyệt</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : (
+                    <View className="mt-4 rounded-[14px] bg-white">
+                      <Text className="text-[13px] font-bold text-[#191C1F]">Update Status</Text>
+                      <View className="mt-3 flex-row flex-wrap gap-2">
+                        {ORDER_STATUSES.map((status) => (
+                          <Pressable
+                            key={status}
+                            onPress={() => setStatusDraft(status)}
+                            className={`rounded-full px-3 py-2 ${
+                              statusDraft === status ? "bg-[#0369A1]" : "bg-[#E8EDF2]"
                             }`}
                           >
-                            {status}
-                          </Text>
-                        </Pressable>
-                      ))}
+                            <Text
+                              className={`text-[12px] font-bold ${
+                                statusDraft === status ? "text-white" : "text-[#334155]"
+                              }`}
+                            >
+                              {status}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+
+                      <TextInput
+                        className="mt-3 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3"
+                        multiline
+                        placeholder="Update note (optional)"
+                        placeholderTextColor="#97a0aa"
+                        value={statusNote}
+                        onChangeText={setStatusNote}
+                      />
+
+                      <Pressable
+                        className="mt-3 h-11 items-center justify-center rounded-[12px] bg-[#0369A1] disabled:opacity-60"
+                        disabled={savingStatus || statusDraft === selectedOrder.orderStatus}
+                        onPress={handleUpdateStatus}
+                      >
+                        <Text className="text-[13px] font-bold text-white">
+                          {savingStatus ? "Saving..." : "Save Status"}
+                        </Text>
+                      </Pressable>
                     </View>
-
-                    <TextInput
-                      className="mt-3 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3"
-                      multiline
-                      placeholder="Update note (optional)"
-                      placeholderTextColor="#97a0aa"
-                      value={statusNote}
-                      onChangeText={setStatusNote}
-                    />
-
-                    <Pressable
-                      className="mt-3 h-11 items-center justify-center rounded-[12px] bg-[#0369A1] disabled:opacity-60"
-                      disabled={savingStatus || statusDraft === selectedOrder.orderStatus}
-                      onPress={handleUpdateStatus}
-                    >
-                      <Text className="text-[13px] font-bold text-white">
-                        {savingStatus ? "Saving..." : "Save Status"}
-                      </Text>
-                    </Pressable>
-                  </View>
+                  )
                 ) : (
                   <Text className="mt-4 text-[12px] text-[#9A6400]">You don't have permission to update order status.</Text>
                 )}

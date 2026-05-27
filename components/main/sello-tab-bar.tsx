@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type TabMeta = {
   key: string;
   label: string;
-  icon: "home" | "grid" | "shopping-cart" | "file-text" | "user";
+  icon: "home" | "grid" | "shopping-cart" | "file-text" | "user" | "message-square";
 };
 
 const tabs: TabMeta[] = [
@@ -14,6 +14,7 @@ const tabs: TabMeta[] = [
   { key: "categories", label: "Danh mục", icon: "grid" },
   { key: "cart", label: "Giỏ hàng", icon: "shopping-cart" },
   { key: "orders", label: "Đơn hàng", icon: "file-text" },
+  { key: "chat", label: "Hỗ trợ", icon: "message-square" },
   { key: "profile", label: "Tài khoản", icon: "user" },
 ];
 

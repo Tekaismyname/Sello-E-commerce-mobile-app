@@ -15,6 +15,7 @@ const statusLabels: Record<OrderStatus, string> = {
   delivered: "Đã giao",
   cancelled: "Đã hủy",
   returned: "Đã trả",
+  return_requested: "Đang yêu cầu trả hàng",
 };
 
 const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
@@ -25,6 +26,7 @@ const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
   delivered: { bg: "bg-[#E8F5E9]", text: "text-[#2E7D32]" },
   cancelled: { bg: "bg-[#FFEBEE]", text: "text-[#C62828]" },
   returned: { bg: "bg-[#FFF8E1]", text: "text-[#F57F17]" },
+  return_requested: { bg: "bg-[#FFEBEE]", text: "text-[#DC2626]" },
 };
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;

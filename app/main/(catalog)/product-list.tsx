@@ -13,10 +13,8 @@ import {
 import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
 import { SelloHeader } from "@/components/main/sello-header";
 import { useProductListFilters } from "@/hooks/main/use-product-list-filters";
-import { useProductListData } from "@/hooks/main/use-main-data";
 
 export default function ProductListScreen() {
-  const { data, loading, errorMessage } = useProductListData();
   const params = useLocalSearchParams<{ keyword?: string }>();
   const searchKeyword = params.keyword?.toString().trim() ?? "";
 
@@ -31,16 +29,18 @@ export default function ProductListScreen() {
     applyDropdownOption,
     handleOpenChip,
     handleLoadMore,
-  } = useProductListFilters(data, searchKeyword);
+    loading,
+    error,
+  } = useProductListFilters(searchKeyword);
 
   return (
     <SafeAreaView className="flex-1 bg-[#f3f5f8]" edges={["top"]}>
       <SelloHeader onSearchPress={() => router.push("/main/search" as Href)} />
 
       {loading ? <MainLoadingState /> : null}
-      {!loading && errorMessage ? <MainErrorState message={errorMessage} /> : null}
+      {!loading && error ? <MainErrorState message={error} /> : null}
 
-      {!loading && data ? (
+      {!loading ? (
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-6" showsVerticalScrollIndicator={false}>
           <ProductListHeaderInfo
             trail="Trang chủ > Danh mục"
@@ -52,7 +52,7 @@ export default function ProductListScreen() {
 
           {openChipId ? <FilterChipDropdown options={dropdownOptions} onSelect={applyDropdownOption} /> : null}
 
-          <SortTabGroup tabs={data.sortTabs} />
+          <SortTabGroup tabs={["Phổ biến", "Bán chạy", "Giá thấp > cao"]} />
 
           <View className="mt-3 flex-row flex-wrap justify-between gap-y-3">
             {visibleProducts.map((product, index) => (

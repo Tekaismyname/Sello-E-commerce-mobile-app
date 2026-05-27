@@ -102,10 +102,16 @@ export const API_ENDPOINTS = {
     google: "/auth/google",
     deleteUser: (userId: number) => `/auth/users/${userId}`,
   },
+  chat: {
+    myRoom: "/chat/my-room",
+    adminRooms: "/chat/admin-rooms",
+    history: (roomId: number) => `/chat/history/${roomId}`,
+  },
   main: {
     home: "/home",
   },
   products: {
+    list: "/products",
     detail: (productId: number) => `/products/${productId}`,
   },
   customer: {
@@ -143,6 +149,7 @@ export const API_ENDPOINTS = {
     myOrders: "/orders/me",
     detail: (orderId: number) => `/orders/${orderId}`,
     cancel: (orderId: number) => `/orders/${orderId}/cancel`,
+    requestReturn: (orderId: number) => `/orders/${orderId}/return-request`,
     tracking: (orderId: number) => `/orders/${orderId}/tracking`,
     mockPaymentCallback: (paymentId: number) => `/payments/mock/${paymentId}/callback`,
     mockPaymentStatus: (paymentId: number) => `/payments/mock/${paymentId}/status`,
@@ -178,6 +185,7 @@ export const API_ENDPOINTS = {
     orders: "/admin/orders",
     orderDetail: (orderId: number) => `/admin/orders/${orderId}`,
     updateOrderStatus: (orderId: number) => `/admin/orders/${orderId}/status`,
+    updateReturnStatus: (orderId: number) => `/admin/orders/${orderId}/return-status`,
     products: "/admin/products",
     productDetail: (productId: number) => `/admin/products/${productId}`,
     createProduct: "/admin/products",

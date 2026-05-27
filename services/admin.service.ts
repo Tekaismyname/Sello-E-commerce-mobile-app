@@ -198,7 +198,8 @@ const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
     order.orderStatus === "shipping" ||
     order.orderStatus === "delivered" ||
     order.orderStatus === "cancelled" ||
-    order.orderStatus === "returned"
+    order.orderStatus === "returned" ||
+    order.orderStatus === "return_requested"
       ? order.orderStatus
       : "pending",
   paymentStatus: String(order.paymentStatus ?? "pending"),
@@ -210,6 +211,7 @@ const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
     productName: String(item.productName ?? item.name ?? "Products"),
     quantity: toNumber(item.quantity, 1),
     price: toNumber(item.price),
+    productImage: typeof item.productImage === "string" ? item.productImage : undefined,
   })),
   statusHistory: ensureArray<Record<string, unknown>>(order.statusHistory).map((history) => ({
     status: String(history.status ?? "pending"),
@@ -743,6 +745,27 @@ export const adminService = {
       {
         method: "PATCH",
         body: JSON.stringify({ status, description }),
+      },
+    );
+
+    return {
+      ...response,
+      data: mapOrder(asRecord(response.data)),
+    };
+  },
+
+  async processOrderReturn(
+    token: string,
+    orderId: number,
+    action: "approve" | "reject",
+    description: string,
+  ) {
+    const response = await requestAdmin<{ message: string; data: unknown }>(
+      API_ENDPOINTS.admin.updateReturnStatus(orderId),
+      token,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ action, description }),
       },
     );
 

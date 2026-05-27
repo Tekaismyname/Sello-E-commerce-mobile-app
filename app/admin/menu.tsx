@@ -29,6 +29,13 @@ const menuItems: MenuItem[] = [
     permission: "users:read",
   },
   {
+    title: "Chat Support",
+    description: "Respond to customer messages and queries in real-time.",
+    icon: "message-square",
+    route: "/admin/chats" as Href,
+    permission: "chats:read",
+  },
+  {
     title: "Categories",
     description: "Create, edit, toggle visibility of product categories.",
     icon: "layers",

@@ -101,6 +101,14 @@ export default function ProfileScreen() {
 
           <Pressable
             className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
+            onPress={() => router.push("/main/chat" as Href)}
+          >
+            <Text className="text-[14px] font-semibold text-[#364150]">Hỗ trợ trực tuyến (Chat)</Text>
+            <Feather name="chevron-right" size={16} color="#7e8997" />
+          </Pressable>
+
+          <Pressable
+            className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
             onPress={() => router.push("/main/change-password" as Href)}
           >
             <Text className="text-[14px] font-semibold text-[#364150]">Đổi mật khẩu</Text>

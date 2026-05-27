@@ -1,6 +1,8 @@
 import { AdminVoucher } from "@/types/admin";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Switch, Text, TextInput, View, Platform } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Feather } from "@expo/vector-icons";
 
 type Props = {
   initialValue?: AdminVoucher | null;
@@ -36,6 +38,11 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
   const [startAt, setStartAt] = useState(initialValue?.startAt ?? "");
   const [endAt, setEndAt] = useState(initialValue?.endAt ?? "");
   const [isActive, setIsActive] = useState(initialValue?.isActive ?? true);
+
+  // Picker modal visible states
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
   const voucherTypeLabel: Record<"product" | "shipping" | "cashback", string> = {
     product: "Products",
     shipping: "Shipping",
@@ -60,6 +67,38 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
     setEndAt(initialValue?.endAt ?? "");
     setIsActive(initialValue?.isActive ?? true);
   }, [initialValue]);
+
+  // Date Formatting Helper
+  const formatDateLabel = (isoString?: string | null, isEnd = false) => {
+    if (!isoString) return isEnd ? "Vô thời hạn" : "Bắt đầu ngay lập tức";
+    try {
+      const d = new Date(isoString);
+      if (Number.isNaN(d.getTime())) return isEnd ? "Vô thời hạn" : "Bắt đầu ngay lập tức";
+      return d.toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return isEnd ? "Vô thời hạn" : "Bắt đầu ngay lập tức";
+    }
+  };
+
+  const onStartChange = (event: any, selectedDate?: Date) => {
+    setShowStartPicker(false);
+    if (selectedDate) {
+      setStartAt(selectedDate.toISOString());
+    }
+  };
+
+  const onEndChange = (event: any, selectedDate?: Date) => {
+    setShowEndPicker(false);
+    if (selectedDate) {
+      setEndAt(selectedDate.toISOString());
+    }
+  };
 
   return (
     <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
@@ -104,11 +143,65 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Usage Limit</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3" keyboardType="numeric" value={usageLimit} onChangeText={(v) => setUsageLimit(onlyDigits(v))} placeholder="100" />
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Start (ISO datetime)</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3" value={startAt} onChangeText={setStartAt} placeholder="2026-04-21T00:00:00.000Z" />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Ngày bắt đầu</Text>
+        <View className="mt-2 flex-row items-center gap-2">
+          <Pressable
+            onPress={() => setShowStartPicker(true)}
+            className="h-12 flex-1 flex-row items-center justify-between rounded-[12px] bg-[#F3F5FA] px-4 active:bg-[#E2E8F0]"
+          >
+            <Text className={`text-[14px] ${startAt ? "text-[#111827] font-semibold" : "text-[#97A0AB]"}`}>
+              {formatDateLabel(startAt, false)}
+            </Text>
+            <Feather name="calendar" size={16} color="#6B7280" />
+          </Pressable>
+          {!!startAt && (
+            <Pressable
+              onPress={() => setStartAt("")}
+              className="h-12 w-12 items-center justify-center rounded-[12px] bg-[#FEE2E2] active:bg-[#FCA5A5]"
+            >
+              <Feather name="trash-2" size={16} color="#EF4444" />
+            </Pressable>
+          )}
+        </View>
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">End (ISO datetime)</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3" value={endAt} onChangeText={setEndAt} placeholder="2026-05-21T00:00:00.000Z" />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Ngày kết thúc</Text>
+        <View className="mt-2 flex-row items-center gap-2">
+          <Pressable
+            onPress={() => setShowEndPicker(true)}
+            className="h-12 flex-1 flex-row items-center justify-between rounded-[12px] bg-[#F3F5FA] px-4 active:bg-[#E2E8F0]"
+          >
+            <Text className={`text-[14px] ${endAt ? "text-[#111827] font-semibold" : "text-[#97A0AB]"}`}>
+              {formatDateLabel(endAt, true)}
+            </Text>
+            <Feather name="calendar" size={16} color="#6B7280" />
+          </Pressable>
+          {!!endAt && (
+            <Pressable
+              onPress={() => setEndAt("")}
+              className="h-12 w-12 items-center justify-center rounded-[12px] bg-[#FEE2E2] active:bg-[#FCA5A5]"
+            >
+              <Feather name="trash-2" size={16} color="#EF4444" />
+            </Pressable>
+          )}
+        </View>
+
+        {showStartPicker && (
+          <DateTimePicker
+            value={startAt ? new Date(startAt) : new Date()}
+            mode="date"
+            display="default"
+            onChange={onStartChange}
+          />
+        )}
+
+        {showEndPicker && (
+          <DateTimePicker
+            value={endAt ? new Date(endAt) : new Date()}
+            mode="date"
+            display="default"
+            onChange={onEndChange}
+          />
+        )}
 
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Description</Text>
         <TextInput className="mt-2 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3" multiline value={description} onChangeText={setDescription} placeholder="Usage Condition Details" />

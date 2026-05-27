@@ -17,6 +17,7 @@ const statusConfig = {
   pending: { label: "CHO XAC NHAN", color: "#7C3AED", icon: "clock" as const },
   cancelled: { label: "DA HUY", color: "#B91C1C", icon: "x-circle" as const },
   returned: { label: "DA TRA", color: "#92400E", icon: "rotate-ccw" as const },
+  return_requested: { label: "YÊU CẦU TRẢ HÀNG", color: "#DC2626", icon: "rotate-ccw" as const },
 };
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
@@ -62,6 +63,14 @@ export function CustomerOrderCard({
         <Pressable className="rounded-[12px] bg-[#E8F1FB] px-4 py-2.5" onPress={() => onOpenTracking(order)}>
           <Text className="text-[13px] font-bold text-[#0369A1]">Theo dõi đơn</Text>
         </Pressable>
+      );
+    }
+
+    if (order.status === "return_requested") {
+      return (
+        <View className="rounded-[12px] bg-red-50 px-4 py-2.5">
+          <Text className="text-[13px] font-bold text-red-600">Đang chờ duyệt</Text>
+        </View>
       );
     }
 

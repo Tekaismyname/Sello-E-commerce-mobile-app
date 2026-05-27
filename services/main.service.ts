@@ -223,6 +223,31 @@ const mapProductListData = (payload: BackendHomeResponse): ProductListData => {
     productListItems: [...mappedProducts, ...missingCategoryProducts],
   };
 };
+
+const mapPublicProductToCard = (
+  product: any,
+  index: number,
+): ProductCard => {
+  const basePrice = Number(product.basePrice) || 0;
+  const oldPrice = basePrice > 0 ? Math.round(basePrice * 1.15) : 0;
+  const ratingValue = 3.8 + (index % 13) / 10;
+  const brandName = product.brand?.name ?? "Sello";
+  const categoryName = product.category?.name ?? "Sản phẩm";
+  
+  return {
+    id: String(product.id),
+    title: product.name,
+    subtitle: brandName,
+    brandName,
+    categoryName,
+    searchKeywords: [product.name, brandName, categoryName],
+    priceValue: basePrice,
+    ratingValue,
+    price: formatPrice(basePrice),
+    oldPrice: oldPrice > 0 ? formatPrice(oldPrice) : undefined,
+    imageUrl: product.primaryImageUrl ?? fallbackImages[index % fallbackImages.length],
+  };
+};
 async function requestMain<T>(path: string): Promise<T> {
   let response: Response | null = null;
   const triedBaseUrls: string[] = [];
@@ -314,6 +339,67 @@ export const mainService = {
     return mapProductListData(
       options?.forceRefresh ? await getFreshBackendHomeData() : await getBackendHomeData(),
     );
+  },
+
+  async getFilterMetadata() {
+    const homeData = await getBackendHomeData();
+    return {
+      categories: homeData.categories,
+      brands: homeData.brands,
+    };
+  },
+
+  async getProducts(params: {
+    search?: string;
+    categoryId?: number;
+    brandId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const queryParts: string[] = [];
+    if (params.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
+    if (params.categoryId) queryParts.push(`categoryId=${params.categoryId}`);
+    if (params.brandId) queryParts.push(`brandId=${params.brandId}`);
+    if (params.minPrice !== undefined) queryParts.push(`minPrice=${params.minPrice}`);
+    if (params.maxPrice !== undefined) queryParts.push(`maxPrice=${params.maxPrice}`);
+    if (params.sortBy) queryParts.push(`sortBy=${params.sortBy}`);
+    if (params.page) queryParts.push(`page=${params.page}`);
+    if (params.limit) queryParts.push(`limit=${params.limit}`);
+    
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+    const response = await requestMain<{ message: string; data: any }>(
+      `${API_ENDPOINTS.products.list}${queryString}`
+    );
+    
+    const rawData = response.data;
+    if (rawData && typeof rawData === "object" && "items" in rawData && Array.isArray(rawData.items)) {
+      const mappedItems = rawData.items.map((item: any, index: number) =>
+        mapPublicProductToCard(item, index)
+      );
+      return {
+        ...response,
+        data: {
+          items: mappedItems,
+          meta: rawData.meta,
+        },
+      };
+    } else if (Array.isArray(rawData)) {
+      const mappedItems = rawData.map((item: any, index: number) =>
+        mapPublicProductToCard(item, index)
+      );
+      return {
+        ...response,
+        data: mappedItems,
+      };
+    }
+    
+    return {
+      ...response,
+      data: [],
+    };
   },
 };
 

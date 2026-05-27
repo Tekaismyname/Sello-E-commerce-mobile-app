@@ -9,6 +9,7 @@ const statusLabel: Record<OrderStatus, string> = {
   delivered: "Đã giao",
   cancelled: "Đã hủy",
   returned: "Đã trả",
+  return_requested: "Yêu cầu trả hàng",
 };
 
 const statusStyle: Record<OrderStatus, { bg: string; text: string }> = {
@@ -19,6 +20,7 @@ const statusStyle: Record<OrderStatus, { bg: string; text: string }> = {
   delivered: { bg: "bg-[#E8F5E9]", text: "text-[#2E7D32]" },
   cancelled: { bg: "bg-[#FFEBEE]", text: "text-[#C62828]" },
   returned: { bg: "bg-[#FFF8E1]", text: "text-[#F57F17]" },
+  return_requested: { bg: "bg-[#FFEBEE]", text: "text-[#DC2626]" },
 };
 
 type OrderStatusPillProps = {

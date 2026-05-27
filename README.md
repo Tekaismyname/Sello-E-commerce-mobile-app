@@ -6,6 +6,7 @@ Ung dung mobile frontend cho Sello E-commerce, xay dung bang Expo, React Native,
 
 - Auth: dang ky, dang nhap, OTP, quen mat khau, reset mat khau, luu phien bang auth context.
 - Customer: home, category, search, product list/detail, cart, checkout, orders, profile, address, wishlist, notification, review.
+- Chat thoi gian thuc: Khach hang lien he ho tro truc tiep va Admin (tat ca level co quyen `chats:read`) doc, reply tin nhan qua Socket.IO va REST API.
 - Orders: danh sach don hang, chi tiet don, huy don, theo doi don hang, lich su trang thai, hien thi san pham da mua ro rang theo tung order.
 - Order tracking map: frontend dung Leaflet trong WebView, nen map tu OpenStreetMap, route geometry va quang duong tu backend.
 - Address book: tao, sua, dat mac dinh, xoa dia chi; thong bao loi than thien khi dia chi dang duoc su dung trong don hang.
@@ -110,35 +111,34 @@ Neu OSM tile hoac CDN khong tai duoc, map co the khong hien thi day du tren emul
 
 ## Cap Nhat UI Gan Day
 
-### Orders
+### Orders & Tracking (Khach hang)
 
-- Card don hang hien ro ma don hang, ngay dat, tong tien va trang thai.
-- Neu order chi co 1 san pham, card uu tien hien dung ten san pham va so luong da mua.
-- Neu order co nhieu san pham, card hien list san pham kem so luong cu the thay vi chi hien `Don hang #...`.
+- **Dong bo anh san pham thuc te**: Cac item trong gio hang, chi tiet don hang, va danh sach don hang duoc dong bo lay hinh anh dai dien chinh xac tu backend.
+- **Bo cuc danh sach don hang**: Card don hang hien dung anh san pham, ten san pham, phan loai khi mua 1 mon. Neu mua nhieu mon, card hien danh sach liet ke chu dong (san pham A x2, san pham B x1) kem theo badge tong so mon và anh cua san pham dau tien, dat chuan UX giong Shopee.
 - Nut hanh dong giu theo trang thai: huy don, theo doi don, mua lai.
 
-### Addresses
+### Admin Orders Management (Quan ly don hang Admin kieu Shopee)
 
-- Khi xoa dia chi dang duoc su dung boi don hang, app hien thong bao tieng Viet than thien thay vi raw backend message.
-- Vi du:
-  `Khong the xoa dia chi nay vi dang duoc su dung trong mot don hang khac.`
-
-### Tracking
-
-- Co the pan va zoom map truc tiep trong man theo doi don hang.
-- Route duoc ve bang Leaflet polyline de bam map dung khi di chuyen/zoom.
+- **Thanh trang thai Shopee (Status Tabs)**: Bo loc phia tren duoc chia thanh 7 nhom trang thai bang Tieng Viet (Tất cả, Chờ xác nhận, Chờ lấy hàng, Đang giao, Đã giao, Đã hủy, Trả hàng/Hoàn tiền) kem theo **so luong don hang thuc te cua tung trang thai** hien thi dang badge chu so dong thoi gian thuc.
+- **Order Cards cao cap**: Redesign tu dang table chu sang the Card bo tron cao cap. Card hien thi day du ma don, thong tin khach, ngay dat, tong tien, va danh sach cac mat hang da dat kem theo hinh anh thuc te của tung san pham.
+- **Nut thao tac nhanh mot cham (Quick Actions)**: Tich hop cac nut dieu chinh nhanh trang thai don hang truc tiep tren moi Card giup Admin xu ly sieu toc ma khong can click vao xem chi tiet:
+  - *Cho xac nhan* -> Nut **Xác nhận đơn** (chuyen sang `confirmed`)
+  - *Da xac nhan* -> Nut **Gói hàng xong** (chuyen sang `packed`)
+  - *Da dong goi* -> Nut **Giao vận chuyển** (chuyen sang `shipping`)
+  - *Dang giao* -> Nut **Đã giao xong** (chuyen sang `delivered`)
+- Giao dien co phan trang muot ma, loc va tim kiem thong minh theo ID don, ten hoac email khach hang.
 
 ## Routing Chinh
 
 - `/` splash/entry
 - `/auth/login`, `/auth/register`, `/auth/forgot-password`, `/auth/otp`, `/auth/reset-password`
-- `/main/home`, `/main/categories`, `/main/search`, `/main/product-list`, `/main/cart`, `/main/orders`, `/main/profile`
+- `/main/home`, `/main/categories`, `/main/search`, `/main/product-list`, `/main/cart`, `/main/orders`, `/main/chat`, `/main/profile`
 - `/main/notifications`
 - `/main/order-detail`
 - `/main/order-tracking`
 - `/main/addresses`, `/main/address-form`
 - `/product/detail`, `/product/reviews`, `/product/write-review`
-- `/admin/dashboard`, `/admin/products`, `/admin/orders`, `/admin/reports`, `/admin/menu`
+- `/admin/dashboard`, `/admin/products`, `/admin/chats`, `/admin/orders`, `/admin/reports`, `/admin/menu`
 - `/admin/categories`, `/admin/category-form`
 - `/admin/vouchers`, `/admin/voucher-form`
 - `/admin/notifications`, `/admin/reviews`

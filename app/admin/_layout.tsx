@@ -13,11 +13,12 @@ export default function AdminLayout() {
     >
       <Tabs.Screen name="dashboard" options={{ title: "Dashboard" }} />
       <Tabs.Screen name="products" options={{ title: "Products" }} />
-      <Tabs.Screen name="reports" options={{ title: "Reports" }} />
+      <Tabs.Screen name="chats" options={{ title: "Chat" }} />
+      <Tabs.Screen name="orders" options={{ title: "Orders" }} />
       <Tabs.Screen name="system" options={{ title: "System" }} />
       <Tabs.Screen name="menu" options={{ title: "Menu" }} />
       <Tabs.Screen name="users" options={{ href: null }} />
-      <Tabs.Screen name="orders" options={{ href: null }} />
+      <Tabs.Screen name="reports" options={{ href: null }} />
       <Tabs.Screen name="add-product" options={{ href: null }} />
       <Tabs.Screen name="categories" options={{ href: null }} />
       <Tabs.Screen name="category-form" options={{ href: null }} />

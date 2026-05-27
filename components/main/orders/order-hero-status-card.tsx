@@ -14,6 +14,7 @@ const statusText: Record<Order["status"], string> = {
   delivered: "Đã giao hàng",
   cancelled: "Đã hủy",
   returned: "Đã trả hàng",
+  return_requested: "Đang yêu cầu trả hàng",
 };
 
 export function OrderHeroStatusCard({ order }: OrderHeroStatusCardProps) {

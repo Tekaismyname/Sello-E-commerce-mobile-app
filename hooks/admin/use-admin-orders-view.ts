@@ -2,11 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminService } from "@/services/admin.service";
 import { AdminOrder } from "@/types/admin";
 
-export type AdminOrderFilter = "all" | "pending" | "shipping";
+export type AdminOrderFilter = "all" | "pending" | "packed" | "shipping" | "delivered" | "cancelled" | "return";
 
 const STATUS_FILTER_MAP: Record<Exclude<AdminOrderFilter, "all">, AdminOrder["orderStatus"][]> = {
-  pending: ["pending", "confirmed", "packed"],
+  pending: ["pending", "confirmed"],
+  packed: ["packed"],
   shipping: ["shipping"],
+  delivered: ["delivered"],
+  cancelled: ["cancelled"],
+  return: ["returned", "return_requested"],
 };
 
 export function useAdminOrdersView(
@@ -85,11 +89,22 @@ export function useAdminOrdersView(
     const shipping = orders.filter((order) => order.orderStatus === "shipping").length;
     const monthlyRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
 
+    const counts: Record<AdminOrderFilter, number> = {
+      all: orders.length,
+      pending: orders.filter((order) => STATUS_FILTER_MAP.pending.includes(order.orderStatus)).length,
+      packed: orders.filter((order) => STATUS_FILTER_MAP.packed.includes(order.orderStatus)).length,
+      shipping: orders.filter((order) => STATUS_FILTER_MAP.shipping.includes(order.orderStatus)).length,
+      delivered: orders.filter((order) => STATUS_FILTER_MAP.delivered.includes(order.orderStatus)).length,
+      cancelled: orders.filter((order) => STATUS_FILTER_MAP.cancelled.includes(order.orderStatus)).length,
+      return: orders.filter((order) => STATUS_FILTER_MAP.return.includes(order.orderStatus)).length,
+    };
+
     return {
       total,
       pending,
       shipping,
       monthlyRevenue,
+      counts,
     };
   }, [orders]);
 

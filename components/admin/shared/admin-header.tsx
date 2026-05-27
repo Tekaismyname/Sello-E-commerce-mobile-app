@@ -1,11 +1,13 @@
-﻿import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { authService } from "@/services/auth.service";
 import { Href, router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { Alert, Pressable, Text, View } from "react-native";
+import { useNotificationCount } from "@/utils/notification-store";
 
 export function AdminHeader({ title }: { title?: string }) {
   const { refreshToken, signOut } = useAuth();
+  const unreadCount = useNotificationCount("admin");
 
   const handleLogout = async () => {
     Alert.alert("Log out", "Do you want to log out of admin account?", [
@@ -47,8 +49,18 @@ export function AdminHeader({ title }: { title?: string }) {
             <Feather name="search" size={22} color="#1a232d" />
           </Pressable>
         ) : null}
-        <Pressable className="h-10 w-10 items-center justify-center relative">
+        <Pressable
+          className="h-10 w-10 items-center justify-center relative active:bg-[#f0f2f5] rounded-full"
+          onPress={() => router.push("/admin/notifications" as Href)}
+        >
           <Feather name="bell" size={22} color="#1a232d" />
+          {unreadCount > 0 && (
+            <View className="absolute right-1 top-1 h-4 min-w-[16px] items-center justify-center rounded-full bg-[#BA1A1A] px-1">
+              <Text className="text-[8px] font-bold text-white leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
+            </View>
+          )}
         </Pressable>
         {!title ? (
           <Pressable className="h-10 w-10 items-center justify-center">

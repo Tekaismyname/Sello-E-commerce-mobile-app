@@ -189,6 +189,7 @@ export interface AdminOrder {
     productName: string;
     quantity: number;
     price: number;
+    productImage?: string | null;
   }[];
   statusHistory?: AdminOrderStatusHistory[];
 }
@@ -200,7 +201,8 @@ export type AdminOrderStatus =
   | "shipping"
   | "delivered"
   | "cancelled"
-  | "returned";
+  | "returned"
+  | "return_requested";
 
 export type AdminReviewModerationStatus = "visible" | "hidden" | "deleted";
 

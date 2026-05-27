@@ -162,7 +162,8 @@ const mapOrderStatus = (value: unknown): Order["status"] => {
     value === "shipping" ||
     value === "delivered" ||
     value === "cancelled" ||
-    value === "returned"
+    value === "returned" ||
+    value === "return_requested"
   ) {
     return value;
   }
@@ -174,6 +175,7 @@ const mapOrderItem = (item: Record<string, unknown>): Order["items"][number] => 
   id: toNumber(item.id ?? item.orderItemId),
   productId: toNumber(item.productId),
   productName: String(item.productName ?? "Sản phẩm"),
+  productImage: typeof item.productImage === "string" ? item.productImage : undefined,
   variantId: item.variantId ? toNumber(item.variantId) : null,
   variantLabel:
     typeof item.variantLabel === "string"
@@ -708,6 +710,22 @@ export const orderService = {
       API_ENDPOINTS.orders.cancel(orderId),
       token,
       { method: "POST" },
+    );
+
+    return {
+      ...response,
+      data: mapOrder(asRecord(response.data)),
+    };
+  },
+
+  async requestOrderReturn(token: string, orderId: number, reason: string) {
+    const response = await requestAuth<ApiResponse<unknown>>(
+      API_ENDPOINTS.orders.requestReturn(orderId),
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
     );
 
     return {
