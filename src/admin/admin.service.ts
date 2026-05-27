@@ -23,6 +23,7 @@ import {
   UpdateUserStatusDto,
   UpdateVoucherDto,
   UpdateVoucherStatusDto,
+  ProcessReturnDto,
 } from './dto/admin.dto';
 
 @Injectable()
@@ -280,10 +281,13 @@ export class AdminService {
     };
   }
 
-  async listUsers() {
+  async listUsers(page?: string, limit?: string) {
+    const p = page ? parseInt(page, 10) : undefined;
+    const l = limit ? parseInt(limit, 10) : undefined;
+
     return {
       message: 'Users fetched successfully',
-      data: await this.database.listAdminUsers(),
+      data: await this.database.listAdminUsers(p, l),
     };
   }
 
@@ -334,10 +338,13 @@ export class AdminService {
     };
   }
 
-  async listOrders() {
+  async listOrders(page?: string, limit?: string) {
+    const p = page ? parseInt(page, 10) : undefined;
+    const l = limit ? parseInt(limit, 10) : undefined;
+
     return {
       message: 'Orders fetched successfully',
-      data: await this.database.listAdminOrders(),
+      data: await this.database.listAdminOrders(p, l),
     };
   }
 
@@ -376,10 +383,35 @@ export class AdminService {
     };
   }
 
-  async listProducts() {
+  async listProducts(page?: string, limit?: string) {
+    const p = page ? parseInt(page, 10) : undefined;
+    const l = limit ? parseInt(limit, 10) : undefined;
+
     return {
       message: 'Products fetched successfully',
-      data: await this.database.listAdminProducts(),
+      data: await this.database.listAdminProducts(p, l),
+    };
+  }
+
+  async processOrderReturn(
+    orderId: number,
+    payload: ProcessReturnDto,
+    adminUserId: number,
+  ) {
+    const order = await this.database.processAdminOrderReturn(
+      orderId,
+      payload.action,
+      payload.description ?? '',
+      adminUserId,
+    );
+
+    if (!order) {
+      throw new NotFoundException('Order not found or not in return requested state');
+    }
+
+    return {
+      message: `Order return request ${payload.action}ed successfully`,
+      data: order,
     };
   }
 

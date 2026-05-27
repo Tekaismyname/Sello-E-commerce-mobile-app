@@ -175,10 +175,26 @@ export class CustomerService {
     return result;
   }
 
-  async getMyOrders(userId: number) {
+  async getMyOrders(userId: number, page?: string, limit?: string) {
+    const p = page ? parseInt(page, 10) : undefined;
+    const l = limit ? parseInt(limit, 10) : undefined;
+
     return {
       message: 'Orders fetched successfully',
-      data: await this.database.getUserOrders(userId),
+      data: await this.database.getUserOrders(userId, p, l),
+    };
+  }
+
+  async requestOrderReturn(userId: number, orderId: number, reason: string) {
+    const result = await this.database.requestUserOrderReturn(userId, orderId, reason);
+
+    if (!result) {
+      throw new NotFoundException('Order not found or cannot be returned');
+    }
+
+    return {
+      message: 'Order return request submitted successfully',
+      data: result,
     };
   }
 

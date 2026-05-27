@@ -24,8 +24,26 @@ export class OrdersController {
 
   @Get('orders/me')
   @UseGuards(JwtAuthGuard)
-  getMyOrders(@Req() request: AuthenticatedRequest) {
-    return this.customerService.getMyOrders(request.user!.sub);
+  getMyOrders(
+    @Req() request: AuthenticatedRequest,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.customerService.getMyOrders(request.user!.sub, page, limit);
+  }
+
+  @Post('orders/:orderId/return-request')
+  @UseGuards(JwtAuthGuard)
+  requestOrderReturn(
+    @Req() request: AuthenticatedRequest,
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Body('reason') reason: string,
+  ) {
+    return this.customerService.requestOrderReturn(
+      request.user!.sub,
+      orderId,
+      reason,
+    );
   }
 
   @Get('orders/:orderId')

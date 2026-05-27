@@ -7,9 +7,10 @@ import { RequestAuditInterceptor } from './common/interceptors/request-audit.int
 import { CatalogModule } from './catalog/catalog.module';
 import { CustomerModule } from './customer/customer.module';
 import { ProductModule } from './product/product.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
-  imports: [AuthModule, CatalogModule, AdminModule, ProductModule, CustomerModule],
+  imports: [AuthModule, CatalogModule, AdminModule, ProductModule, CustomerModule, ChatModule],
   controllers: [AppController],
   providers: [
     {

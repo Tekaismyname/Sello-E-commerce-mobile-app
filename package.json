@@ -24,6 +24,8 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.21",
+    "@nestjs/websockets": "^11.1.21",
     "dotenv": "^17.4.1",
     "mysql2": "^3.20.0",
     "nodemailer": "^8.0.5",

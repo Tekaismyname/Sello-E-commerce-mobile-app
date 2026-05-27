@@ -10,6 +10,7 @@ import {
   Put,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -39,6 +40,7 @@ import {
   UpdateUserStatusDto,
   UpdateVoucherDto,
   UpdateVoucherStatusDto,
+  ProcessReturnDto,
 } from './dto/admin.dto';
 
 type AuthenticatedRequest = Request & {
@@ -205,8 +207,11 @@ export class AdminController {
 
   @Get('users')
   @Permissions('users:read')
-  listUsers() {
-    return this.adminService.listUsers();
+  listUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.listUsers(page, limit);
   }
 
   @Get('users/:userId')
@@ -235,8 +240,11 @@ export class AdminController {
 
   @Get('orders')
   @Permissions('orders:read')
-  listOrders() {
-    return this.adminService.listOrders();
+  listOrders(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.listOrders(page, limit);
   }
 
   @Get('orders/:orderId')
@@ -261,8 +269,25 @@ export class AdminController {
 
   @Get('products')
   @Permissions('products:read')
-  listProducts() {
-    return this.adminService.listProducts();
+  listProducts(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.listProducts(page, limit);
+  }
+
+  @Patch('orders/:orderId/return-status')
+  @Permissions('orders:update')
+  processOrderReturn(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Body() payload: ProcessReturnDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.adminService.processOrderReturn(
+      orderId,
+      payload,
+      request.user!.sub,
+    );
   }
 
   @Get('products/:productId')

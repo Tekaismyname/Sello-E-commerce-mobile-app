@@ -2458,6 +2458,94 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Chat Flow",
+      "item": [
+        {
+          "name": "Get My Chat Room",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/my-room",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat",
+                "my-room"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Chat Rooms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/admin-rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat",
+                "admin-rooms"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/history/1?limit=50&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat",
+                "history",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

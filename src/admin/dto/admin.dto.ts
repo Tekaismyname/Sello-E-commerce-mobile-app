@@ -174,3 +174,8 @@ export class ExportReportDto {
   reportType!: 'overview';
   format!: 'csv' | 'json';
 }
+
+export class ProcessReturnDto {
+  action!: 'approve' | 'reject';
+  description?: string;
+}

@@ -1,33 +1,41 @@
 # Sello E-commerce Backend
 
-Backend NestJS cho Sello E-commerce, dùng MySQL và JWT. API hiện phục vụ cả customer app và admin app.
+Backend NestJS cho ứng dụng Sello E-commerce, sử dụng cơ sở dữ liệu MySQL và cơ chế xác thực JWT. API phục vụ đồng thời cho cả Customer App (Mobile App) và Admin App (Web Dashboard).
 
-## Tính Năng Chính
+---
 
-- Auth: register, verify OTP, login, logout, forgot password, reset password.
-- Social login: Google OAuth2 và iCloud/Apple placeholder flow.
-- Role-based access: `customer`, `admin`.
-- Admin hierarchy: `admin_level` 1, 2, 3.
-- Permission-based admin API qua `@Permissions`.
-- Public catalog: home, product detail, product reviews.
-- Customer flows: cart, checkout, voucher apply, order, order cancel/tracking, payment mock callback.
-- Customer account: profile, password, addresses, wishlist, notifications, contact admin, reviews.
-- Order tracking map: backend geocodes destination with Photon, computes route and distance with OSRM, and returns map payload for the mobile frontend Leaflet + OpenStreetMap view.
-- Admin flows: dashboard, users, orders, products, reports, categories, vouchers, notifications, review moderation.
-- MySQL UTF-8/UTF-8MB4 support for Vietnamese text.
+## 🚀 Tính Năng Chính
 
-## Cài Đặt
+* **Xác thực & Bảo mật (Auth)**: Đăng ký, xác minh OTP qua Email, Đăng nhập, Đăng xuất, Quên mật khẩu, Đặt lại mật khẩu.
+* **Đăng nhập Mạng xã hội**: Tích hợp Google OAuth2 và iCloud/Apple placeholder flow.
+* **Phân quyền người dùng (RBAC)**: Phân quyền rõ ràng giữa `customer` (Khách hàng) và `admin` (Quản trị viên).
+* **Cấp bậc Admin (Hierarchy)**: Quản trị viên phân thành 3 cấp (`admin_level` 1, 2, 3) với ma trận quyền hạn tương ứng.
+* **Kiểm soát quyền chi tiết**: Quản lý API Admin thông qua decorator `@Permissions`.
+* **Danh mục sản phẩm công khai**: Tìm kiếm & lọc sản phẩm nâng cao, xem chi tiết, đánh giá sản phẩm.
+* **Quy trình mua hàng (Customer Flow)**: Giỏ hàng, kiểm tra đơn hàng, áp dụng mã giảm giá (voucher), đặt hàng, hủy đơn, gửi yêu cầu đổi trả (return request), theo dõi trạng thái đơn hàng.
+* **Tài khoản cá nhân**: Quản lý hồ sơ, đổi mật khẩu, sổ địa chỉ nhận hàng, danh sách yêu thích, thông báo cá nhân, gửi phản hồi/hỗ trợ tới Admin.
+* **Chat thời gian thực (Real-time Chat)**: Chat hỗ trợ trực tiếp giữa Khách hàng và Admin thông qua **Socket.IO** (room-based). Phân quyền chuyên biệt `chats:read` cho mọi cấp độ Admin.
+* **Bản đồ theo dõi đơn hàng (Order Tracking)**: Tự động chuyển đổi địa chỉ khách hàng thành tọa độ địa lý (Geocoding) bằng Photon, tính toán khoảng cách và tuyến đường di chuyển bằng OSRM, hiển thị trực quan lộ trình của Shipper trên bản đồ Leaflet + OpenStreetMap ở thiết bị di động.
+* **Quản trị hệ thống (Admin Panel)**: Thống kê doanh thu (Dashboard) với phân trang tùy chọn (Optional Pagination), quản lý danh sách người dùng, đơn hàng, sản phẩm, danh mục, mã giảm giá, phê duyệt đánh giá sản phẩm (moderation), duyệt yêu cầu đổi trả (approve/reject return) và gửi thông báo hệ thống.
+* **Hỗ trợ Tiếng Việt**: Cấu hình MySQL hỗ trợ hoàn toàn UTF-8/UTF-8MB4 hiển thị tiếng Việt không lỗi font.
 
+---
+
+## 🛠️ Hướng Dẫn Cài Đặt
+
+### 1. Cài đặt các gói phụ thuộc
 ```bash
 npm install
 ```
 
-Tạo `.env` từ `.env.example`:
+### 2. Cấu hình môi trường (`.env`)
+Tạo file `.env` tại thư mục gốc của dự án dựa trên file mẫu `.env.example`:
 
 ```env
 PORT=3000
 JWT_SECRET=sello-local-secret
 
+# Cấu hình Cơ sở dữ liệu MySQL
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
 MYSQL_USER=root
@@ -36,489 +44,343 @@ MYSQL_DATABASE=Sello_commerce
 MYSQL_CONNECTION_LIMIT=10
 MYSQL_TIMEZONE=Z
 
+# Cấu hình SMTP gửi OTP/Email
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_email_app_password
 SMTP_FROM=Sello Ecommerce <your_email@gmail.com>
 
+# Cấu hình Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 APP_AUTH_REDIRECT_URI=selloecommerce://auth/callback
 ```
 
-Chạy development:
-
+### 3. Khởi động dự án
+Chạy Backend ở chế độ Development (tự động reload khi code thay đổi):
 ```bash
 npm run start:dev
 ```
 
-API mặc định chạy tại:
-
+API mặc định sẽ chạy tại:
 ```txt
 http://localhost:3000
 ```
 
-## Scripts
+---
 
-```bash
-npm run start
-npm run start:dev
-npm run start:debug
-npm run start:prod
-npm run build
-npm run lint
-npm run test
-npm run test:e2e
+## 💻 Danh Sách Scripts Chạy Dự Án
+
+* `npm run start` - Khởi động server bình thường.
+* `npm run start:dev` - Khởi động server ở chế độ phát triển (watch mode).
+* `npm run start:debug` - Khởi động server kèm debugger.
+* `npm run start:prod` - Chạy dự án sau khi build thành sản phẩm.
+* `npm run build` - Biên dịch dự án NestJS sang mã Javascript (`dist/`).
+* `npm run lint` - Kiểm tra và sửa lỗi định dạng code (ESLint).
+* `npm run test` - Chạy unit tests.
+* `npm run test:e2e` - Chạy các kiểm thử end-to-end.
+
+---
+
+## 💾 Lưu Ý Về Cơ Sở Dữ Liệu
+
+Dự án kết nối trực tiếp đến MySQL qua thư viện `mysql2/promise`. Khi ứng dụng khởi động, Database Service sẽ tự động kiểm tra kết nối và bổ sung các cột cần thiết nếu chưa có trong schema hiện tại:
+* `categories.description`
+* `notifications.image_url`
+* `product_reviews.moderation_status`
+* `product_reviews.moderated_by`
+* `product_reviews.moderated_at`
+* `product_reviews.moderation_note`
+
+**Định dạng Tiếng Việt**: Connection pool được thiết lập với `charset: utf8mb4` và thực thi lệnh sql `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci` ngay khi khởi tạo để hỗ trợ lưu và truy vấn tiếng Việt có dấu. 
+
+---
+
+## 📡 Chi Tiết Endpoints API (HTTP)
+
+### 🔓 API Công Khai (Public Endpoints)
+```http
+GET /                              # Kiểm tra trạng thái hoạt động (Health Check)
+GET /home                          # Lấy dữ liệu trang chủ (Banner, sản phẩm nổi bật, danh mục)
+GET /products/:productId           # Lấy thông tin chi tiết sản phẩm và các biến thể
+GET /products/:productId/reviews   # Xem danh sách đánh giá sản phẩm (Chỉ hiển thị các đánh giá hợp lệ)
+POST /auth/register                # Đăng ký tài khoản
+POST /auth/verify-otp              # Xác minh mã OTP (khi đăng ký hoặc đặt lại mật khẩu)
+POST /auth/login                   # Đăng nhập (Dùng chung cho cả Khách hàng và Admin)
+POST /auth/forgot-password         # Yêu cầu gửi mã OTP để đổi mật khẩu mới
+POST /auth/reset-password          # Xác nhận đổi mật khẩu mới bằng OTP
+POST /auth/logout                  # Đăng xuất tài khoản
+GET /auth/google                   # Cổng đăng nhập Google OAuth
+GET /auth/icloud                   # Cổng đăng nhập Apple (Giả lập)
 ```
 
-## Database Notes
-
-Backend dùng MySQL qua `mysql2/promise`. Khi boot, service sẽ kiểm tra kết nối và tự bổ sung một số cột admin nếu thiếu:
-
-- `categories.description`
-- `notifications.image_url`
-- `product_reviews.moderation_status`
-- `product_reviews.moderated_by`
-- `product_reviews.moderated_at`
-- `product_reviews.moderation_note`
-
-Connection pool cấu hình `charset: utf8mb4` và chạy `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci` khi kiểm tra kết nối để hỗ trợ tiếng Việt tốt hơn.
-
-Nếu dữ liệu cũ đã bị vỡ encoding, cần sửa/convert dữ liệu cũ trong database; cấu hình UTF-8 chỉ đảm bảo dữ liệu mới lưu đúng.
-
-## Main Endpoints
-
-### Public
+### 🔒 API Cho Khách Hàng (Customer Protected Endpoints)
+*Yêu cầu gửi kèm Header `Authorization: Bearer <JWT_Token>`*
 
 ```http
-GET /
-GET /home
-GET /products/:productId
-GET /products/:productId/reviews
-POST /auth/register
-POST /auth/verify-otp
-POST /auth/login
-POST /auth/forgot-password
-POST /auth/reset-password
-POST /auth/logout
-GET /auth/google
-GET /auth/icloud
+GET /auth/me                       # Lấy thông tin tài khoản hiện tại
+GET /cart                          # Xem giỏ hàng cá nhân
+POST /cart/items                   # Thêm sản phẩm/biến thể vào giỏ hàng
+PUT /cart/items/:cartItemId        # Cập nhật số lượng sản phẩm trong giỏ
+PATCH /cart/items/:cartItemId/select # Chọn/bỏ chọn sản phẩm để thanh toán
+DELETE /cart/items/:cartItemId     # Xóa sản phẩm khỏi giỏ hàng
+GET /cart/summary                  # Tổng kết nhanh giỏ hàng (Số lượng, tổng tiền)
+POST /checkout/preview             # Xem trước giá trị đơn hàng (Phí ship, thuế, giảm giá...)
+POST /checkout/apply-voucher       # Áp dụng mã giảm giá vào đơn hàng
+POST /orders                       # Tạo đơn hàng mới
+GET /orders/me                     # Danh sách đơn hàng cá nhân
+GET /orders/:orderId               # Chi tiết một đơn hàng cụ thể
+POST /orders/:orderId/cancel       # Hủy đơn hàng (Chỉ áp dụng khi đơn ở trạng thái Pending hoặc Confirmed)
+GET /orders/:orderId/tracking      # Lấy dữ liệu theo dõi tuyến đường vận chuyển (Shipper)
+POST /payments/mock/:paymentId/callback # Callback giả lập thanh toán
+GET /me                            # Lấy thông tin cá nhân mở rộng
+PUT /me                            # Cập nhật thông tin cá nhân
+PUT /me/password                   # Đổi mật khẩu
+POST /me/contact-admin             # Gửi thông điệp/yêu cầu hỗ trợ tới toàn bộ Admin
+GET /addresses                     # Xem danh sách địa chỉ nhận hàng
+POST /addresses                    # Thêm địa chỉ mới
+PUT /addresses/:addressId          # Sửa thông tin địa chỉ
+PATCH /addresses/:addressId/default # Thiết lập địa chỉ mặc định
+DELETE /addresses/:addressId       # Xóa địa chỉ (Không xóa được nếu địa chỉ đã liên kết với đơn hàng cũ)
+GET /notifications                 # Danh sách thông báo cá nhân
+PATCH /notifications/:notificationId/read # Đánh dấu đã đọc một thông báo
+PATCH /notifications/read-all      # Đánh dấu đã đọc tất cả thông báo
+POST /wishlist/items               # Thêm sản phẩm vào danh sách yêu thích
+GET /wishlist                      # Xem danh sách yêu thích
+DELETE /wishlist/items/:wishlistItemId # Xóa sản phẩm khỏi danh sách yêu thích
+POST /reviews                      # Viết đánh giá sản phẩm (Yêu cầu đã mua và đơn hàng ở trạng thái Delivered)
 ```
 
-### Customer Protected
+### 🔑 API Cho Quản Trị Viên (Admin Endpoints)
+*Yêu cầu gửi kèm Header `Authorization: Bearer <JWT_Token>` và tài khoản có role `admin`.*
 
 ```http
-GET /auth/me
-GET /cart
-POST /cart/items
-PUT /cart/items/:cartItemId
-PATCH /cart/items/:cartItemId/select
-DELETE /cart/items/:cartItemId
-GET /cart/summary
-POST /checkout/preview
-POST /checkout/apply-voucher
-POST /orders
-GET /orders/me
-GET /orders/:orderId
-POST /orders/:orderId/cancel
-GET /orders/:orderId/tracking
-POST /payments/mock/:paymentId/callback
-GET /me
-PUT /me
-PUT /me/password
-POST /me/contact-admin
-GET /addresses
-POST /addresses
-PUT /addresses/:addressId
-PATCH /addresses/:addressId/default
-DELETE /addresses/:addressId
-GET /notifications
-PATCH /notifications/:notificationId/read
-PATCH /notifications/read-all
-POST /wishlist/items
-GET /wishlist
-DELETE /wishlist/items/:wishlistItemId
-POST /reviews
+GET /auth/admin/ping               # Kiểm tra quyền Admin chung
+GET /auth/admin/operations/ping    # Kiểm tra quyền Admin điều hành
+DELETE /auth/users/:userId         # Xóa tài khoản người dùng khỏi hệ thống
+
+# Dashboard & Cấu hình hệ thống
+GET /admin/system/dashboard        # Lấy số liệu thống kê tổng quan (Doanh thu, đơn hàng, khách hàng)
+PUT /admin/system/config           # Cập nhật cấu hình hệ thống toàn cục
+
+# Quản lý người dùng
+GET /admin/users                   # Danh sách người dùng hệ thống
+GET /admin/users/:userId           # Chi tiết thông tin người dùng
+PATCH /admin/users/:userId/status  # Khóa hoặc mở khóa tài khoản người dùng
+PATCH /admin/users/:userId/role    # Thay đổi quyền hạn/vai trò người dùng
+
+# Quản lý đơn hàng
+GET /admin/orders                  # Danh sách toàn bộ đơn hàng
+GET /admin/orders/:orderId         # Chi tiết đơn hàng của khách hàng
+PATCH /admin/orders/:orderId/status # Cập nhật trạng thái đơn hàng (Confirmed, Shipped, Delivered...)
+
+# Quản lý sản phẩm
+GET /admin/products                # Danh sách sản phẩm
+POST /admin/products               # Tạo sản phẩm mới
+GET /admin/products/:productId     # Xem thông tin chi tiết sản phẩm
+PUT /admin/products/:productId     # Sửa đổi thông tin sản phẩm
+PATCH /admin/products/:productId/status # Bật/tắt trạng thái hiển thị của sản phẩm
+
+# Quản lý danh mục
+GET /admin/categories              # Danh sách danh mục sản phẩm
+POST /admin/categories             # Tạo danh mục mới
+PUT /admin/categories/:categoryId  # Sửa đổi danh mục
+PATCH /admin/categories/:categoryId/status # Kích hoạt hoặc ẩn danh mục
+DELETE /admin/categories/:categoryId # Xóa danh mục (Soft-delete ẩn danh mục)
+
+# Quản lý mã giảm giá
+GET /admin/vouchers                # Danh sách các mã giảm giá
+POST /admin/vouchers               # Tạo mã giảm giá mới
+PUT /admin/vouchers/:voucherId     # Sửa thông tin mã giảm giá
+PATCH /admin/vouchers/:voucherId/status # Kích hoạt hoặc hủy kích hoạt mã giảm giá
+DELETE /admin/vouchers/:voucherId   # Xóa mã giảm giá (Soft-delete)
+
+# Gửi thông báo hệ thống
+GET /admin/notifications           # Lịch sử các thông báo hệ thống đã gửi
+POST /admin/notifications          # Gửi thông báo mới tới người dùng (Hỗ trợ lọc theo đối tượng nhận)
+
+# Kiểm duyệt đánh giá sản phẩm
+GET /admin/reviews                 # Xem toàn bộ đánh giá của khách hàng
+PATCH /admin/reviews/:reviewId/moderation # Kiểm duyệt ẩn/hiển thị đánh giá
+
+# Báo cáo & Xuất file
+GET /admin/reports/overview        # Lấy báo cáo chi tiết theo thời gian
+POST /admin/reports/export         # Xuất báo cáo dạng file lưu vào thư mục exports/
 ```
 
-### Admin
+---
 
-```http
-GET /auth/admin/ping
-GET /auth/admin/operations/ping
-DELETE /auth/users/:userId
+## 💬 Real-time Chat Socket (Socket.IO)
 
-GET /admin/system/dashboard
-PUT /admin/system/config
+Ứng dụng cung cấp cổng kết nối WebSocket thời gian thực thông qua công nghệ **Socket.IO** để xử lý tính năng chat trực tiếp giữa Khách hàng và Admin.
 
-GET /admin/users
-GET /admin/users/:userId
-PATCH /admin/users/:userId/status
-PATCH /admin/users/:userId/role
+* **URL kết nối**: `http://localhost:3000` (Socket.IO protocol)
+* **Namespace/Path mặc định**: `/socket.io/`
 
-GET /admin/orders
-GET /admin/orders/:orderId
-PATCH /admin/orders/:orderId/status
+### 📤 Các sự kiện Khách hàng/Admin gửi lên (Publish Events)
 
-GET /admin/products
-POST /admin/products
-GET /admin/products/:productId
-PUT /admin/products/:productId
-PATCH /admin/products/:productId/status
+#### 1. Sự kiện `joinRoom`
+Đăng ký kết nối vào phòng chat cụ thể (mỗi khách hàng có một phòng chat riêng tương ứng).
+* **Dữ liệu gửi lên (Payload)**: `roomId` (Số nguyên dương - ID của phòng chat).
+* **Phản hồi từ Server (Acknowledgement)**:
+  ```json
+  {
+    "status": "joined",
+    "roomId": 1
+  }
+  ```
 
-GET /admin/categories
-POST /admin/categories
-PUT /admin/categories/:categoryId
-PATCH /admin/categories/:categoryId/status
-DELETE /admin/categories/:categoryId
+#### 2. Sự kiện `sendMessage`
+Gửi tin nhắn mới vào phòng chat. Tin nhắn sẽ được tự động lưu vào database trước khi phát tới các thành viên khác trong phòng.
+* **Dữ liệu gửi lên (Payload)**:
+  ```json
+  {
+    "roomId": 1,
+    "senderId": 5,
+    "senderType": "customer", // hoặc "admin"
+    "content": "Tôi cần hỗ trợ kỹ thuật!"
+  }
+  ```
+* **Phản hồi từ Server (Acknowledgement)**: Trả về đối tượng tin nhắn đã được lưu trữ thành công trong DB (chứa `message_id`, `created_at`,...).
 
-GET /admin/vouchers
-POST /admin/vouchers
-PUT /admin/vouchers/:voucherId
-PATCH /admin/vouchers/:voucherId/status
-DELETE /admin/vouchers/:voucherId
+#### 3. Sự kiện `markAsRead`
+Đánh dấu toàn bộ tin nhắn từ phía đối phương trong phòng chat hiện tại là đã đọc.
+* **Dữ liệu gửi lên (Payload)**:
+  ```json
+  {
+    "roomId": 1,
+    "readerType": "admin" // hoặc "customer"
+  }
+  ```
+* **Phản hồi từ Server (Acknowledgement)**: `{"status": "read", "roomId": 1}`.
 
-GET /admin/notifications
-POST /admin/notifications
+### 📥 Các sự kiện Lắng nghe từ Server (Listen Events)
 
-GET /admin/reviews
-PATCH /admin/reviews/:reviewId/moderation
+Để nhận dữ liệu thời gian thực, phía Client cần lắng nghe các sự kiện sau:
+* **`newMessage`**: Kích hoạt khi có tin nhắn mới được gửi vào phòng chat. Trả về đối tượng chi tiết của tin nhắn.
+* **`messagesRead`**: Kích hoạt khi đối phương đã mở phòng chat và đọc tin nhắn. Trả về `{ roomId, readerType }`.
 
-GET /admin/reports/overview
-POST /admin/reports/export
-```
+---
 
-## Auth Và Permissions
+## 🔒 Phân Quyền & Bảo Mật
 
-`POST /auth/login` dùng chung cho customer và admin. Sau khi login thành công, backend trả:
+Sau khi đăng nhập thành công qua `POST /auth/login`, Client sẽ nhận được một đối tượng chứa `accessToken`, `refreshToken`, `role`, `adminLevel` và danh sách `permissions` cụ thể.
 
-- `accessToken`
-- `refreshToken`
-- `role`
-- `adminLevel`
-- `permissions`
+### 📊 Ma Trận Quyền Hạn Admin
 
-Admin API được bảo vệ bằng JWT guard, role/admin guard và permission guard. Frontend nên dựa vào `permissions`, không hard-code theo role string.
+| Chức năng | Cấp 1 (Level 1 - Admin Tổng) | Cấp 2 (Level 2 - Admin Vận Hành) | Cấp 3 (Level 3 - Nhân Viên) |
+|---|:---:|:---:|:---:|
+| Thống kê Dashboard | Có | Có | Có |
+| Thay đổi Cấu hình hệ thống | Có | Không | Không |
+| Đọc thông tin User | Có | Có | Có |
+| Cập nhật Trạng thái User (Khóa/Mở) | Có | Có | Không |
+| Nâng cấp Quyền User (Role) | Có | Không | Không |
+| Đọc & Cập nhật Đơn hàng | Có | Có | Có |
+| Xem Sản phẩm | Có | Có | Có |
+| Thêm/Sửa/Ẩn Sản phẩm | Có | Có | Không |
+| Xem Danh mục sản phẩm | Có | Có | Có |
+| Thêm/Sửa/Ẩn Danh mục | Có | Có | Không |
+| Xóa vĩnh viễn Danh mục | Có | Không | Không |
+| Xem & Quản lý Mã giảm giá (Vouchers) | Có | Có | Xem (Có), Sửa/Ẩn (Không) |
+| Xóa vĩnh viễn Vouchers | Có | Không | Không |
+| Đọc & Tạo thông báo hệ thống | Có | Có | Xem (Có), Tạo mới (Không) |
+| Kiểm duyệt đánh giá (Reviews) | Có | Có | Xem (Có), Phê duyệt (Không) |
+| Xem Báo cáo & Xuất dữ liệu | Đầy đủ quyền | Chỉ xem báo cáo, không được xuất file | Chỉ xem báo cáo, không được xuất file |
 
-## User Action Logs
+---
 
-Backend logs authenticated user activity through a global interceptor. Logs include user identity, role, action name, method, path, response status, and request duration. Request bodies and tokens are not logged.
+## 📝 Nhật Ký Hoạt Động (User Action Logs)
 
-Example:
+Tất cả hoạt động của người dùng đã được xác thực đều được ghi nhận tự động thông qua một Global Interceptor và xuất ra console phục vụ giám sát hệ thống. Nhật ký bao gồm danh tính người dùng, hành động, API được gọi, mã trạng thái trả về và thời gian xử lý.
+*(Thông tin nhạy cảm như nội dung mật khẩu và mã token sẽ tự động bị bỏ qua).*
 
+**Ví dụ log hoạt động:**
 ```txt
 [UserAction] userId=1 role=customer email=a@gmail.com action="view_order_tracking" method=GET path=/orders/12/tracking status=200 durationMs=184
 [AuthService] userId=1 role=customer email=a@gmail.com action="login_success"
 ```
 
-For unauthenticated public endpoints, the log uses `user=guest`. Failed requests are logged with warning level and the returned status code.
+---
 
-## Admin Permission Matrix
+## 💳 Quy Trình Thanh Toán Giả Lập (Mock Payment QR Flow)
 
-| Capability | Level 1 | Level 2 | Level 3 |
-|---|---:|---:|---:|
-| System dashboard | Có | Có | Có |
-| System config | Có | Không | Không |
-| Users read | Có | Có | Có |
-| Users status update | Có | Có | Không |
-| Users role update | Có | Không | Không |
-| Orders read/update | Có | Có | Có |
-| Products read | Có | Có | Có |
-| Products create/update/status | Có | Có | Không |
-| Categories read | Có | Có | Có |
-| Categories create/update/status | Có | Có | Không |
-| Categories delete/soft-delete | Có | Không | Không |
-| Vouchers read | Có | Có | Có |
-| Vouchers create/update/status | Có | Có | Không |
-| Vouchers delete/soft-delete | Có | Không | Không |
-| Notifications read/create | Có | Có | Có đọc, không tạo |
-| Reviews read/moderate | Có | Có | Có đọc, không duyệt |
-| Reports overview | Có | Có | Có |
-| Reports export | Có | Không | Không |
+Hệ thống hỗ trợ quy trình thanh toán giả lập thông qua mã QR để phục vụ môi trường phát triển và kiểm thử mà không mất phí dịch vụ thực tế.
 
-## Admin Behavior Notes
+1. **Khởi tạo thanh toán**: Khi khách hàng tạo đơn hàng chọn phương thức thanh toán không phải COD (Thanh toán trực tuyến), Server tạo một mã thanh toán đính kèm token xác thực duy nhất.
+2. **Trả về mã QR**: Server trả về dữ liệu chứa mã QR liên kết đến trang web giả lập ngân hàng của Sello:
+   ```json
+   {
+     "paymentUrl": "http://<IP_LAN>:3000/payments/mock/456/confirm-page?token=...",
+     "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=..."
+   }
+   ```
+3. **Xác nhận thanh toán**: Khách hàng quét mã QR hoặc truy cập đường dẫn `paymentUrl` để mở giao diện **Sello Mock Bank**. Tại đây có 2 lựa chọn: **Xác nhận thanh toán** hoặc **Từ chối giao dịch**.
+4. **Cập nhật trạng thái**: Khi chọn "Xác nhận thanh toán", trang ngân hàng giả lập sẽ kích hoạt callback cập nhật trạng thái đơn hàng thành `paid` và đổi trạng thái vận chuyển sang `confirmed` trên server.
 
-- Category delete là soft delete bằng `status = inactive`.
-- Voucher delete là soft delete bằng `is_active = false`.
-- Voucher date được validate trước khi lưu; ngày không tồn tại sẽ trả `BadRequestException`, không để MySQL trả lỗi `ER_TRUNCATED_WRONG_VALUE`.
-- Product list trả `stockQty` tổng từ active variants để frontend hiển thị tồn kho đúng.
-- Notification target hiện hỗ trợ `all_users`, `customer_only`, `admin_only`.
-- Khi admin gọi `POST /admin/notifications`, backend tạo một notification row cho từng user khớp target ngay trong request.
-- `POST /me/contact-admin` tạo notification cho toàn bộ admin `active`, giúp user liên hệ admin từ profile.
-- Review moderation hỗ trợ `visible`, `hidden`, `deleted`; public review chỉ trả review `visible`.
+> [!NOTE]  
+> Khi chạy ứng dụng trên thiết bị di động thật và backend chạy trên máy tính cá nhân, bạn phải đảm bảo cấu hình địa chỉ IP LAN của máy tính vào biến môi trường `MOCK_PAYMENT_PUBLIC_BASE_URL` trong file `.env` để điện thoại có thể truy cập được trang web ngân hàng giả lập.
 
-## Customer Flow Notes
+---
 
-- `GET /products/:productId`: trả detail, variants, images, stock và review summary.
-- `POST /cart/items`: thêm sản phẩm/variant vào giỏ; nếu trùng item thì cộng quantity.
-- `PATCH /cart/items/:cartItemId/select`: chọn item để checkout.
-- `POST /checkout/preview`: tính subtotal, shipping, voucher discount.
-- `POST /checkout/apply-voucher`: validate voucher theo selected cart items.
-- `POST /orders`: tạo đơn từ selected cart items.
-- `POST /orders/:orderId/cancel`: chỉ hủy đơn `pending` hoặc `confirmed`, hoàn kho và hoàn voucher/payment nếu phù hợp.
-- `GET /orders/me`, `GET /orders/:orderId`, `GET /orders/:orderId/tracking`: lịch sử, chi tiết và tracking.
-- `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`: đọc và cập nhật thông báo user.
-- `POST /me/contact-admin`: user gửi nội dung hỗ trợ tới admin dưới dạng notification.
-- `POST /reviews`: chỉ cho review khi user đã mua sản phẩm và đơn đã `delivered`.
+## 🗺️ Theo Dõi Đơn Hàng & Bản Đồ (Order Tracking Map)
 
-### Address Delete Behavior
+Khi thiết bị gọi API lấy thông tin vận chuyển đơn hàng (`GET /orders/:orderId/tracking`), hệ thống sẽ trả về tuyến đường di chuyển thực tế từ vị trí người giao hàng đến địa chỉ nhận.
 
-- `DELETE /addresses/:addressId` only deletes an address that belongs to the current user.
-- If the address is already referenced by an existing order, the API returns `409 Conflict`.
-- Current message:
+* **Bộ phân giải địa chỉ (Geocoder)**: Hệ thống sử dụng dịch vụ miễn phí **Photon** (`https://photon.komoot.io`) để tìm tọa độ (Vĩ độ - Latitude & Kinh độ - Longitude) từ chuỗi địa chỉ văn bản của khách hàng trong trường hợp địa chỉ đó chưa được lưu tọa độ sẵn.
+* **Bộ tính toán lộ trình (Routing)**: Sử dụng **OSRM** (`https://router.project-osrm.org`) để tính toán tuyến đường đi ngắn nhất, thời gian di chuyển dự kiến và khoảng cách thực tế dựa trên dữ liệu giao thông thực.
+* **Tuyến đường dự phòng (Fallback Route)**: Nếu một trong các dịch vụ bản đồ công cộng ở trên gặp sự cố hoặc không thể truy cập, API vẫn sẽ hoạt động bình thường bằng cách tự động vẽ một đường thẳng nối trực tiếp từ vị trí Shipper đến địa chỉ khách hàng kèm nhãn nhà cung cấp là `fallback`.
 
-```txt
-Cannot delete address that is used by existing orders
-```
+---
 
-This is consumed by the mobile frontend and mapped to a friendlier Vietnamese error for the user.
+## 📱 Kết Nối Thiết Bị Di Động & Android Emulator
 
-### Mock Payment QR
-
-Online payment hien la mock bank QR flow de demo va test, khong tich hop cong thanh toan tra phi. Khi `payment_method.method_code` khac `COD`, backend tao token xac nhan, QR tro den trang Sello Mock Bank, va tra them:
-
-```json
-{
-  "orderId": 123,
-  "orderCode": "ORD1770000000000",
-  "paymentId": 456,
-  "paymentType": "online",
-  "paymentStatus": "pending",
-  "orderStatus": "pending",
-  "paymentUrl": "http://192.168.1.10:3000/payments/mock/456/confirm-page?token=...",
-  "qrPayload": "{\"type\":\"SELLO_MOCK_PAYMENT\",\"paymentId\":456,\"orderCode\":\"ORD1770000000000\",\"amount\":230000,\"currency\":\"VND\",\"paymentUrl\":\"http://192.168.1.10:3000/payments/mock/456/confirm-page?token=...\",\"expiresAt\":\"...\"}",
-  "qrCodeUrl": "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=...",
-  "expiresAt": "2026-05-13T05:30:00.000Z"
-}
-```
-
-`qrCodeUrl` la anh QR tao tu public free QR API. Frontend hien thi QR va poll trang thai thanh toan. De gia lap thanh toan nhu ngan hang:
-
-1. Quet QR bang dien thoai khac hoac mo `paymentUrl`.
-2. Trang `Sello Mock Bank` hien thi don hang, so tien, nut `Xac nhan thanh toan` va `Tu choi giao dich`.
-3. Chi khi bam `Xac nhan thanh toan`, backend moi cap nhat `payments.payment_status = success`, `orders.payment_status = paid`, `orders.order_status = confirmed`.
-4. Neu khong xac nhan, don hang van `pending`.
-
-Kiem tra trang thai:
-
-```http
-GET /payments/mock/:paymentId/status
-```
-
-Luu y khi test tren dien thoai that: `MOCK_PAYMENT_PUBLIC_BASE_URL` phai la IP LAN cua may chay backend, vi QR mo tren dien thoai khong truy cap duoc `localhost` cua may tinh.
-
-## Reports
-
-`POST /admin/reports/export` ghi file vào thư mục `exports/` tại root backend và trả:
-
-- `fileName`
-- `filePath`
-- `mimeType`
-
-## Code Structure
-
-```txt
-src/main.ts                         # Bootstrap app, CORS, health logs
-src/app.module.ts                   # Root module
-src/auth/                           # Auth, JWT, guards, permissions
-src/auth/services/mysql-database.service.ts
-src/admin/                          # Admin controller/service/dto
-src/catalog/                        # Home/catalog API
-src/customer/                       # Customer cart/order/profile APIs
-```
-
-## Kiểm Tra
-
-```bash
-npm run build
-npm run test
-```
-
-Lint backend hiện dùng `--fix`:
-
-```bash
-npm run lint
-```
-
-Nếu repo đang có khác biệt line-ending/Prettier cũ, nên kiểm tra diff kỹ trước khi commit sau khi chạy lint.
-
-## Postman
-
-Current collection file: `Sello-Auth.postman_collection.json`.
-
-For online payment QR testing, the collection's `Create Order` request uses `paymentMethodId: 2` by default. Its test script stores `paymentId`, `paymentUrl`, `paymentQrPayload`, `paymentQrCodeUrl`, `mockPaymentToken`, and `mockPaymentExpiresAt`.
-
-Collection hiện nằm tại frontend repo:
-
-```txt
-Sello-Auth.postman_collection.json
-```
-
-Thứ tự test nhanh:
-
-1. Login Customer.
-2. Get Product Detail.
-3. Create Address.
-4. Add Cart Item.
-5. Select Cart Item.
-6. Checkout Preview.
-7. Create Order. Default body uses `paymentMethodId: 2` for online mock payment and QR variables.
-8. Open Mock Payment QR Code.
-8. Mock Payment Callback nếu đơn online.
-9. Get My Orders.
-10. Get Order Detail.
-11. Get Order Tracking.
-
-### Test Mock Payment QR
-
-Happy path:
-
-1. Run `Login Customer`.
-2. Run `Create Address`.
-3. Run `Add Cart Item`.
-4. Run `Select Cart Item`.
-5. Run `Checkout Preview`.
-6. Run `Create Order`. The default body uses `paymentMethodId: 2`.
-7. Run `Open Mock Payment QR Code` to view the QR image, or run `Open Mock Bank Confirm Page` to open the HTML confirmation page directly.
-8. Run `Get Mock Payment Status`; it should be `pending`.
-9. Run `Confirm Mock Bank Payment`.
-10. Run `Get Mock Payment Status` again; it should be `success`.
-11. Run `Get Order Detail`; order payment should be `paid` and order status should be `confirmed`.
-
-Decline path:
-
-1. Create a new online order.
-2. Run `Decline Mock Bank Payment`.
-3. Run `Get Mock Payment Status`; it should be `failed`.
-
-`Legacy Mock Payment Callback (Disabled)` is kept only to show the old callback endpoint is no longer accepted. The new mock payment flow must go through the QR confirmation token.
-
-### Test Order Tracking Map
-
-Before testing the map-enriched tracking response, make sure backend `.env` has the free provider defaults:
-
-```env
-PHOTON_BASE_URL=https://photon.komoot.io
-OSRM_BASE_URL=https://router.project-osrm.org
-MAP_REQUEST_TIMEOUT_MS=5000
-MAP_USER_AGENT=Sello-Ecommerce-Backend/1.0
-```
-
-Postman test flow:
-
-1. Run `Login Customer` to set `accessToken`.
-2. Run `Create Address`. For best demo results, use a specific Ho Chi Minh City address. If `latitude` and `longitude` are omitted, backend will geocode with Photon and cache the coordinates.
-3. Run `Add Cart Item`.
-4. Run `Select Cart Item`.
-5. Run `Checkout Preview`.
-6. Run `Create Order`; the test script stores `orderId` and, for online payment, `paymentId`.
-7. If the order uses online mock payment, run `Mock Payment Callback Success`.
-8. Run `Get Order Tracking`.
-
-`Get Order Tracking` now includes a Postman test script that stores:
-
-- `trackingOriginLat`, `trackingOriginLng`
-- `trackingDestinationLat`, `trackingDestinationLng`
-- `trackingRouteProvider`, `trackingRouteStatus`
-- `trackingRouteDistanceMeters`, `trackingRouteDurationSeconds`
-- `trackingRouteGeoJson`
-
-Open the `Visualize` tab after `Get Order Tracking` to preview the route on an OpenStreetMap tile map. If OSRM is unavailable, the response still works and shows a straight-line fallback route with `trackingRouteProvider=fallback`.
-
-Frontend currently consumes the tracking response for:
-
-- destination coordinates from `data.map.destination`
-- route geometry from `data.map.route.geometry.coordinates`
-- route distance and duration from `data.map.route.distanceMeters` and `data.map.route.durationSeconds`
-- rendering OpenStreetMap tiles and Leaflet polyline in the mobile app
-
-## Android Emulator Note
-
-Khi frontend chạy trên Android Emulator và backend chạy local, có thể dùng ADB reverse:
+Khi chạy ứng dụng Mobile trên Android Emulator và muốn kết nối đến Backend chạy local ở máy tính của bạn, bạn có thể thực hiện ánh xạ cổng kết nối (Port Forwarding) bằng công cụ ADB thông qua các lệnh PowerShell sau:
 
 ```powershell
+# Xem danh sách thiết bị/máy ảo đang kết nối
 & "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" devices
+
+# Thực hiện chuyển tiếp cổng 3000 từ máy ảo Android về máy tính
 & "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse tcp:3000 tcp:3000
-```
 
-Kiểm tra mapping:
-
-```powershell
+# Xem danh sách các cổng chuyển tiếp đang hoạt động
 & "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse --list
-```
 
-Xóa mapping:
-
-```powershell
+# Xóa cổng chuyển tiếp
 & "C:\Users\hokha\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse --remove tcp:3000
 ```
 
-## Free Map Tracking Providers
+---
 
-`GET /orders/:orderId/tracking` enriches the existing mock shipper tracking with real map data when possible:
+## 🧪 Hướng Dẫn Sử Dụng Postman Để Test Dự Án
 
-- Geocoder: Photon (`PHOTON_BASE_URL`, default `https://photon.komoot.io`).
-- Router: OSRM (`OSRM_BASE_URL`, default `https://router.project-osrm.org`).
-- Map data attribution: OpenStreetMap contributors.
+File Collection Postman đính kèm dự án: [Sello-Auth.postman_collection.json](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce-Backend/Sello-Auth.postman_collection.json).
 
-The backend first uses saved `addresses.latitude` and `addresses.longitude`. If they are missing, it geocodes the order address with Photon and caches the coordinates back to MySQL. It then requests an OSRM GeoJSON route from the mock shipper location to the destination. If either public service is unavailable, the API still returns tracking data with a straight-line fallback route.
+### 1. Chu kỳ Test luồng mua hàng thông thường
+1. Chạy API **Login Customer** để lưu token.
+2. Gọi **Create Address** để tạo một địa chỉ nhận hàng hợp lệ.
+3. Gọi **Add Cart Item** để thêm sản phẩm cần mua vào giỏ hàng.
+4. Gọi **Select Cart Item** để chọn sản phẩm chuẩn bị checkout.
+5. Gọi **Checkout Preview** để kiểm tra tổng số tiền trước khi mua.
+6. Gọi **Create Order** để tạo đơn hàng.
+7. Mở liên kết thanh toán thu được hoặc chạy **Confirm Mock Bank Payment** để thanh toán.
+8. Gọi các API **Get My Orders**, **Get Order Detail** để kiểm tra lại trạng thái đơn hàng.
 
-Typical response fields used by the frontend:
-
-```json
-{
-  "destination": {
-    "address": "90/29 Au Duong Lan, Phuong 3, Quan 8, TP. Ho Chi Minh, Vietnam",
-    "latitude": 10.78,
-    "longitude": 106.65
-  },
-  "map": {
-    "origin": {
-      "label": "Vi tri shipper",
-      "latitude": 10.81,
-      "longitude": 106.65
-    },
-    "destination": {
-      "label": "Diem giao hang",
-      "address": "90/29 Au Duong Lan, Phuong 3, Quan 8, TP. Ho Chi Minh, Vietnam",
-      "latitude": 10.78,
-      "longitude": 106.65,
-      "source": "database"
-    },
-    "route": {
-      "provider": "OSRM",
-      "status": "routed",
-      "distanceMeters": 8100,
-      "durationSeconds": 720,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [106.65, 10.81],
-          [106.651, 10.809]
-        ]
-      }
-    }
-  }
-}
-```
-
-Frontend rendering stack:
-
-- Photon for destination geocoding when saved coordinates are missing
-- OSRM for route, distance, duration, and polyline geometry
-- OpenStreetMap tiles for base map rendering
-- Leaflet in the mobile WebView to draw the route directly on the map
-
-Useful `.env` keys:
-
-```env
-PHOTON_BASE_URL=https://photon.komoot.io
-PHOTON_LANG=vi
-PHOTON_BIAS_LAT=10.7769
-PHOTON_BIAS_LON=106.7009
-OSRM_BASE_URL=https://router.project-osrm.org
-MAP_REQUEST_TIMEOUT_MS=5000
-MAP_USER_AGENT=Sello-Ecommerce-Backend/1.0
-```
+### 2. Chu kỳ Test Chat thời gian thực (Socket.IO)
+Để kiểm tra tính năng Chat, bạn thực hiện qua Postman theo các bước sau:
+1. Tạo Request mới trong Postman, chọn định dạng giao thức là **Socket.IO**.
+2. Kết nối tới địa chỉ `http://localhost:3000`.
+3. Tại tab **Listeners**, cấu hình lắng nghe sự kiện `newMessage`.
+4. Tại tab **Publish**, gửi sự kiện `joinRoom` với nội dung là ID phòng chat của bạn (ví dụ: `3`) để tham gia phòng chat.
+5. Gửi sự kiện `sendMessage` bằng duy nhất 1 đối số (Arg 1) dưới định dạng JSON:
+   ```json
+   {
+     "roomId": 3,
+     "senderId": 5,
+     "senderType": "customer",
+     "content": "Xin chào, tôi cần hỗ trợ!"
+   }
+   ```
+   *Lưu ý: `roomId` và `senderId` phải là các ID thực tế tồn tại trong cơ sở dữ liệu và thuộc quyền sở hữu của bạn để tránh lỗi xác thực từ máy chủ.*

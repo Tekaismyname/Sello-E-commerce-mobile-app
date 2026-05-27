@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleDestroy,
 } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
@@ -289,6 +291,29 @@ interface ReviewListRow extends RowDataPacket {
   media_urls?: string | null;
 }
 
+export interface ChatRoomRow extends RowDataPacket {
+  room_id: number;
+  user_id: number;
+  status: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+  full_name?: string;
+  email?: string;
+  unread_count?: number | string;
+  last_message?: string;
+  last_message_at?: Date | string;
+}
+
+export interface ChatMessageRow extends RowDataPacket {
+  message_id: number;
+  room_id: number;
+  sender_id: number;
+  sender_type: 'customer' | 'admin';
+  content: string;
+  is_read: number | boolean;
+  created_at: Date | string;
+}
+
 interface GeoPoint {
   latitude: number;
   longitude: number;
@@ -369,8 +394,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       'vouchers:delete',
       'notifications:read',
       'notifications:create',
-      'reviews:read',
+            'reviews:read',
       'reviews:moderate',
+      'chats:read',
     ],
     customer: [
       'profile:read',
@@ -1285,18 +1311,82 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     return this.completeMockPayment(paymentId, token, 'failed');
   }
 
-  async getUserOrders(userId: number) {
-    const [rows] = await this.pool.query<RowDataPacket[]>(
+  async getUserOrders(userId: number, page?: number, limit?: number) {
+    let rows: RowDataPacket[] = [];
+    let total = 0;
+    let totalPages = 0;
+
+    if (page !== undefined && limit !== undefined) {
+      const offset = (page - 1) * limit;
+      const [countRows] = await this.pool.query<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM orders WHERE user_id = ?`,
+        [userId],
+      );
+      total = Number(countRows[0]?.total ?? 0);
+      totalPages = Math.ceil(total / limit);
+
+      const [orderRows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT order_id, order_code, subtotal, shipping_fee, product_discount, total_amount, order_status, payment_status, placed_at
+          FROM orders
+          WHERE user_id = ?
+          ORDER BY order_id DESC
+          LIMIT ? OFFSET ?
+        `,
+        [userId, limit, offset],
+      );
+      rows = orderRows;
+    } else {
+      const [orderRows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT order_id, order_code, subtotal, shipping_fee, product_discount, total_amount, order_status, payment_status, placed_at
+          FROM orders
+          WHERE user_id = ?
+          ORDER BY order_id DESC
+        `,
+        [userId],
+      );
+      rows = orderRows;
+    }
+
+    if (rows.length === 0) {
+      return page !== undefined && limit !== undefined
+        ? { items: [], meta: { total, page, limit, totalPages } }
+        : [];
+    }
+
+    const orderIds = rows.map((r) => r.order_id);
+    const [itemRows] = await this.pool.query<RowDataPacket[]>(
       `
-        SELECT order_id, order_code, subtotal, shipping_fee, product_discount, total_amount, order_status, payment_status, placed_at
-        FROM orders
-        WHERE user_id = ?
-        ORDER BY order_id DESC
+        SELECT oi.order_item_id, oi.order_id, oi.product_id, oi.variant_id, oi.product_name_snapshot, oi.variant_snapshot, oi.unit_price, oi.quantity, oi.line_total,
+               pi.image_url AS product_image
+        FROM order_items oi
+        LEFT JOIN product_images pi ON pi.product_id = oi.product_id AND pi.is_primary = TRUE
+        WHERE oi.order_id IN (${orderIds.map(() => '?').join(',')})
+        ORDER BY oi.order_item_id ASC
       `,
-      [userId],
+      orderIds,
     );
 
-    return rows.map((row) => ({
+    const itemsByOrderId: Record<number, any[]> = {};
+    for (const item of itemRows) {
+      if (!itemsByOrderId[item.order_id]) {
+        itemsByOrderId[item.order_id] = [];
+      }
+      itemsByOrderId[item.order_id].push({
+        id: item.order_item_id,
+        productId: item.product_id,
+        variantId: item.variant_id,
+        productName: item.product_name_snapshot,
+        variantSnapshot: item.variant_snapshot,
+        unitPrice: Number(item.unit_price),
+        quantity: item.quantity,
+        lineTotal: Number(item.line_total),
+        productImage: item.product_image || null,
+      });
+    }
+
+    const mappedOrders = rows.map((row) => ({
       id: row.order_id,
       orderCode: row.order_code,
       subtotal: Number(row.subtotal),
@@ -1306,7 +1396,22 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       orderStatus: row.order_status,
       paymentStatus: row.payment_status,
       placedAt: new Date(row.placed_at),
+      items: itemsByOrderId[row.order_id] || [],
     }));
+
+    if (page !== undefined && limit !== undefined) {
+      return {
+        items: mappedOrders,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+      };
+    }
+
+    return mappedOrders;
   }
 
   async getUserOrderDetail(userId: number, orderId: number) {
@@ -1328,10 +1433,12 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     const [itemRows, paymentRows, shipmentRows, historyRows] = await Promise.all([
       this.pool.query<RowDataPacket[]>(
         `
-          SELECT order_item_id, product_id, variant_id, product_name_snapshot, variant_snapshot, unit_price, quantity, line_total
-          FROM order_items
-          WHERE order_id = ?
-          ORDER BY order_item_id ASC
+          SELECT oi.order_item_id, oi.product_id, oi.variant_id, oi.product_name_snapshot, oi.variant_snapshot, oi.unit_price, oi.quantity, oi.line_total,
+                 pi.image_url AS product_image
+          FROM order_items oi
+          LEFT JOIN product_images pi ON pi.product_id = oi.product_id AND pi.is_primary = TRUE
+          WHERE oi.order_id = ?
+          ORDER BY oi.order_item_id ASC
         `,
         [orderId],
       ),
@@ -1386,6 +1493,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         unitPrice: Number(row.unit_price),
         quantity: row.quantity,
         lineTotal: Number(row.line_total),
+        productImage: row.product_image || null,
       })),
       payment: paymentRows[0][0]
         ? {
@@ -1726,7 +1834,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         SELECT address_id, user_id, recipient_name, phone, province, district, ward, detail_address,
                address_type, is_default, latitude, longitude, created_at, updated_at
         FROM addresses
-        WHERE user_id = ?
+        WHERE user_id = ? AND (address_type != 'DELETED' OR address_type IS NULL)
         ORDER BY is_default DESC, address_id DESC
       `,
       [userId],
@@ -1901,9 +2009,15 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     );
 
     if (Number(orderRows[0]?.total ?? 0) > 0) {
-      throw new ConflictException(
-        'Cannot delete address that is used by existing orders',
+      const [result] = await this.pool.execute<ResultSetHeader>(
+        `
+          UPDATE addresses
+          SET address_type = 'DELETED', is_default = FALSE
+          WHERE address_id = ? AND user_id = ?
+        `,
+        [addressId, userId],
       );
+      return result.affectedRows > 0;
     }
 
     const [result] = await this.pool.execute<ResultSetHeader>(
@@ -3014,7 +3128,38 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     return this.getAdminDashboard();
   }
 
-  async listAdminUsers() {
+    async listAdminUsers(page?: number, limit?: number) {
+    if (page !== undefined && limit !== undefined) {
+      const offset = (page - 1) * limit;
+      const [countRows] = await this.pool.query<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM users`,
+      );
+      const total = Number(countRows[0]?.total ?? 0);
+      const totalPages = Math.ceil(total / limit);
+
+      const [rows] = await this.pool.query<AdminUserListRow[]>(
+        `
+          SELECT user_id, full_name, email, phone, password_hash, role, admin_level, status, is_verified, created_at, updated_at
+          FROM users
+          ORDER BY user_id ASC
+          LIMIT ? OFFSET ?
+        `,
+        [limit, offset],
+      );
+
+      const items = rows.map((row) => this.mapUser(row));
+
+      return {
+        items,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+      };
+    }
+
     const [rows] = await this.pool.query<AdminUserListRow[]>(
       `
         SELECT user_id, full_name, email, phone, password_hash, role, admin_level, status, is_verified, created_at, updated_at
@@ -3045,28 +3190,102 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     });
   }
 
-  async listAdminOrders() {
-    const [rows] = await this.pool.query<OrderListRow[]>(
+    async listAdminOrders(page?: number, limit?: number) {
+    let rows: OrderListRow[] = [];
+    let total = 0;
+    let totalPages = 0;
+
+    if (page !== undefined && limit !== undefined) {
+      const offset = (page - 1) * limit;
+      const [countRows] = await this.pool.query<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM orders`,
+      );
+      total = Number(countRows[0]?.total ?? 0);
+      totalPages = Math.ceil(total / limit);
+
+      const [orderRows] = await this.pool.query<OrderListRow[]>(
+        `
+          SELECT
+            o.order_id,
+            o.order_code,
+            o.user_id,
+            u.full_name,
+            u.email,
+            pm.method_name AS payment_method_name,
+            o.total_amount,
+            o.order_status,
+            o.payment_status,
+            o.placed_at
+          FROM orders o
+          INNER JOIN users u ON u.user_id = o.user_id
+          INNER JOIN payment_methods pm ON pm.payment_method_id = o.payment_method_id
+          ORDER BY o.order_id DESC
+          LIMIT ? OFFSET ?
+        `,
+        [limit, offset],
+      );
+      rows = orderRows;
+    } else {
+      const [orderRows] = await this.pool.query<OrderListRow[]>(
+        `
+          SELECT
+            o.order_id,
+            o.order_code,
+            o.user_id,
+            u.full_name,
+            u.email,
+            pm.method_name AS payment_method_name,
+            o.total_amount,
+            o.order_status,
+            o.payment_status,
+            o.placed_at
+          FROM orders o
+          INNER JOIN users u ON u.user_id = o.user_id
+          INNER JOIN payment_methods pm ON pm.payment_method_id = o.payment_method_id
+          ORDER BY o.order_id DESC
+        `,
+      );
+      rows = orderRows;
+    }
+
+    if (rows.length === 0) {
+      return page !== undefined && limit !== undefined
+        ? { items: [], meta: { total, page, limit, totalPages } }
+        : [];
+    }
+
+    const orderIds = rows.map((r) => r.order_id);
+    const [itemRows] = await this.pool.query<RowDataPacket[]>(
       `
-        SELECT
-          o.order_id,
-          o.order_code,
-          o.user_id,
-          u.full_name,
-          u.email,
-          pm.method_name AS payment_method_name,
-          o.total_amount,
-          o.order_status,
-          o.payment_status,
-          o.placed_at
-        FROM orders o
-        INNER JOIN users u ON u.user_id = o.user_id
-        INNER JOIN payment_methods pm ON pm.payment_method_id = o.payment_method_id
-        ORDER BY o.order_id DESC
+        SELECT oi.order_item_id, oi.order_id, oi.product_id, oi.variant_id, oi.product_name_snapshot, oi.variant_snapshot, oi.unit_price, oi.quantity, oi.line_total,
+               pi.image_url AS product_image
+        FROM order_items oi
+        LEFT JOIN product_images pi ON pi.product_id = oi.product_id AND pi.is_primary = TRUE
+        WHERE oi.order_id IN (${orderIds.map(() => '?').join(',')})
+        ORDER BY oi.order_item_id ASC
       `,
+      orderIds,
     );
 
-    return rows.map((row) => ({
+    const itemsByOrderId: Record<number, any[]> = {};
+    for (const item of itemRows) {
+      if (!itemsByOrderId[item.order_id]) {
+        itemsByOrderId[item.order_id] = [];
+      }
+      itemsByOrderId[item.order_id].push({
+        id: item.order_item_id,
+        productId: item.product_id,
+        variantId: item.variant_id,
+        productName: item.product_name_snapshot,
+        variantSnapshot: item.variant_snapshot,
+        unitPrice: Number(item.unit_price),
+        quantity: item.quantity,
+        lineTotal: Number(item.line_total),
+        productImage: item.product_image || null,
+      });
+    }
+
+    const mappedOrders = rows.map((row) => ({
       id: row.order_id,
       orderCode: row.order_code,
       user: {
@@ -3079,7 +3298,22 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       orderStatus: row.order_status,
       paymentStatus: row.payment_status,
       placedAt: new Date(row.placed_at),
+      items: itemsByOrderId[row.order_id] || [],
     }));
+
+    if (page !== undefined && limit !== undefined) {
+      return {
+        items: mappedOrders,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+      };
+    }
+
+    return mappedOrders;
   }
 
   async getAdminOrderDetail(orderId: number) {
@@ -3295,7 +3529,84 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     return this.getAdminOrderDetail(orderId);
   }
 
-  async listAdminProducts() {
+    async listAdminProducts(page?: number, limit?: number) {
+    if (page !== undefined && limit !== undefined) {
+      const offset = (page - 1) * limit;
+      const [countRows] = await this.pool.query<RowDataPacket[]>(
+        `SELECT COUNT(*) AS total FROM products`,
+      );
+      const total = Number(countRows[0]?.total ?? 0);
+      const totalPages = Math.ceil(total / limit);
+
+      const [rows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT
+            p.product_id,
+            p.name,
+            p.sku,
+            p.base_price,
+            p.status,
+            c.category_id,
+            c.name AS category_name,
+            b.brand_id,
+            b.name AS brand_name,
+            pi.image_url AS primary_image_url,
+            COALESCE(SUM(CASE WHEN pv.status = 'active' THEN pv.stock_qty ELSE 0 END), 0) AS stock_qty
+          FROM products p
+          INNER JOIN categories c ON c.category_id = p.category_id
+          LEFT JOIN brands b ON b.brand_id = p.brand_id
+          LEFT JOIN product_images pi
+            ON pi.product_id = p.product_id
+           AND pi.is_primary = TRUE
+          LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+          GROUP BY
+            p.product_id,
+            p.name,
+            p.sku,
+            p.base_price,
+            p.status,
+            c.category_id,
+            c.name,
+            b.brand_id,
+            b.name,
+            pi.image_url
+          ORDER BY p.product_id DESC
+          LIMIT ? OFFSET ?
+        `,
+        [limit, offset],
+      );
+
+      const items = rows.map((row) => ({
+        id: row.product_id,
+        name: row.name,
+        sku: row.sku,
+        basePrice: Number(row.base_price),
+        status: row.status,
+        stockQty: Number(row.stock_qty ?? 0),
+        category: {
+          id: row.category_id,
+          name: row.category_name,
+        },
+        brand: row.brand_id
+          ? {
+              id: row.brand_id,
+              name: row.brand_name,
+            }
+          : null,
+        primaryImageUrl: row.primary_image_url,
+      }));
+
+      return {
+        items,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+      };
+    }
+
     const [rows] = await this.pool.query<RowDataPacket[]>(
       `
         SELECT
@@ -3907,6 +4218,171 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }));
   }
 
+  async getOrCreateChatRoom(userId: number) {
+    const [rows] = await this.pool.query<ChatRoomRow[]>(
+      `
+        SELECT room_id, user_id, status, created_at, updated_at
+        FROM chat_rooms
+        WHERE user_id = ?
+        LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (rows[0]) {
+      return rows[0];
+    }
+
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `
+        INSERT INTO chat_rooms (user_id, status)
+        VALUES (?, 'active')
+      `,
+      [userId],
+    );
+
+    return {
+      room_id: result.insertId,
+      user_id: userId,
+      status: 'active',
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as ChatRoomRow;
+  }
+
+  async getAdminChatRooms() {
+    const [rows] = await this.pool.query<ChatRoomRow[]>(
+      `
+        SELECT
+          cr.room_id,
+          cr.user_id,
+          cr.status,
+          cr.created_at,
+          cr.updated_at,
+          u.full_name,
+          u.email,
+          (
+            SELECT COUNT(*)
+            FROM chat_messages cm
+            WHERE cm.room_id = cr.room_id AND cm.is_read = FALSE AND cm.sender_type = 'customer'
+          ) AS unread_count,
+          (
+            SELECT content
+            FROM chat_messages cm
+            WHERE cm.room_id = cr.room_id
+            ORDER BY cm.message_id DESC
+            LIMIT 1
+          ) AS last_message,
+          (
+            SELECT created_at
+            FROM chat_messages cm
+            WHERE cm.room_id = cr.room_id
+            ORDER BY cm.message_id DESC
+            LIMIT 1
+          ) AS last_message_at
+        FROM chat_rooms cr
+        INNER JOIN users u ON u.user_id = cr.user_id
+        ORDER BY last_message_at IS NULL, last_message_at DESC, cr.updated_at DESC
+      `
+    );
+
+    return rows;
+  }
+
+  async getChatHistory(roomId: number, limit = 50, offset = 0) {
+    const [rows] = await this.pool.query<ChatMessageRow[]>(
+      `
+        SELECT message_id, room_id, sender_id, sender_type, content, is_read, created_at
+        FROM chat_messages
+        WHERE room_id = ?
+        ORDER BY message_id DESC
+        LIMIT ? OFFSET ?
+      `,
+      [roomId, limit, offset],
+    );
+
+    return rows.reverse();
+  }
+
+  async saveChatMessage(
+    roomId: number,
+    senderId: number,
+    senderType: 'customer' | 'admin',
+    content: string,
+  ) {
+    const [roomRows] = await this.pool.query<ChatRoomRow[]>(
+      `
+        SELECT room_id, user_id, status, created_at, updated_at
+        FROM chat_rooms
+        WHERE room_id = ?
+        LIMIT 1
+      `,
+      [roomId],
+    );
+
+    const room = roomRows[0];
+    if (!room) {
+      throw new NotFoundException('Chat room not found');
+    }
+
+    const sender = await this.findUserById(senderId);
+    if (!sender) {
+      throw new NotFoundException('Sender not found');
+    }
+
+    if (sender.role !== senderType) {
+      throw new BadRequestException('Sender type does not match sender role');
+    }
+
+    if (senderType === 'customer' && room.user_id !== senderId) {
+      throw new ForbiddenException(
+        'Customer can only send messages to their own chat room',
+      );
+    }
+
+    const [result] = await this.pool.execute<ResultSetHeader>(
+      `
+        INSERT INTO chat_messages (room_id, sender_id, sender_type, content)
+        VALUES (?, ?, ?, ?)
+      `,
+      [roomId, senderId, senderType, content],
+    );
+
+    await this.pool.execute(
+      `
+        UPDATE chat_rooms
+        SET updated_at = CURRENT_TIMESTAMP
+        WHERE room_id = ?
+      `,
+      [roomId],
+    );
+
+    const [rows] = await this.pool.query<ChatMessageRow[]>(
+      `
+        SELECT message_id, room_id, sender_id, sender_type, content, is_read, created_at
+        FROM chat_messages
+        WHERE message_id = ?
+        LIMIT 1
+      `,
+      [result.insertId],
+    );
+
+    return rows[0];
+  }
+
+  async markChatMessagesAsRead(roomId: number, readerType: 'customer' | 'admin') {
+    const targetSenderType = readerType === 'customer' ? 'admin' : 'customer';
+
+    await this.pool.execute(
+      `
+        UPDATE chat_messages
+        SET is_read = TRUE
+        WHERE room_id = ? AND sender_type = ? AND is_read = FALSE
+      `,
+      [roomId, targetSenderType],
+    );
+  }
+
   getPermissionsByRole(role: UserRole) {
     return this.rolePermissions[role] ?? [];
   }
@@ -3943,8 +4419,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         'vouchers:update',
         'notifications:read',
         'notifications:create',
-        'reviews:read',
+                'reviews:read',
         'reviews:moderate',
+        'chats:read',
       ];
     }
 
@@ -3958,8 +4435,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       'categories:read',
       'brands:read',
       'vouchers:read',
-      'notifications:read',
+            'notifications:read',
       'reviews:read',
+      'chats:read',
     ];
   }
 
@@ -4274,7 +4752,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         SELECT address_id, user_id, recipient_name, phone, province, district, ward, detail_address,
                address_type, is_default, latitude, longitude, created_at, updated_at
         FROM addresses
-        WHERE address_id = ? AND user_id = ?
+        WHERE address_id = ? AND user_id = ? AND (address_type != 'DELETED' OR address_type IS NULL)
         LIMIT 1
       `,
       [addressId, userId],
@@ -5385,7 +5863,336 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     };
   }
 
-  private toAdminLevel(value: number | null): AdminLevel | null {
+    private toAdminLevel(value: number | null): AdminLevel | null {
     return value === 1 || value === 2 || value === 3 ? value : null;
+  }
+
+  async listPublicProducts(params: {
+    search?: string;
+    categoryId?: number;
+    brandId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const conditions: string[] = ["p.status = 'active'"];
+    const queryParams: any[] = [];
+
+    if (params.search) {
+      conditions.push('(p.name LIKE ? OR p.description LIKE ?)');
+      const searchPattern = `%${params.search}%`;
+      queryParams.push(searchPattern, searchPattern);
+    }
+
+    if (params.categoryId) {
+      conditions.push('p.category_id = ?');
+      queryParams.push(params.categoryId);
+    }
+
+    if (params.brandId) {
+      conditions.push('p.brand_id = ?');
+      queryParams.push(params.brandId);
+    }
+
+    if (params.minPrice !== undefined) {
+      conditions.push('p.base_price >= ?');
+      queryParams.push(params.minPrice);
+    }
+
+    if (params.maxPrice !== undefined) {
+      conditions.push('p.base_price <= ?');
+      queryParams.push(params.maxPrice);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    let orderBy = 'ORDER BY p.product_id DESC';
+    if (params.sortBy === 'price_asc') {
+      orderBy = 'ORDER BY p.base_price ASC';
+    } else if (params.sortBy === 'price_desc') {
+      orderBy = 'ORDER BY p.base_price DESC';
+    } else if (params.sortBy === 'popularity') {
+      orderBy = 'ORDER BY p.avg_rating DESC, p.product_id DESC';
+    } else if (params.sortBy === 'newest') {
+      orderBy = 'ORDER BY p.product_id DESC';
+    }
+
+    if (params.page !== undefined && params.limit !== undefined) {
+      const offset = (params.page - 1) * params.limit;
+
+      const [countRows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT COUNT(DISTINCT p.product_id) AS total
+          FROM products p
+          INNER JOIN categories c ON c.category_id = p.category_id
+          LEFT JOIN brands b ON b.brand_id = p.brand_id
+          ${whereClause}
+        `,
+        queryParams,
+      );
+      const total = Number(countRows[0]?.total ?? 0);
+      const totalPages = Math.ceil(total / params.limit);
+
+      const [rows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT
+            p.product_id,
+            p.name,
+            p.sku,
+            p.base_price,
+            p.status,
+            c.category_id,
+            c.name AS category_name,
+            b.brand_id,
+            b.name AS brand_name,
+            pi.image_url AS primary_image_url,
+            COALESCE(SUM(CASE WHEN pv.status = 'active' THEN pv.stock_qty ELSE 0 END), 0) AS stock_qty
+          FROM products p
+          INNER JOIN categories c ON c.category_id = p.category_id
+          LEFT JOIN brands b ON b.brand_id = p.brand_id
+          LEFT JOIN product_images pi
+            ON pi.product_id = p.product_id
+           AND pi.is_primary = TRUE
+          LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+          ${whereClause}
+          GROUP BY
+            p.product_id,
+            p.name,
+            p.sku,
+            p.base_price,
+            p.status,
+            c.category_id,
+            c.name,
+            b.brand_id,
+            b.name,
+            pi.image_url
+          ${orderBy}
+          LIMIT ? OFFSET ?
+        `,
+        [...queryParams, params.limit, offset],
+      );
+
+      const items = rows.map((row) => ({
+        id: row.product_id,
+        name: row.name,
+        sku: row.sku,
+        basePrice: Number(row.base_price),
+        status: row.status,
+        stockQty: Number(row.stock_qty ?? 0),
+        category: {
+          id: row.category_id,
+          name: row.category_name,
+        },
+        brand: row.brand_id
+          ? {
+              id: row.brand_id,
+              name: row.brand_name,
+            }
+          : null,
+        primaryImageUrl: row.primary_image_url,
+      }));
+
+      return {
+        items,
+        meta: {
+          total,
+          page: params.page,
+          limit: params.limit,
+          totalPages,
+        },
+      };
+    }
+
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT
+          p.product_id,
+          p.name,
+          p.sku,
+          p.base_price,
+          p.status,
+          c.category_id,
+          c.name AS category_name,
+          b.brand_id,
+          b.name AS brand_name,
+          pi.image_url AS primary_image_url,
+          COALESCE(SUM(CASE WHEN pv.status = 'active' THEN pv.stock_qty ELSE 0 END), 0) AS stock_qty
+        FROM products p
+        INNER JOIN categories c ON c.category_id = p.category_id
+        LEFT JOIN brands b ON b.brand_id = p.brand_id
+        LEFT JOIN product_images pi
+          ON pi.product_id = p.product_id
+         AND pi.is_primary = TRUE
+        LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+        ${whereClause}
+        GROUP BY
+          p.product_id,
+          p.name,
+          p.sku,
+          p.base_price,
+          p.status,
+          c.category_id,
+          c.name,
+          b.brand_id,
+          b.name,
+          pi.image_url
+        ${orderBy}
+      `,
+      queryParams,
+    );
+
+    return rows.map((row) => ({
+      id: row.product_id,
+      name: row.name,
+      sku: row.sku,
+      basePrice: Number(row.base_price),
+      status: row.status,
+      stockQty: Number(row.stock_qty ?? 0),
+      category: {
+        id: row.category_id,
+        name: row.category_name,
+      },
+      brand: row.brand_id
+        ? {
+            id: row.brand_id,
+            name: row.brand_name,
+          }
+        : null,
+      primaryImageUrl: row.primary_image_url,
+    }));
+  }
+
+  async requestUserOrderReturn(userId: number, orderId: number, reason: string) {
+    const connection = await this.pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const [orderRows] = await connection.query<RowDataPacket[]>(
+        `
+          SELECT order_id, order_status, payment_status, order_code
+          FROM orders
+          WHERE order_id = ? AND user_id = ?
+          LIMIT 1
+        `,
+        [orderId, userId],
+      );
+
+      const order = orderRows[0];
+      if (!order) {
+        await connection.rollback();
+        return undefined;
+      }
+
+      if (order.order_status !== 'delivered') {
+        throw new BadRequestException('Only delivered orders can be returned');
+      }
+
+      await connection.execute(
+        `
+          UPDATE orders
+          SET order_status = 'return_requested', updated_at = CURRENT_TIMESTAMP
+          WHERE order_id = ?
+        `,
+        [orderId],
+      );
+
+      await connection.execute(
+        `
+          INSERT INTO order_status_histories (order_id, status, description, updated_by)
+          VALUES (?, 'return_requested', ?, ?)
+        `,
+        [orderId, reason || 'Return requested by customer', userId],
+      );
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    return this.getUserOrderDetail(userId, orderId);
+  }
+
+  async processAdminOrderReturn(
+    orderId: number,
+    action: 'approve' | 'reject',
+    description: string,
+    adminId: number,
+  ) {
+    const connection = await this.pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const [orderRows] = await connection.query<RowDataPacket[]>(
+        `
+          SELECT order_id, order_status, payment_status, user_id, order_code
+          FROM orders
+          WHERE order_id = ?
+          LIMIT 1
+        `,
+        [orderId],
+      );
+
+      const order = orderRows[0];
+      if (!order) {
+        await connection.rollback();
+        return undefined;
+      }
+
+      if (order.order_status !== 'return_requested') {
+        throw new BadRequestException('Order has no active return request');
+      }
+
+      const nextStatus = action === 'approve' ? 'returned' : 'delivered';
+      const nextPaymentStatus = (action === 'approve' && order.payment_status === 'paid') ? 'refunded' : order.payment_status;
+
+      await connection.execute(
+        `
+          UPDATE orders
+          SET order_status = ?, payment_status = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE order_id = ?
+        `,
+        [nextStatus, nextPaymentStatus, orderId],
+      );
+
+      await connection.execute(
+        `
+          INSERT INTO order_status_histories (order_id, status, description, updated_by)
+          VALUES (?, ?, ?, ?)
+        `,
+        [orderId, nextStatus, description || `Return request ${action}d by admin`, adminId],
+      );
+
+      if (order.user_id) {
+        await connection.execute(
+          `
+            INSERT INTO notifications (user_id, title, content, notification_type)
+            VALUES (?, ?, ?, 'order')
+          `,
+          [
+            order.user_id,
+            `Yêu cầu đổi trả đơn hàng ${order.order_code} đã được xử lý`,
+            action === 'approve' 
+              ? `Yêu cầu đổi trả của bạn đã được chấp thuận. Trạng thái: ${nextStatus}.`
+              : `Yêu cầu đổi trả của bạn bị từ chối. Trạng thái đơn hàng: ${nextStatus}. Lý do: ${description || 'Không có'}`
+          ],
+        );
+      }
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    return this.getAdminOrderDetail(orderId);
   }
 }
