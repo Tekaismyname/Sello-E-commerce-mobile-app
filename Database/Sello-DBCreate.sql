@@ -353,5 +353,40 @@ CREATE TABLE search_histories (
         ON DELETE CASCADE
 );
 
+-- Bảng lưu trữ phiên chat (mỗi user có 1 phiên chat với shop)
+CREATE TABLE chat_rooms (
+    room_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL, -- ID của khách hàng
+    status ENUM('active', 'closed') DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+
+ -- Bảng lưu trữ chi tiết tin nhắn
+ CREATE TABLE chat_messages (
+	message_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+	room_id BIGINT NOT NULL,
+	sender_id BIGINT NOT NULL, -- ID người gửi (có thể là User hoặc Admin)
+	sender_type ENUM('customer', 'admin') NOT NULL,
+	content TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (room_id) REFERENCES chat_rooms(room_id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+ALTER TABLE chat_rooms
+	ADD CONSTRAINT uq_chat_rooms_user UNIQUE (user_id);
+
+CONSTRAINT fk_chat_messages_room
+  FOREIGN KEY (room_id) REFERENCES chat_rooms(room_id) ON DELETE CASCADE,
+CONSTRAINT fk_chat_messages_sender
+  FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE
+
+CREATE INDEX idx_chat_messages_room_id ON chat_messages(room_id);
+CREATE INDEX idx_chat_messages_room_read_sender ON chat_messages(room_id, is_read, sender_type);
+CREATE INDEX idx_chat_rooms_updated_at ON chat_rooms(updated_at);
+
 ALTER TABLE users
 ADD COLUMN admin_level TINYINT NULL;
