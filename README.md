@@ -115,10 +115,18 @@ Neu OSM tile hoac CDN khong tai duoc, map co the khong hien thi day du tren emul
 
 ## Cap Nhat UI Gan Day
 
-### Tối Ưu Hóa Hiệu Năng Mobile (Mới nhất)
+### Kiểm Soát Quyền Viết Đánh Giá & Đồng Bộ Giao Diện Hóa Đơn (Mới nhất)
+
+- **Kiểm tra điều kiện viết đánh giá động**: Thay vì hiển thị nút nổi "Viết đánh giá" cho tất cả mọi người, ứng dụng hiện tại sẽ kiểm tra danh sách đơn hàng đã mua của tài khoản. Nút nổi chỉ được kích hoạt hiển thị trong trang danh sách đánh giá của sản phẩm khi người dùng hiện tại đã mua sản phẩm đó và đơn hàng đã được giao thành công (`delivered`).
+- **Nút viết đánh giá trực quan trong lịch sử đơn hàng**: 
+  - Trong danh sách lịch sử mua hàng, các đơn hàng đã giao (`delivered`) sẽ xuất hiện nút **"Viết đánh giá"** màu xanh nhạt nằm cạnh nút **"Mua lại"**.
+  - Trong màn hình chi tiết đơn hàng, mỗi sản phẩm cụ thể đã mua sẽ có nút bấm **"Viết đánh giá"** riêng để người dùng dễ dàng đánh giá chính xác từng sản phẩm mình đã mua.
+- **Đồng bộ hóa hình ảnh và tên sản phẩm khi viết đánh giá**: Form viết đánh giá hiện tại sẽ tự động nhận diện tên và hình ảnh thực tế của sản phẩm được truyền qua tham số điều hướng (`productName` và `productImage`) từ trang chi tiết hoặc chi tiết đơn hàng, loại bỏ hình ảnh mẫu giày mặc định trước đây.
+
+### Tối Ưu Hóa Hiệu Năng Mobile (Bản trước)
 
 - **Shopify FlashList**: Refactor màn hình danh sách sản phẩm (`app/main/(catalog)/product-list.tsx`) sử dụng `<FlashList>` v2.x với tính năng tự động tính toán kích thước phần tử và tái sử dụng view (recycling) thay cho `ScrollView` truyền thống, giúp cuộn mượt mà không bị giật lag.
-- **Expo Image**: Thay thế component `Image` của React Native bằng `expo-image` trên các component cuộn chính (suggested-product-card, flash-sales-section, home-promo-banner, cart-item-card, product-list-card) để tối ưu bộ nhớ đệm ảnh và giảm chi phí xử lý luồng giao diện.
+- **Expo Image**: Thay thế component `Image` của React Native bằng `expo-image` trên các component cuộn chính (suggested-product-card, flash-sales-section, home-promo-banner, cart-item-card, product-list-card) để tối ưu bộ nhớ đệm ảnh và giảm chi phí xử lý luồng giao diện. Đồng thời đăng ký `cssInterop` tại `app/_layout.tsx` để công cụ NativeWind v4 hỗ trợ dịch chuyển các class CSS `className` (kích thước rộng, cao) sang thuộc tính `style` cho component bên thứ ba này, khắc phục lỗi ảnh bị thu về kích thước 0.
 - **Giải phóng tài nguyên WebView Leaflet**: Điều chỉnh cơ chế mount bản đồ trong form địa chỉ (`components/main/address/address-form.tsx`). WebView bản đồ chỉ được khởi tạo khi modal hiển thị và tự động hủy bỏ hoàn toàn khi đóng modal, tránh tình trạng rò rỉ tài nguyên nền.
 
 ### Dang Nhap & Dia Chi (Bản trước)

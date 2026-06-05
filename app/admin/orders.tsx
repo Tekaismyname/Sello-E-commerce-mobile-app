@@ -8,6 +8,7 @@ import { usePermissions } from "@/hooks/auth/use-permissions";
 import { useAdminOrdersView } from "@/hooks/admin/use-admin-orders-view";
 import { adminService } from "@/services/admin.service";
 import { AdminOrder, AdminOrderStatus } from "@/types/admin";
+import { Image as ExpoImage } from "expo-image";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -244,24 +245,133 @@ export default function AdminOrdersScreen() {
                 <ActivityIndicator color="#0369A1" />
               </View>
             ) : selectedOrder ? (
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView showsVerticalScrollIndicator={false} className="mt-2">
+                {/* 1. Basic Info */}
                 <View className="rounded-[14px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[16px] font-bold text-[#191C1F]">
-                    #{selectedOrder.orderCode}
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-[16px] font-extrabold text-[#0F4C6B]">
+                      Đơn hàng #{selectedOrder.orderCode}
+                    </Text>
+                    <View className="rounded-full bg-[#EAF5FC] px-2.5 py-1">
+                      <Text className="text-[11px] font-bold text-[#0F6CBD]">
+                        {selectedOrder.orderStatus.toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="mt-2 text-[12px] text-[#64748B]">
+                    Ngày tạo: {selectedOrder.placedAt ? new Date(selectedOrder.placedAt).toLocaleString("vi-VN") : "N/A"}
                   </Text>
-                  <Text className="mt-1 text-[13px] text-[#4B5563]">
-                    {selectedOrder.user.fullName} - {selectedOrder.user.email}
-                  </Text>
-                  <Text className="mt-1 text-[13px] text-[#4B5563]">Total: {new Intl.NumberFormat("en-US").format(selectedOrder.totalAmount)} d</Text>
-                  <Text className="mt-1 text-[13px] text-[#4B5563]">Current Status: {selectedOrder.orderStatus}</Text>
+                  
+                  <View className="mt-3 border-t border-[#E2E8F0] pt-3">
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase">Khách hàng</Text>
+                    <Text className="mt-1 text-[13px] font-bold text-[#1F2937]">
+                      {selectedOrder.user.fullName}
+                    </Text>
+                    <Text className="text-[12px] text-[#64748B]">
+                      {selectedOrder.user.email}
+                    </Text>
+                  </View>
                 </View>
 
+                {/* 2. Shipping Address */}
                 {!!selectedOrder.shippingAddress && (
                   <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                    <Text className="text-[13px] font-bold text-[#191C1F]">Shipping Address</Text>
-                    <Text className="mt-1 text-[13px] text-[#4B5563]">
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase">Địa chỉ giao hàng</Text>
+                    <Text className="mt-1 text-[13px] leading-[19px] text-[#334155]">
                       {selectedOrder.shippingAddress}
                     </Text>
+                  </View>
+                )}
+
+                {/* 3. Payment Details */}
+                <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
+                  <Text className="text-[12px] font-bold text-[#475569] uppercase">Thông tin thanh toán</Text>
+                  <View className="mt-2 flex-row justify-between items-center">
+                    <Text className="text-[13px] text-[#334155]">Phương thức:</Text>
+                    <Text className="text-[13px] font-bold text-[#1F2937]">{selectedOrder.paymentMethodName}</Text>
+                  </View>
+                  <View className="mt-1.5 flex-row justify-between items-center">
+                    <Text className="text-[13px] text-[#334155]">Trạng thái:</Text>
+                    <View className={`rounded-full px-2 py-0.5 ${
+                      selectedOrder.paymentStatus === 'paid' ? 'bg-[#DCFCE7]' : 'bg-[#FEF3C7]'
+                    }`}>
+                      <Text className={`text-[11px] font-bold ${
+                        selectedOrder.paymentStatus === 'paid' ? 'text-[#15803D]' : 'text-[#B45309]'
+                      }`}>
+                        {selectedOrder.paymentStatus.toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="mt-2 border-t border-[#E2E8F0] pt-2 flex-row justify-between items-center">
+                    <Text className="text-[13px] font-bold text-[#475569]">Tổng thanh toán:</Text>
+                    <Text className="text-[16px] font-extrabold text-[#0369A1]">
+                      {new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)}đ
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 4. Order Items */}
+                {selectedOrder.items && selectedOrder.items.length > 0 && (
+                  <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase mb-2">Sản phẩm đã mua</Text>
+                    {selectedOrder.items.map((item, index) => (
+                      <View key={item.id ?? index} className={`flex-row items-center py-2 ${
+                        index > 0 ? "border-t border-[#E2E8F0]/50" : ""
+                      }`}>
+                        <ExpoImage
+                          source={{ uri: item.productImage || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80" }}
+                          className="h-10 w-10 rounded-lg bg-gray-100"
+                          contentFit="cover"
+                        />
+                        <View className="ml-3 flex-1">
+                          <Text className="text-[13px] font-bold text-[#1F2937]" numberOfLines={1}>
+                            {item.productName}
+                          </Text>
+                          <Text className="text-[12px] text-[#64748B]">
+                            {item.quantity} x {new Intl.NumberFormat("vi-VN").format(item.price)}đ
+                          </Text>
+                        </View>
+                        <Text className="text-[13px] font-bold text-[#1F2937] ml-2">
+                          {new Intl.NumberFormat("vi-VN").format(item.quantity * item.price)}đ
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* 5. Status History Timeline */}
+                {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
+                  <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase mb-3">Lịch sử giao dịch & Trạng thái</Text>
+                    {selectedOrder.statusHistory.map((history, index) => (
+                      <View key={index} className="flex-row items-start mb-1">
+                        {/* Timeline visual bar */}
+                        <View className="items-center mr-3">
+                          <View className="h-4 w-4 rounded-full border-2 border-[#0369A1] bg-white items-center justify-center">
+                            <View className="h-1.5 w-1.5 rounded-full bg-[#0369A1]" />
+                          </View>
+                          {index < selectedOrder.statusHistory!.length - 1 && (
+                            <View className="w-0.5 h-10 bg-[#CBD5E1]" />
+                          )}
+                        </View>
+                        {/* Content */}
+                        <View className="flex-1 pb-4">
+                          <View className="flex-row justify-between items-center">
+                            <Text className="text-[13px] font-bold text-[#1F2937]">
+                              {history.status.toUpperCase()}
+                            </Text>
+                            <Text className="text-[11px] text-[#94A3B8]">
+                              {history.changedAt ? new Date(history.changedAt).toLocaleString("vi-VN") : "N/A"}
+                            </Text>
+                          </View>
+                          {!!history.description && (
+                            <Text className="mt-1 text-[12px] leading-[17px] text-[#64748B]">
+                              {history.description}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    ))}
                   </View>
                 )}
 

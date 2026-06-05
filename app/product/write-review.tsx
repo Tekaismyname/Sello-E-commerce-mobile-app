@@ -14,7 +14,12 @@ import { reviewService } from "@/services/customer.service";
 import { triggerLocalNotification } from "@/utils/local-notification";
 
 export default function WriteReviewScreen() {
-  const params = useLocalSearchParams<{ productId?: string; id?: string }>();
+  const params = useLocalSearchParams<{
+    productId?: string;
+    id?: string;
+    productName?: string;
+    productImage?: string;
+  }>();
   const { token } = useAuth();
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -25,6 +30,11 @@ export default function WriteReviewScreen() {
     (typeof params.id === "string" ? params.id : undefined);
   const parsedProductId = Number(rawProductId);
   const productId = Number.isFinite(parsedProductId) && parsedProductId > 0 ? parsedProductId : null;
+
+  const productName = params.productName ?? "Sản phẩm";
+  const productImage =
+    params.productImage ??
+    "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80";
 
   const submitReview = async () => {
     if (!productId) {
@@ -74,11 +84,13 @@ export default function WriteReviewScreen() {
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4">
           <View className="mb-6 flex-row items-center gap-4 rounded-[16px] bg-white p-4 shadow-sm">
             <Image
-              source={{ uri: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80" }}
+              source={{ uri: productImage }}
               className="h-16 w-16 rounded-[8px]"
             />
             <View className="flex-1">
-              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]">Sản phẩm</Text>
+              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]" numberOfLines={2}>
+                {productName}
+              </Text>
               <Text className="mt-1 text-[12px] text-[#6b7682]">Hãy để lại đánh giá của bạn</Text>
             </View>
           </View>

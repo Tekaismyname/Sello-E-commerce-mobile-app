@@ -212,6 +212,15 @@ export default function OrderDetailScreen() {
             </View>
           ) : null}
 
+          {order.status === "cancelled" && (
+            <View className="mt-4 rounded-[12px] bg-[#FFEBEE] p-3 border border-[#FFCDD2]">
+              <Text className="text-[12px] font-bold text-[#C62828]">Lý do hủy đơn</Text>
+              <Text className="mt-1 text-[13px] text-[#C62828] font-medium">
+                {timeline.find((h) => h.status === "cancelled")?.description || "Hủy tự động do hết hạn thanh toán"}
+              </Text>
+            </View>
+          )}
+
           {canCancel ? (
             <Pressable
               className="mt-4 items-center justify-center rounded-[12px] border border-[#BA1A1A] py-3"

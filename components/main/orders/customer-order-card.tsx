@@ -74,6 +74,19 @@ export function CustomerOrderCard({
       );
     }
 
+    if (order.status === "delivered") {
+      return (
+        <View className="flex-row gap-2">
+          <Pressable className="rounded-[12px] bg-[#E8F1FB] px-3.5 py-2.5" onPress={() => onOpenDetail(order)}>
+            <Text className="text-[13px] font-bold text-[#0369A1]">Viết đánh giá</Text>
+          </Pressable>
+          <Pressable className="rounded-[12px] bg-[#0F6CBD] px-3.5 py-2.5" onPress={() => onOpenDetail(order)}>
+            <Text className="text-[13px] font-bold text-white">Mua lại</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
     return (
       <Pressable className="rounded-[12px] bg-[#0F6CBD] px-4 py-2.5" onPress={() => onOpenDetail(order)}>
         <Text className="text-[13px] font-bold text-white">Mua lại</Text>

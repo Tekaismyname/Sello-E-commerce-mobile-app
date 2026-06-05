@@ -4,7 +4,53 @@ Tài liệu này ghi nhận chi tiết danh sách tất cả các file được 
 
 ---
 
-## 📅 Bản Cập Nhật Mới Nhất: Tối Ưu Hóa Hiệu Năng Mobile (Shopify FlashList, Expo Image & Giải Phóng Tài Nguyên Bản Đồ)
+## 📅 Bản Cập Nhật: Tích Hợp Thanh Toán PayPal Sandbox (PayPal Integration)
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[services/customer.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/services/customer.service.ts)**
+*   **Thay đổi**: Bổ sung hàm `capturePaypalOrder` vào `orderService` để gọi API đối soát capture của cổng thanh toán PayPal Sandbox ở backend.
+
+#### 2. **[app/main/(payment)/payment.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/(payment)/payment.tsx)**
+*   **Thay đổi**: Tích hợp luồng thanh toán ví điện tử PayPal Sandbox. Khi đơn hàng có loại thanh toán là `paypal`, màn hình sẽ tự động hiển thị mô tả PayPal cùng nút **"Mở cổng thanh toán PayPal"** màu vàng thương hiệu. Khi nhấn nút, ứng dụng sử dụng `WebBrowser.openAuthSessionAsync` để đưa khách hàng sang PayPal đăng nhập thanh toán và tự động bắt deep link callback `selloecommerce://checkout/paypal/success` trả về để khớp lệnh tự động. Các phương thức thanh toán cũ (COD, Mock QR) được giữ nguyên hoàn toàn.
+
+#### 3. **[app/admin/orders.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/admin/orders.tsx)**
+*   **Thay đổi**: Thiết kế lại giao diện hộp thoại chi tiết đơn hàng của Admin. Giờ đây, khi Admin xem chi tiết đơn hàng, màn hình sẽ hiển thị đầy đủ:
+    1. Thông tin khách hàng đặt đơn.
+    2. Chi tiết sản phẩm đã mua (hình ảnh, số lượng, đơn giá, tổng tiền từng dòng).
+    3. Thông tin thanh toán (phương thức thanh toán, trạng thái thanh toán có màu sắc trực quan, tổng thanh toán).
+    4. Dòng thời gian lịch sử trạng thái giao dịch (Timeline status history) trực quan, liệt kê chi tiết từng thời điểm thay đổi trạng thái kèm mô tả.
+
+---
+
+## 📅 Bản Cập Nhật Mới Nhất: Tăng Tốc Độ Tải Dữ Liệu (API Latency Fix) & Kiểm Soát Quyền Viết Đánh Giá
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[app/product/reviews.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/product/reviews.tsx)**
+*   **Thay đổi**: Tích hợp kiểm tra quyền viết đánh giá động. Khi mở danh sách đánh giá của sản phẩm, ứng dụng sẽ gọi API danh sách đơn hàng của người dùng để xác thực xem họ đã mua sản phẩm này và đơn hàng đã được giao thành công (`delivered`) hay chưa. Nút bấm nổi "Viết đánh giá" (`WriteReviewFab`) sẽ tự động ẩn đi đối với người dùng chưa mua sản phẩm này.
+
+#### 2. **[app/main/(order)/order-detail.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/(order)/order-detail.tsx)**
+*   **Thay đổi**: Bổ sung nút bấm **"Viết đánh giá"** trực tiếp bên cạnh mỗi sản phẩm trong danh sách "Sản phẩm đã chọn" nếu đơn hàng có trạng thái là đã giao thành công (`delivered`). Điều này giúp khách hàng dễ dàng đánh giá từng sản phẩm đã mua trong lịch sử chi tiết đơn hàng.
+
+#### 3. **[components/main/orders/customer-order-card.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/orders/customer-order-card.tsx)**
+*   **Thay đổi**: Đối với thẻ đơn hàng ở màn hình lịch sử có trạng thái đã giao thành công (`delivered`), hệ thống sẽ hiển thị đồng thời hai nút hành động: **"Viết đánh giá"** (để dẫn khách hàng vào xem chi tiết đơn hàng và đánh giá sản phẩm) và **"Mua lại"**.
+
+#### 4. **[app/product/write-review.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/product/write-review.tsx)**
+*   **Thay đổi**: Cập nhật giao diện màn hình viết đánh giá để hiển thị đúng tên và hình ảnh thực tế của sản phẩm được truyền qua tham số điều hướng (`productName`, `productImage`) thay vì sử dụng ảnh mẫu giày mặc định, mang lại trải nghiệm UX nhất quán và trực quan hơn.
+
+#### 5. **[components/product/review/write-review-fab.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/review/write-review-fab.tsx)**, **[components/product/detail/product-review-overview.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/detail/product-review-overview.tsx)**, & **[app/product/detail.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/product/detail.tsx)**
+*   **Thay đổi**: Mở rộng truyền dữ liệu tên và hình ảnh đại diện sản phẩm từ màn hình chi tiết sản phẩm qua danh sách đánh giá và dẫn tới form viết đánh giá, phục vụ cho việc hiển thị thông tin động.
+
+#### 6. **[app/_layout.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/_layout.tsx)**
+*   **Thay đổi**: Đăng ký component `Image` của `expo-image` với công cụ NativeWind v4 thông qua hàm `cssInterop` (`cssInterop(ExpoImage, { className: "style" })`). Điều này giải quyết triệt để lỗi ảnh sản phẩm không hiển thị (bị ẩn về kích thước 0) do NativeWind v4 không tự động ánh xạ thuộc tính `className` (như `h-[120px]`, `w-full`) sang thuộc tính `style` cho các component của bên thứ ba.
+
+#### 7. **[services/admin.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/services/admin.service.ts)**, **[services/auth.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/services/auth.service.ts)**, **[services/chat.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/services/chat.service.ts)**, **[services/customer.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/services/customer.service.ts)**, & **[services/main.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/services/main.service.ts)**
+*   **Thay đổi**: Tích hợp cơ chế tự động ghi nhớ và ưu tiên máy chủ phản hồi làm việc chính (Active API Base URL). Khi một yêu cầu fetch API thành công trên một candidate URL, URL đó sẽ được tự động đưa lên vị trí đầu tiên (index 0) của danh sách `API_BASE_URL_CANDIDATES`. Điều này loại bỏ hoàn toàn việc ứng dụng phải liên tục thử kết nối và chờ đợi timeout (10s+) trên các máy chủ local/máy ảo lỗi ở các request tiếp theo, giúp tăng tốc độ tải dữ liệu tức thì lên gấp nhiều lần.
+
+---
+
+## 📅 Bản Cập Nhật Trước: Tối Ưu Hóa Hiệu Năng Mobile (Shopify FlashList, Expo Image & Giải Phóng Tài Nguyên Bản Đồ)
 
 ### 📂 Chi tiết các file thay đổi (Modified Files)
 

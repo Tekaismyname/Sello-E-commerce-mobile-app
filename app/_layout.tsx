@@ -17,6 +17,12 @@ import { notificationStore } from "@/utils/notification-store";
 import { notificationService } from "@/services/customer.service";
 import { adminService } from "@/services/admin.service";
 
+import { cssInterop } from "nativewind";
+import { Image as ExpoImage } from "expo-image";
+
+// Register expo-image globally with NativeWind to support Tailwind class names
+cssInterop(ExpoImage, { className: "style" });
+
 // Detect if running inside Expo Go client to avoid native remote notification errors
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 

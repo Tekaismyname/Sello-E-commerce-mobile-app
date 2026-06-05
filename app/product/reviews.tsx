@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -10,11 +10,45 @@ import {
   ReviewSummary,
   WriteReviewFab,
 } from "@/components/product";
+import { useAuth } from "@/contexts/auth-context";
+import { orderService } from "@/services/customer.service";
 
 export default function ProductReviewsScreen() {
-  const params = useLocalSearchParams<{ id?: string; productId?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    productId?: string;
+    productName?: string;
+    productImage?: string;
+  }>();
   const [selectedFilter, setSelectedFilter] = useState("Tat ca");
   const productId = typeof params.id === "string" ? params.id : params.productId;
+  const productName = params.productName;
+  const productImage = params.productImage;
+
+  const { token } = useAuth();
+  const [isEligible, setIsEligible] = useState(false);
+
+  useEffect(() => {
+    if (!token || !productId) {
+      setIsEligible(false);
+      return;
+    }
+    const parsedProductId = Number(productId);
+    orderService
+      .getMyOrders(token)
+      .then((res) => {
+        const orders = res.data ?? [];
+        const hasDeliveredOrder = orders.some(
+          (order) =>
+            order.status === "delivered" &&
+            order.items.some((item) => item.productId === parsedProductId),
+        );
+        setIsEligible(hasDeliveredOrder);
+      })
+      .catch(() => {
+        setIsEligible(false);
+      });
+  }, [token, productId]);
 
   const filters = ["Tat ca", "5 Sao", "4 Sao", "3 Sao", "2 Sao", "1 Sao", "Co hinh anh"];
 
@@ -75,7 +109,13 @@ export default function ProductReviewsScreen() {
         <View className="h-[80px]" />
       </ScrollView>
 
-      <WriteReviewFab productId={productId} />
+      {isEligible ? (
+        <WriteReviewFab
+          productId={productId}
+          productName={productName}
+          productImage={productImage}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

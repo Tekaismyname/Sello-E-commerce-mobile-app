@@ -260,6 +260,8 @@ export default function OrderTrackingScreen() {
     [tracking?.timeline],
   );
 
+  const normalizedLatest = useMemo(() => latestStatus.toLowerCase().trim(), [latestStatus]);
+
   const mapOrigin = useMemo(
     () =>
       isValidCoordinate(tracking?.map?.origin)
@@ -350,73 +352,111 @@ export default function OrderTrackingScreen() {
               <Text className="mt-1 text-[13px] text-[#4B5563]">Lien he tai xe: {tracking.shipment.driverPhone}</Text>
             )}
 
-            <View className="mt-3 h-[250px] overflow-hidden rounded-[14px] bg-[#EAF1F7]">
-              {hasMap ? (
-                <>
-                  <WebView
-                    originWhitelist={["*"]}
-                    source={{ html: mapHtml }}
-                    style={{ flex: 1, backgroundColor: "#EAF1F7" }}
-                    scrollEnabled={false}
-                    nestedScrollEnabled={false}
-                    javaScriptEnabled
-                    domStorageEnabled
-                    setSupportMultipleWindows={false}
-                  />
-                  <View className="absolute left-3 right-3 top-3 flex-row items-center justify-between rounded-[12px] bg-white/95 px-3 py-2">
-                    <View className="flex-row items-center">
-                      <Feather name="navigation" size={14} color="#0F6CBD" />
-                      <Text className="ml-2 text-[12px] font-bold text-[#1F2934]">
-                        {tracking.map?.route.provider ?? "OSRM"}
+            {normalizedLatest === "cancelled" ? (
+              <View className="mt-3 items-center justify-center rounded-[14px] bg-[#FEF2F2] border border-[#FEE2E2] p-6 py-8">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-[#FEE2E2] mb-3">
+                  <Feather name="x-circle" size={24} color="#EF4444" />
+                </View>
+                <Text className="text-[15px] font-extrabold text-[#991B1B] text-center">
+                  Đơn hàng đã bị hủy
+                </Text>
+                <Text className="mt-1 text-[13px] leading-[19px] text-[#991B1B] opacity-80 text-center px-4">
+                  Đơn hàng đã hủy và không thể theo dõi hành trình giao nhận.
+                </Text>
+              </View>
+            ) : normalizedLatest === "returned" || normalizedLatest === "return_requested" ? (
+              <View className="mt-3 items-center justify-center rounded-[14px] bg-[#FFFBEB] border border-[#FEF3C7] p-6 py-8">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-[#FEF3C7] mb-3">
+                  <Feather name="rotate-ccw" size={24} color="#D97706" />
+                </View>
+                <Text className="text-[15px] font-extrabold text-[#92400E] text-center">
+                  Yêu cầu trả hàng
+                </Text>
+                <Text className="mt-1 text-[13px] leading-[19px] text-[#92400E] opacity-80 text-center px-4">
+                  Đơn hàng đang trong quy trình xử lý trả hàng hoàn tiền.
+                </Text>
+              </View>
+            ) : normalizedLatest !== "shipping" && normalizedLatest !== "delivered" ? (
+              <View className="mt-3 items-center justify-center rounded-[14px] bg-[#F1F5F9] border border-[#E2E8F0] p-6 py-8">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-[#E2E8F0] mb-3">
+                  <Feather name="box" size={24} color="#64748B" />
+                </View>
+                <Text className="text-[15px] font-extrabold text-[#1F2934] text-center">
+                  Đang chuẩn bị hàng
+                </Text>
+                <Text className="mt-1 text-[13px] leading-[19px] text-[#64748B] text-center px-4">
+                  Cửa hàng đang đóng gói sản phẩm. Lộ trình giao hàng trực tuyến sẽ xuất hiện khi đơn hàng được bàn giao cho đơn vị vận chuyển.
+                </Text>
+              </View>
+            ) : (
+              <View className="mt-3 h-[250px] overflow-hidden rounded-[14px] bg-[#EAF1F7]">
+                {hasMap ? (
+                  <>
+                    <WebView
+                      originWhitelist={["*"]}
+                      source={{ html: mapHtml }}
+                      style={{ flex: 1, backgroundColor: "#EAF1F7" }}
+                      scrollEnabled={false}
+                      nestedScrollEnabled={false}
+                      javaScriptEnabled
+                      domStorageEnabled
+                      setSupportMultipleWindows={false}
+                    />
+                    <View className="absolute left-3 right-3 top-3 flex-row items-center justify-between rounded-[12px] bg-white/95 px-3 py-2">
+                      <View className="flex-row items-center">
+                        <Feather name="navigation" size={14} color="#0F6CBD" />
+                        <Text className="ml-2 text-[12px] font-bold text-[#1F2934]">
+                          {tracking.map?.route.provider ?? "OSRM"}
+                        </Text>
+                      </View>
+                      <Text className="text-[12px] font-semibold text-[#64748B]">
+                        {[distanceText, durationText].filter(Boolean).join(" | ") || tracking.map?.route.status}
                       </Text>
                     </View>
-                    <Text className="text-[12px] font-semibold text-[#64748B]">
-                      {[distanceText, durationText].filter(Boolean).join(" | ") || tracking.map?.route.status}
-                    </Text>
-                  </View>
-                  <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white/95 p-3">
-                    <View className="flex-1 pr-3">
-                      <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
-                      <Text className="text-[15px] font-extrabold text-[#1F2934]" numberOfLines={1}>
-                        {tracking.shipment?.driverName ?? "Dang cap nhat"}
-                        {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
-                      </Text>
+                    <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white/95 p-3">
+                      <View className="flex-1 pr-3">
+                        <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
+                        <Text className="text-[15px] font-extrabold text-[#1F2934]" numberOfLines={1}>
+                          {tracking.shipment?.driverName ?? "Dang cap nhat"}
+                          {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
+                        </Text>
+                      </View>
+                      <View className="h-9 w-9 items-center justify-center rounded-full bg-[#E8F3FC]">
+                        <Feather name="phone-call" size={16} color="#0369A1" />
+                      </View>
                     </View>
-                    <View className="h-9 w-9 items-center justify-center rounded-full bg-[#E8F3FC]">
-                      <Feather name="phone-call" size={16} color="#0369A1" />
+                  </>
+                ) : (
+                  <>
+                    <View className="absolute left-0 right-0 top-[48px] h-[1px] bg-[#D5E1EB]" />
+                    <View className="absolute left-0 right-0 top-[112px] h-[1px] bg-[#D5E1EB]" />
+                    <View className="absolute left-0 right-0 top-[176px] h-[1px] bg-[#D5E1EB]" />
+                    <View className="absolute bottom-0 left-[72px] top-0 w-[1px] bg-[#D5E1EB]" />
+                    <View className="absolute bottom-0 left-[170px] top-0 w-[1px] bg-[#D5E1EB]" />
+                    <View className="absolute bottom-0 right-[72px] top-0 w-[1px] bg-[#D5E1EB]" />
+                    <View className="absolute left-8 right-10 top-[96px] h-[5px] rotate-[-10deg] rounded-full bg-[#8CC5E8]" />
+                    <View className="absolute left-[54px] top-[74px] h-10 w-10 items-center justify-center rounded-full bg-[#0F6CBD]">
+                      <Feather name="truck" size={18} color="white" />
                     </View>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View className="absolute left-0 right-0 top-[48px] h-[1px] bg-[#D5E1EB]" />
-                  <View className="absolute left-0 right-0 top-[112px] h-[1px] bg-[#D5E1EB]" />
-                  <View className="absolute left-0 right-0 top-[176px] h-[1px] bg-[#D5E1EB]" />
-                  <View className="absolute bottom-0 left-[72px] top-0 w-[1px] bg-[#D5E1EB]" />
-                  <View className="absolute bottom-0 left-[170px] top-0 w-[1px] bg-[#D5E1EB]" />
-                  <View className="absolute bottom-0 right-[72px] top-0 w-[1px] bg-[#D5E1EB]" />
-                  <View className="absolute left-8 right-10 top-[96px] h-[5px] rotate-[-10deg] rounded-full bg-[#8CC5E8]" />
-                  <View className="absolute left-[54px] top-[74px] h-10 w-10 items-center justify-center rounded-full bg-[#0F6CBD]">
-                    <Feather name="truck" size={18} color="white" />
-                  </View>
-                  <View className="absolute right-[48px] top-[118px] h-10 w-10 items-center justify-center rounded-full bg-[#E53935]">
-                    <Feather name="map-pin" size={18} color="white" />
-                  </View>
-                  <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white p-3">
-                    <View>
-                      <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
-                      <Text className="text-[15px] font-extrabold text-[#1F2934]">
-                        {tracking.shipment?.driverName ?? "Dang cap nhat"}{" "}
-                        {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
-                      </Text>
+                    <View className="absolute right-[48px] top-[118px] h-10 w-10 items-center justify-center rounded-full bg-[#E53935]">
+                      <Feather name="map-pin" size={18} color="white" />
                     </View>
-                    <View className="h-9 w-9 items-center justify-center rounded-full bg-[#E8F3FC]">
-                      <Feather name="phone-call" size={16} color="#0369A1" />
+                    <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white p-3">
+                      <View>
+                        <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
+                        <Text className="text-[15px] font-extrabold text-[#1F2934]">
+                          {tracking.shipment?.driverName ?? "Dang cap nhat"}{" "}
+                          {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
+                        </Text>
+                      </View>
+                      <View className="h-9 w-9 items-center justify-center rounded-full bg-[#E8F3FC]">
+                        <Feather name="phone-call" size={16} color="#0369A1" />
+                      </View>
                     </View>
-                  </View>
-                </>
-              )}
-            </View>
+                  </>
+                )}
+              </View>
+            )}
 
             {destinationInfo ? (
               <View className="mt-3 rounded-[12px] bg-[#F8FAFD] p-3">

@@ -257,6 +257,11 @@ async function requestMain<T>(path: string): Promise<T> {
 
     try {
       response = await fetch(`${baseUrl}${path}`);
+      const idx = API_BASE_URL_CANDIDATES.indexOf(baseUrl);
+      if (idx > 0) {
+        API_BASE_URL_CANDIDATES.splice(idx, 1);
+        API_BASE_URL_CANDIDATES.unshift(baseUrl);
+      }
       break;
     } catch {
       continue;

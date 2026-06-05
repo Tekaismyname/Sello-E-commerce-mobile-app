@@ -48,6 +48,11 @@ async function requestAuth<T>(
           ...(init?.headers ?? {}),
         },
       });
+      const idx = API_BASE_URL_CANDIDATES.indexOf(baseUrl);
+      if (idx > 0) {
+        API_BASE_URL_CANDIDATES.splice(idx, 1);
+        API_BASE_URL_CANDIDATES.unshift(baseUrl);
+      }
       break;
     } catch {
       continue;
@@ -99,6 +104,11 @@ async function requestPublic<T>(path: string, init?: RequestInit): Promise<T> {
           ...(init?.headers ?? {}),
         },
       });
+      const idx = API_BASE_URL_CANDIDATES.indexOf(baseUrl);
+      if (idx > 0) {
+        API_BASE_URL_CANDIDATES.splice(idx, 1);
+        API_BASE_URL_CANDIDATES.unshift(baseUrl);
+      }
       break;
     } catch {
       continue;
@@ -892,5 +902,16 @@ export const orderService = {
         expiresAt: typeof data.expiresAt === "string" ? toDateString(data.expiresAt) : null,
       } satisfies MockPaymentStatus,
     };
+  },
+
+  capturePaypalOrder(token: string, paymentId: number, paypalOrderId: string) {
+    return requestAuth<{ message: string; status: string; data?: any }>(
+      "/payments/paypal/capture",
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({ paymentId, paypalOrderId }),
+      },
+    );
   },
 };

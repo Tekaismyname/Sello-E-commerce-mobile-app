@@ -158,6 +158,25 @@ export default function OrderDetailScreen() {
                           </Text>
                           <Text className="text-[12px] text-[#64748B]">x{item.quantity}</Text>
                         </View>
+                        {order.status === "delivered" && (
+                          <View className="mt-2 flex-row justify-end">
+                            <Pressable
+                              className="rounded-full bg-[#0369A1] px-3.5 py-1.5 active:opacity-90"
+                              onPress={() =>
+                                router.push({
+                                  pathname: "/product/write-review",
+                                  params: {
+                                    productId: item.productId,
+                                    productName: item.productName,
+                                    productImage: imgSource,
+                                  },
+                                } as any)
+                              }
+                            >
+                              <Text className="text-[11px] font-bold text-white">Viết đánh giá</Text>
+                            </Pressable>
+                          </View>
+                        )}
                       </View>
                     </View>
                   );

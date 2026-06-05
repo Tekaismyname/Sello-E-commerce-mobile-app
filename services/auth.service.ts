@@ -39,6 +39,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
           ...(init?.headers ?? {}),
         },
       });
+      const idx = API_BASE_URL_CANDIDATES.indexOf(baseUrl);
+      if (idx > 0) {
+        API_BASE_URL_CANDIDATES.splice(idx, 1);
+        API_BASE_URL_CANDIDATES.unshift(baseUrl);
+      }
       break;
     } catch {
       continue;
@@ -74,6 +79,11 @@ async function resolveReachableBaseUrl(): Promise<string> {
     try {
       const response = await fetch(`${baseUrl}/home`, { method: "GET" });
       if (response.ok) {
+        const idx = API_BASE_URL_CANDIDATES.indexOf(baseUrl);
+        if (idx > 0) {
+          API_BASE_URL_CANDIDATES.splice(idx, 1);
+          API_BASE_URL_CANDIDATES.unshift(baseUrl);
+        }
         return baseUrl;
       }
     } catch {

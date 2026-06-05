@@ -148,7 +148,11 @@ export default function ProductDetailScreen() {
 
         <View className="h-2 w-full bg-[#f3f5f8]" />
 
-        <ProductReviewOverview productId={String(product.id)} />
+        <ProductReviewOverview
+          productId={String(product.id)}
+          productName={product.name}
+          productImage={product.primaryImageUrl ?? ""}
+        />
 
         <View className="h-[80px]" />
       </ScrollView>

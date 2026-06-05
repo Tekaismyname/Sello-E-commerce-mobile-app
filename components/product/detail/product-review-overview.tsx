@@ -4,14 +4,27 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 type ProductReviewOverviewProps = {
   productId: string;
+  productName?: string;
+  productImage?: string;
 };
 
-export function ProductReviewOverview({ productId }: ProductReviewOverviewProps) {
+export function ProductReviewOverview({ productId, productName, productImage }: ProductReviewOverviewProps) {
   return (
     <View className="bg-white py-5">
       <View className="mb-4 flex-row items-center justify-between px-4">
         <Text className="text-[16px] font-extrabold uppercase tracking-wider text-[#191C1F]">Đánh giá thực tế</Text>
-        <Pressable onPress={() => router.push(`/product/reviews?id=${productId}` as Href)}>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/product/reviews",
+              params: {
+                id: productId,
+                productName,
+                productImage,
+              },
+            } as any)
+          }
+        >
           <Text className="text-[14px] font-bold text-[#006397]">Xem tất cả</Text>
         </Pressable>
       </View>
