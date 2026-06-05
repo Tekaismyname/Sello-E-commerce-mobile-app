@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { triggerLocalNotification } from "@/utils/local-notification";
 
 export default function AddressFormScreen() {
   const { token } = useAuth();
@@ -33,7 +34,7 @@ export default function AddressFormScreen() {
             } else {
               await createAddress(payload);
             }
-            Alert.alert("Thành công", "Đã lưu địa chỉ.");
+            triggerLocalNotification("Thành công! 🎉", "Địa chỉ giao hàng của bạn đã được cập nhật thành công.");
             router.back();
           } catch (err: any) {
             Alert.alert("Lỗi", err?.message ?? "Không thể lưu địa chỉ.");

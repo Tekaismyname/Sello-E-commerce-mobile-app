@@ -1,6 +1,7 @@
 import { Href, router, useLocalSearchParams } from "expo-router";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FlashList } from "@shopify/flash-list";
 import {
   FilterChipDropdown,
   FilterChipGroup,
@@ -41,49 +42,68 @@ export default function ProductListScreen() {
       {!loading && error ? <MainErrorState message={error} /> : null}
 
       {!loading ? (
-        <ScrollView className="flex-1" contentContainerClassName="px-4 pb-6" showsVerticalScrollIndicator={false}>
-          <ProductListHeaderInfo
-            trail="Trang chủ > Danh mục"
-            keyword={searchKeyword || "Tất cả sản phẩm"}
-            totalText={`${filteredProducts.length} sản phẩm được tìm thấy`}
+        <View style={{ flex: 1 }}>
+          <FlashList
+            data={visibleProducts}
+            numColumns={2}
+            keyExtractor={(item, index) => `${item.id}-${index}`}
+            renderItem={({ item, index }) => (
+              <View
+                style={{
+                  flex: 1,
+                  paddingLeft: index % 2 === 0 ? 0 : 6,
+                  paddingRight: index % 2 === 0 ? 6 : 0,
+                  marginBottom: 12,
+                }}
+              >
+                <ProductListCard product={item} />
+              </View>
+            )}
+            ListHeaderComponent={
+              <View style={{ paddingBottom: 8 }}>
+                <ProductListHeaderInfo
+                  trail="Trang chủ > Danh mục"
+                  keyword={searchKeyword || "Tất cả sản phẩm"}
+                  totalText={`${filteredProducts.length} sản phẩm được tìm thấy`}
+                />
+
+                <FilterChipGroup chips={chips} openChipId={openChipId} onPressChip={handleOpenChip} />
+
+                {openChipId ? <FilterChipDropdown options={dropdownOptions} onSelect={applyDropdownOption} /> : null}
+
+                <SortTabGroup tabs={["Phổ biến", "Bán chạy", "Giá thấp > cao"]} />
+              </View>
+            }
+            ListEmptyComponent={
+              <View className="mt-4 rounded-[12px] bg-white px-4 py-5">
+                <Text className="text-center text-[13px] font-semibold text-[#6b7682]">
+                  Không tìm thấy sản phẩm phù hợp với từ khóa này.
+                </Text>
+              </View>
+            }
+            ListFooterComponent={
+              <View style={{ paddingTop: 8 }}>
+                {visibleProducts.length > 2 ? <InlinePromoBanner /> : null}
+
+                {hasMore ? (
+                  <Pressable
+                    className="mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5] mb-2"
+                    onPress={handleLoadMore}
+                    disabled={loadingMore}
+                  >
+                    <Text className="text-[14px] font-bold text-[#3077d8]">
+                      {loadingMore ? "Đang tải thêm..." : "Xem thêm sản phẩm"}
+                    </Text>
+                  </Pressable>
+                ) : null}
+
+                <ProductListFooterLoading visible={loadingMore} />
+              </View>
+            }
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
           />
-
-          <FilterChipGroup chips={chips} openChipId={openChipId} onPressChip={handleOpenChip} />
-
-          {openChipId ? <FilterChipDropdown options={dropdownOptions} onSelect={applyDropdownOption} /> : null}
-
-          <SortTabGroup tabs={["Phổ biến", "Bán chạy", "Giá thấp > cao"]} />
-
-          <View className="mt-3 flex-row flex-wrap justify-between gap-y-3">
-            {visibleProducts.map((product, index) => (
-              <ProductListCard key={`${product.id}-${index}`} product={product} />
-            ))}
-          </View>
-
-          {visibleProducts.length === 0 ? (
-            <View className="mt-4 rounded-[12px] bg-white px-4 py-5">
-              <Text className="text-center text-[13px] font-semibold text-[#6b7682]">
-                Không tìm thấy sản phẩm phù hợp với từ khóa này.
-              </Text>
-            </View>
-          ) : null}
-
-          {visibleProducts.length > 2 ? <InlinePromoBanner /> : null}
-
-          {hasMore ? (
-            <Pressable
-              className="mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5]"
-              onPress={handleLoadMore}
-              disabled={loadingMore}
-            >
-              <Text className="text-[14px] font-bold text-[#3077d8]">
-                {loadingMore ? "Đang tải thêm..." : "Xem thêm sản phẩm"}
-              </Text>
-            </Pressable>
-          ) : null}
-
-          <ProductListFooterLoading visible={loadingMore} />
-        </ScrollView>
+        </View>
       ) : null}
     </SafeAreaView>
   );

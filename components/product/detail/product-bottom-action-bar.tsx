@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { UIButton } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import { triggerLocalNotification } from "@/utils/local-notification";
 
 type ProductBottomActionBarProps = {
   productId: number;
@@ -48,7 +49,17 @@ export function ProductBottomActionBar({
 
   const addToCart = async (goCheckout = false) => {
     if (!token) {
-      Alert.alert("Lỗi", "Vui lòng đăng nhập để tiếp tục.");
+      Alert.alert(
+        "Yêu cầu đăng nhập",
+        "Bạn cần đăng nhập tài khoản Sello để thực hiện chức năng này.",
+        [
+          { text: "Để sau", style: "cancel" },
+          {
+            text: "Đăng nhập ngay",
+            onPress: () => router.push("/auth/login" as Href),
+          },
+        ]
+      );
       return;
     }
 
@@ -62,7 +73,7 @@ export function ProductBottomActionBar({
       if (goCheckout) {
         router.push("/main/checkout" as Href);
       } else {
-        Alert.alert("Thành công", "Đã thêm sản phẩm vào giỏ hàng.");
+        triggerLocalNotification("Thêm vào giỏ hàng thành công 🛒", "Sản phẩm đã được thêm vào giỏ hàng của bạn.");
       }
     } catch (err: any) {
       Alert.alert("Lỗi", err.message ?? "Không thể thêm vào giỏ hàng.");
@@ -71,7 +82,17 @@ export function ProductBottomActionBar({
 
   const toggleWishlist = async () => {
     if (!token) {
-      Alert.alert("Lỗi", "Vui lòng đăng nhập để tiếp tục.");
+      Alert.alert(
+        "Yêu cầu đăng nhập",
+        "Bạn cần đăng nhập tài khoản Sello để thực hiện chức năng này.",
+        [
+          { text: "Để sau", style: "cancel" },
+          {
+            text: "Đăng nhập ngay",
+            onPress: () => router.push("/auth/login" as Href),
+          },
+        ]
+      );
       return;
     }
 
@@ -86,9 +107,9 @@ export function ProductBottomActionBar({
 
       const latest = await wishlistService.getWishlist(token);
       setWishlistItems((latest.data ?? []).map((item) => ({ id: item.id, productId: item.productId })));
-      Alert.alert(
-        "Thành công",
-        existingWishlistItem ? "Đã xóa khỏi danh sách yêu thích." : "Đã thêm vào danh sách yêu thích.",
+      triggerLocalNotification(
+        "Danh sách yêu thích ❤️",
+        existingWishlistItem ? "Đã xóa sản phẩm khỏi danh sách yêu thích." : "Đã thêm sản phẩm vào danh sách yêu thích.",
       );
     } catch (err: any) {
       Alert.alert("Lỗi", err.message ?? "Không thể cập nhật danh sách yêu thích.");

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Feather } from "@expo/vector-icons";
-import { Image, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { Href, router } from "expo-router";
 import { ProductCard } from "@/types/main";
 
 type FlashSalesSectionProps = {
@@ -44,37 +46,59 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
   );
 
   return (
-    <View className="mb-5 rounded-[16px] bg-[#f4eefe] px-3 py-3">
-      <View className="mb-2 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          <Feather name="zap" size={16} color="#7d2de2" />
-          <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">FLASH</Text>
-          <Text className="text-[29px] font-extrabold leading-[30px] text-[#43146f]">SALE</Text>
+    <View className="mb-5 rounded-[16px] bg-[#FFF3F0] px-3 py-3 border border-[#FFE5DF]">
+      <View className="mb-3 flex-row items-center justify-between">
+        <View className="flex-row items-center gap-1.5">
+          <Feather name="zap" size={18} color="#EE4D2D" />
+          <Text className="text-[20px] font-black tracking-tighter text-[#EE4D2D] uppercase">FLASH SALE</Text>
         </View>
-        <View className="flex-row gap-1">
+        <View className="flex-row items-center gap-1">
           {displayedCountdown.map((value, index) => (
-            <View key={`${value}-${index}`} className="min-w-[24px] rounded-full bg-[#8f46e9] px-2 py-[3px]">
-              <Text className="text-center text-[11px] font-extrabold text-white">{value}</Text>
+            <View key={`${value}-${index}`} className="flex-row items-center">
+              <View className="min-w-[22px] h-[20px] justify-center items-center rounded-[4px] bg-[#222222] px-1">
+                <Text className="text-center text-[11px] font-black text-white">{value}</Text>
+              </View>
+              {index < 2 && <Text className="mx-[2px] font-extrabold text-[#EE4D2D] text-[12px] self-center">:</Text>}
             </View>
           ))}
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3">
-        {products.map((product, index) => (
-          <View key={`${product.id}-${index}`} className="w-[120px] overflow-hidden rounded-[12px] bg-white pb-3">
-            <View className="relative h-[84px]">
-              <Image source={{ uri: product.imageUrl }} className="h-full w-full" resizeMode="cover" />
-              {product.badge ? (
-                <View className="absolute left-1.5 top-1 rounded-full bg-[#f34545] px-1.5 py-[2px]">
-                  <Text className="text-[9px] font-bold text-white">{product.badge}</Text>
-                </View>
-              ) : null}
-            </View>
-            <Text className="px-2 pt-2 text-[13px] font-bold leading-[16px] text-[#1770ca]">{product.price}</Text>
-            <Text className="px-2 pt-1 text-[10px] text-[#6e7885]">{product.subtitle}</Text>
-          </View>
-        ))}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 py-1">
+        {products.map((product, index) => {
+          const percent = 30 + (index % 7) * 10;
+          return (
+            <Pressable
+              key={`${product.id}-${index}`}
+              onPress={() => router.push(`/product/detail?id=${product.id}` as Href)}
+              className="w-[120px] overflow-hidden rounded-[12px] bg-white pb-3 shadow-[0px_4px_10px_rgba(0,0,0,0.03)] border border-[#FFE5DF]"
+              style={({ pressed }) => ({
+                transform: [{ scale: pressed ? 0.96 : 1 }],
+              })}
+            >
+              <View className="relative h-[84px] w-full bg-[#f3f5fa]">
+                <Image source={{ uri: product.imageUrl }} className="h-full w-full" contentFit="cover" />
+                {product.badge ? (
+                  <View className="absolute left-0 top-0 rounded-br-[8px] bg-[#EE4D2D] px-2 py-[2.5px]">
+                    <Text className="text-[9px] font-black text-white">{product.badge}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text className="px-2 pt-2 text-[12px] font-black leading-[16px] text-[#EE4D2D]">{product.price}</Text>
+              
+              {/* Shopee Progress Bar */}
+              <View className="mx-2 mt-2 h-[13px] justify-center overflow-hidden rounded-full bg-[#FFE5DF] relative border border-[#EE4D2D]/10">
+                <View
+                  style={{ width: `${percent}%` }}
+                  className="absolute left-0 top-0 h-full rounded-full bg-[#EE4D2D]"
+                />
+                <Text className="absolute w-full text-center text-[7.5px] font-black uppercase text-white z-10">
+                  {percent > 80 ? "Sắp cháy hàng" : `Đang bán chạy`}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );

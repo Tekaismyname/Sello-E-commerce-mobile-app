@@ -10,6 +10,7 @@ import {
   CartSummaryCard,
 } from "@/components/main/cart";
 import { SelloHeader } from "@/components/main/sello-header";
+import { GuestPlaceholder } from "@/components/ui";
 import { useAuth } from "@/contexts/auth-context";
 import { cartService } from "@/services/customer.service";
 import { Cart, CartItem } from "@/types/customer";
@@ -112,10 +113,18 @@ export default function CartScreen() {
         <Text className="text-[30px] font-extrabold text-[#1f2934]">Giỏ hàng</Text>
 
         {loading ? <CartLoadingState /> : null}
-        {!loading && error ? <CartErrorState message={error} /> : null}
-        {!loading && !error && cart && cart.items.length === 0 ? <CartEmptyState /> : null}
+        {!loading && !token ? (
+          <GuestPlaceholder
+            icon="shopping-cart"
+            title="Giỏ hàng trống"
+            description="Hãy đăng nhập tài khoản Sello để xem các sản phẩm trong giỏ hàng của bạn nhé!"
+          />
+        ) : !loading && error ? (
+          <CartErrorState message={error} />
+        ) : null}
+        {!loading && token && !error && cart && cart.items.length === 0 ? <CartEmptyState /> : null}
 
-        {!loading && !error && cart && cart.items.length > 0 ? (
+        {!loading && token && !error && cart && cart.items.length > 0 ? (
           <View className="mt-4 gap-3">
             {cart.items.map((item) => (
               <CartItemCard

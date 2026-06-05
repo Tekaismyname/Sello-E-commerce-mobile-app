@@ -22,6 +22,9 @@ export function FeaturedCategoriesSection({ categories }: FeaturedCategoriesSect
           <Pressable
             key={item.id}
             className="w-[18.5%] items-center"
+            style={({ pressed }) => ({
+              transform: [{ scale: pressed ? 0.94 : 1 }],
+            })}
             onPress={() =>
               router.push((`/main/product-list?keyword=${encodeURIComponent(item.label)}` as unknown) as Href)
             }

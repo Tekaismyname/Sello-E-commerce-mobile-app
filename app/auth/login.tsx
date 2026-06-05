@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthButton } from "@/components/auth/auth-button";
 import { AuthMessage } from "@/components/auth/auth-message";
 import { SelloAuthLogo } from "@/components/auth/sello-auth-logo";
@@ -18,12 +19,14 @@ import { SocialAuthOptions } from "@/components/auth/social-auth-options";
 import { useAuthAction } from "@/hooks/auth/use-auth-action";
 import { authService } from "@/services/auth.service";
 import { useAuth } from "@/contexts/auth-context";
+import { triggerLocalNotification } from "@/utils/local-notification";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const {
     loading,
     errorMessage,
@@ -32,6 +35,24 @@ export default function LoginScreen() {
     setSuccessMessage,
     runAuthAction,
   } = useAuthAction();
+
+  useEffect(() => {
+    const loadSavedCredentials = async () => {
+      try {
+        const savedRemember = await AsyncStorage.getItem("sello_remember_me");
+        if (savedRemember === "true") {
+          const savedId = await AsyncStorage.getItem("sello_saved_identifier");
+          const savedPw = await AsyncStorage.getItem("sello_saved_password");
+          if (savedId) setIdentifier(savedId);
+          if (savedPw) setPassword(savedPw);
+          setRememberMe(true);
+        }
+      } catch (err) {
+        console.warn("Error loading saved credentials:", err);
+      }
+    };
+    loadSavedCredentials();
+  }, []);
 
   const submitLogin = async () => {
     setErrorMessage("");
@@ -50,6 +71,26 @@ export default function LoginScreen() {
 
       // Persist tokens + user to AsyncStorage
       await signIn(response);
+
+      // Lưu lại hoặc xóa thông tin đăng nhập tùy vào rememberMe
+      try {
+        if (rememberMe) {
+          await AsyncStorage.setItem("sello_remember_me", "true");
+          await AsyncStorage.setItem("sello_saved_identifier", identifier.trim());
+          await AsyncStorage.setItem("sello_saved_password", password);
+        } else {
+          await AsyncStorage.removeItem("sello_remember_me");
+          await AsyncStorage.removeItem("sello_saved_identifier");
+          await AsyncStorage.removeItem("sello_saved_password");
+        }
+      } catch (err) {
+        console.warn("Error persisting saved credentials:", err);
+      }
+
+      triggerLocalNotification(
+        "Đăng nhập thành công 🎉",
+        `Chào mừng ${response.user.fullName} quay trở lại với Sello!`
+      );
 
       setSuccessMessage(`Login success: ${response.user.fullName}`);
       const normalizedRole = response.user.role?.trim().toLowerCase();
@@ -154,6 +195,21 @@ export default function LoginScreen() {
                 </Pressable>
               </View>
             </View>
+
+            {/* Remember Me Checkbox */}
+            <Pressable
+              onPress={() => setRememberMe((prev) => !prev)}
+              className="mt-1 flex-row items-center gap-2.5 px-1 py-1 active:opacity-75"
+            >
+              <View
+                className={`h-5 w-5 items-center justify-center rounded-[6px] border ${
+                  rememberMe ? "border-[#157bb8] bg-[#157bb8]" : "border-[#d9dadf] bg-white"
+                }`}
+              >
+                {rememberMe && <Feather name="check" size={12} color="white" />}
+              </View>
+              <Text className="text-[14px] font-semibold text-[#3f4850]">Ghi nhớ đăng nhập</Text>
+            </Pressable>
 
             <AuthMessage kind="error" text={errorMessage} />
             <AuthMessage kind="success" text={successMessage} />

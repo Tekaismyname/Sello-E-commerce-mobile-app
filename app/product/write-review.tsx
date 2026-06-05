@@ -11,6 +11,7 @@ import {
 import { ReviewImageUploader } from "@/components/product/review/review-image-uploader";
 import { useAuth } from "@/contexts/auth-context";
 import { reviewService } from "@/services/customer.service";
+import { triggerLocalNotification } from "@/utils/local-notification";
 
 export default function WriteReviewScreen() {
   const params = useLocalSearchParams<{ productId?: string; id?: string }>();
@@ -49,6 +50,8 @@ export default function WriteReviewScreen() {
         rating,
         comment: reviewText || undefined,
       });
+
+      triggerLocalNotification("Đánh giá thành công! 🌟", "Cảm ơn bạn đã đóng góp ý kiến cho sản phẩm này.");
 
       Alert.alert("Thành công", "Đánh giá đã được gửi!", [
         { text: "OK", onPress: () => router.back() },

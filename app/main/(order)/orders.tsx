@@ -11,6 +11,7 @@ import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GuestPlaceholder } from "@/components/ui";
 
 export default function OrdersScreen() {
   const { token } = useAuth();
@@ -57,39 +58,49 @@ export default function OrdersScreen() {
           Theo dõi và quản lý lịch sử mua sắm một cách dễ dàng.
         </Text>
 
-        <OrderFilterTabs value={filter} onChange={setFilter} />
+        {!token ? (
+          <GuestPlaceholder
+            icon="package"
+            title="Quản lý đơn hàng"
+            description="Hãy đăng nhập tài khoản Sello để theo dõi đơn hàng và xem lịch sử mua sắm của bạn!"
+          />
+        ) : (
+          <>
+            <OrderFilterTabs value={filter} onChange={setFilter} />
 
-        {loading && (
-          <View className="mt-10 items-center">
-            <ActivityIndicator size="large" color="#0369A1" />
-          </View>
-        )}
-
-        {!loading && error && (
-          <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">{error}</Text>
-          </View>
-        )}
-
-        {!loading && !error && (
-          <View className="mt-4 gap-3">
-            {filteredOrders.map((order) => (
-              <CustomerOrderCard
-                key={order.id}
-                order={order}
-                onOpenDetail={openOrderDetail}
-                onOpenTracking={openOrderTracking}
-                onCancel={handleCancel}
-              />
-            ))}
-
-            {!filteredOrders.length && (
-              <View className="items-center rounded-[16px] bg-white p-6">
-                <Feather name="package" size={42} color="#B6C1CD" />
-                <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chưa có đơn hàng phù hợp</Text>
+            {loading && (
+              <View className="mt-10 items-center">
+                <ActivityIndicator size="large" color="#0369A1" />
               </View>
             )}
-          </View>
+
+            {!loading && error && (
+              <View className="mt-4 rounded-[14px] bg-white p-4">
+                <Text className="text-[14px] font-semibold text-[#B91C1C]">{error}</Text>
+              </View>
+            )}
+
+            {!loading && !error && (
+              <View className="mt-4 gap-3">
+                {filteredOrders.map((order) => (
+                  <CustomerOrderCard
+                    key={order.id}
+                    order={order}
+                    onOpenDetail={openOrderDetail}
+                    onOpenTracking={openOrderTracking}
+                    onCancel={handleCancel}
+                  />
+                ))}
+
+                {!filteredOrders.length && (
+                  <View className="items-center rounded-[16px] bg-white p-6">
+                    <Feather name="package" size={42} color="#B6C1CD" />
+                    <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chưa có đơn hàng phù hợp</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </>
         )}
 
         <RecommendedProducts products={homeData?.suggestedProducts ?? []} />

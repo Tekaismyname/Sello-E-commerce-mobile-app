@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { addressService } from "@/services/customer.service";
 import { Address, CreateAddressPayload, UpdateAddressPayload } from "@/types/customer";
 
-export function useAddressesView(token: string) {
+export function useAddressesView(token: string, options?: { lazy?: boolean }) {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,8 +28,10 @@ export function useAddressesView(token: string) {
   }, [token]);
 
   useEffect(() => {
-    fetchAddresses();
-  }, [fetchAddresses]);
+    if (!options?.lazy) {
+      fetchAddresses();
+    }
+  }, [fetchAddresses, options?.lazy]);
 
   const createAddress = useCallback(
     async (payload: CreateAddressPayload) => {

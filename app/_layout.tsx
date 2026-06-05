@@ -139,8 +139,8 @@ function RootLayoutInner() {
             }
           }
         } else {
-          // Admin view
-          const response = await adminService.listNotifications(token);
+          // Admin view: Poll personal notifications (e.g. customer contact requests) instead of system-wide list
+          const response = await notificationService.getNotifications(token);
           const unreadCount = response.data.filter((n) => !n.isRead).length;
           notificationStore.setAdminCount(unreadCount);
 
@@ -157,14 +157,14 @@ function RootLayoutInner() {
                   // Direct in-app alert fallback for Admin in Expo Go
                   Alert.alert(
                     item.title,
-                    item.content || "Có thông báo hệ thống mới!"
+                    item.content || "Bạn có thông báo mới!"
                   );
                 } else {
                   try {
                     await Notifications.scheduleNotificationAsync({
                       content: {
                         title: item.title,
-                        body: item.content || "Có thông báo hệ thống mới!",
+                        body: item.content || "Bạn có thông báo mới!",
                         sound: true,
                         badge: unreadCount,
                       },
@@ -174,7 +174,7 @@ function RootLayoutInner() {
                     console.warn("expo-notifications fallback activated for Admin:", e);
                     Alert.alert(
                       item.title,
-                      item.content || "Có thông báo hệ thống mới!"
+                      item.content || "Bạn có thông báo mới!"
                     );
                   }
                 }

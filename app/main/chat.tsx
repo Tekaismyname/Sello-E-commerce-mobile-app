@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/auth-context";
+import { GuestPlaceholder } from "@/components/ui";
 import { chatService } from "@/services/chat.service";
 import { ChatMessage, ChatRoom } from "@/types/chat";
 import { io, Socket } from "socket.io-client";
@@ -287,81 +288,89 @@ export default function CustomerChatScreen() {
       </View>
 
       {/* Messages */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.message_id.toString()}
-          renderItem={renderMessageItem}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-20">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-[#EAF4FF] mb-4">
-                <Feather name="message-circle" size={32} color="#2d6dff" />
-              </View>
-              <Text className="text-[16px] font-extrabold text-[#191C1F]">Chào bạn!</Text>
-              <Text className="mt-1 text-center text-[13px] leading-5 text-[#607080] px-8">
-                Gửi tin nhắn bên dưới để nhận hỗ trợ trực tiếp từ tư vấn viên Sello nhé.
-              </Text>
-            </View>
-          }
+      {!token ? (
+        <GuestPlaceholder
+          icon="message-circle"
+          title="Trò chuyện hỗ trợ"
+          description="Hãy đăng nhập tài khoản Sello để bắt đầu trò chuyện trực tuyến với đội ngũ chăm sóc khách hàng của chúng tôi!"
         />
+      ) : (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1"
+          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        >
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.message_id.toString()}
+            renderItem={renderMessageItem}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center py-20">
+                <View className="h-16 w-16 items-center justify-center rounded-full bg-[#EAF4FF] mb-4">
+                  <Feather name="message-circle" size={32} color="#2d6dff" />
+                </View>
+                <Text className="text-[16px] font-extrabold text-[#191C1F]">Chào bạn!</Text>
+                <Text className="mt-1 text-center text-[13px] leading-5 text-[#607080] px-8">
+                  Gửi tin nhắn bên dưới để nhận hỗ trợ trực tiếp từ tư vấn viên Sello nhé.
+                </Text>
+              </View>
+            }
+          />
 
-        {mediaUploading && (
-          <View className="flex-row items-center justify-center bg-white py-2 border-t border-[#E7EEF5] gap-2">
-            <ActivityIndicator size="small" color="#2d6dff" />
-            <Text className="text-[12px] text-[#607080] font-semibold">Đang tải tệp đính kèm...</Text>
+          {mediaUploading && (
+            <View className="flex-row items-center justify-center bg-white py-2 border-t border-[#E7EEF5] gap-2">
+              <ActivityIndicator size="small" color="#2d6dff" />
+              <Text className="text-[12px] text-[#607080] font-semibold">Đang tải tệp đính kèm...</Text>
+            </View>
+          )}
+
+          {/* Input Bar */}
+          <View className="border-t border-[#E7EEF5] bg-white px-4 py-3">
+            <View className="flex-row items-center gap-2">
+              {/* Image Attach Button */}
+              <Pressable
+                onPress={() => handlePickMedia("image")}
+                disabled={mediaUploading}
+                className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF]"
+              >
+                <Feather name="image" size={17} color="#2d6dff" />
+              </Pressable>
+
+              {/* Video Attach Button */}
+              <Pressable
+                onPress={() => handlePickMedia("video")}
+                disabled={mediaUploading}
+                className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF] mr-1"
+              >
+                <Feather name="video" size={17} color="#2d6dff" />
+              </Pressable>
+
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                placeholder="Nhập tin nhắn..."
+                placeholderTextColor="#97A0AB"
+                multiline
+                maxLength={500}
+                className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F6F8FC] px-4 py-2 text-[14px] text-[#191C1F]"
+              />
+              <Pressable
+                onPress={handleSend}
+                disabled={!text.trim() || mediaUploading}
+                className={`h-10 w-10 items-center justify-center rounded-full ${
+                  text.trim() && !mediaUploading ? "bg-[#2d6dff]" : "bg-[#E7EEF5]"
+                }`}
+              >
+                <Feather name="send" size={16} color={text.trim() && !mediaUploading ? "white" : "#97A0AB"} />
+              </Pressable>
+            </View>
           </View>
-        )}
-
-        {/* Input Bar */}
-        <View className="border-t border-[#E7EEF5] bg-white px-4 py-3">
-          <View className="flex-row items-center gap-2">
-            {/* Image Attach Button */}
-            <Pressable
-              onPress={() => handlePickMedia("image")}
-              disabled={mediaUploading}
-              className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF]"
-            >
-              <Feather name="image" size={17} color="#2d6dff" />
-            </Pressable>
-
-            {/* Video Attach Button */}
-            <Pressable
-              onPress={() => handlePickMedia("video")}
-              disabled={mediaUploading}
-              className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF] mr-1"
-            >
-              <Feather name="video" size={17} color="#2d6dff" />
-            </Pressable>
-
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              placeholder="Nhập tin nhắn..."
-              placeholderTextColor="#97A0AB"
-              multiline
-              maxLength={500}
-              className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F6F8FC] px-4 py-2 text-[14px] text-[#191C1F]"
-            />
-            <Pressable
-              onPress={handleSend}
-              disabled={!text.trim() || mediaUploading}
-              className={`h-10 w-10 items-center justify-center rounded-full ${
-                text.trim() && !mediaUploading ? "bg-[#2d6dff]" : "bg-[#E7EEF5]"
-              }`}
-            >
-              <Feather name="send" size={16} color={text.trim() && !mediaUploading ? "white" : "#97A0AB"} />
-            </Pressable>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
 }

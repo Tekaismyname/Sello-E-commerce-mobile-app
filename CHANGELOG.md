@@ -4,7 +4,151 @@ Tài liệu này ghi nhận chi tiết danh sách tất cả các file được 
 
 ---
 
-## 📅 Bản Cập Nhật Mới Nhất: Đồng Bộ Ảnh Đơn Hàng & Giao Diện Quản Lý Đơn Hàng Admin Kiểu Shopee
+## 📅 Bản Cập Nhật Mới Nhất: Tối Ưu Hóa Hiệu Năng Mobile (Shopify FlashList, Expo Image & Giải Phóng Tài Nguyên Bản Đồ)
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[app/main/(catalog)/product-list.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/(catalog)/product-list.tsx)**
+*   **Thay đổi**: Refactor từ việc sử dụng `ScrollView` kết hợp với `.map()` sang sử dụng `<FlashList>` của Shopify với cấu hình `numColumns={2}` giúp cải thiện hiệu năng cuộn, tái sử dụng phần tử vẽ (view recycling) hiệu quả. Lược bỏ thuộc tính `estimatedItemSize` do dự án đang dùng **FlashList v2.x** (tự động tính toán kích thước phần tử và tối ưu cho kiến trúc React Native mới).
+
+#### 2. **[components/product/list/product-list-card.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/list/product-list-card.tsx)**
+*   **Thay đổi**: 
+    *   Chuyển đổi thẻ sản phẩm sang sử dụng `w-full` thay vì các giá trị phần trăm cố định để tự động kéo giãn vừa vặn theo chiều rộng của cột FlashList.
+    *   Chuyển đổi component hiển thị ảnh sang `expo-image` để tối ưu bộ nhớ đệm và hiển thị ảnh mượt mà, sử dụng `contentFit="cover"` thay cho `resizeMode`.
+
+#### 3. **[components/product/list/suggested-product-card.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/list/suggested-product-card.tsx)**
+*   **Thay đổi**: Chuyển đổi component `Image` sang `expo-image` để nâng cao hiệu năng lưu đệm hình ảnh và giảm tải thời gian dựng khung hình khi cuộn nhanh.
+
+#### 4. **[components/main/home/flash-sales-section.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/home/flash-sales-section.tsx)**
+*   **Thay đổi**: Nâng cấp các thẻ ảnh của sản phẩm Flash Sale sang `expo-image` để giảm thiểu giật lag khi cuộn trang chủ chứa danh sách sản phẩm dài.
+
+#### 5. **[components/main/home/home-promo-banner.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/home/home-promo-banner.tsx)**
+*   **Thay đổi**: Thay thế `Image` gốc bằng `expo-image` để hiển thị các banner quảng cáo sắc nét và tải nhanh hơn nhờ bộ nhớ đệm cải tiến.
+
+#### 6. **[components/main/cart/cart-item-card.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/cart/cart-item-card.tsx)**
+*   **Thay đổi**: Cải thiện hiệu năng render danh sách giỏ hàng bằng cách đổi ảnh sản phẩm sang `expo-image`, giúp ứng dụng luôn mượt mà khi người dùng thay đổi số lượng hoặc xóa vật phẩm.
+
+#### 7. **[components/main/address/address-form.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/address/address-form.tsx)**
+*   **Thay đổi**: Khắc phục triệt để lỗi rò rỉ bộ nhớ và tài nguyên chạy ngầm của WebView chứa bản đồ Leaflet. WebView giờ đây chỉ được mount vào DOM khi Modal hiển thị bản đồ thực sự được mở (`showMap === true`) và tự động unmount/hủy bỏ khi đóng Modal, giúp giải phóng hoàn toàn tài nguyên CPU/RAM chạy ngầm.
+
+---
+
+## 📅 Bản Cập Nhật Trước: Hoàn Thiện Giao Diện Flash Sale Shopee, Animation Tương Tác & Tích Hợp Thông Báo Đẩy Toàn Diện
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[components/main/home/flash-sales-section.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/home/flash-sales-section.tsx)**
+*   **Thay đổi**: Sửa đổi tham số điều hướng từ `productId` sang `id` để khớp chính xác với `app/product/detail.tsx`, đảm bảo khi nhấn vào các mặt hàng Flash Sale sẽ điều hướng tới trang chi tiết sản phẩm và hiển thị thông tin thành công.
+
+#### 2. **[components/main/home/featured-categories-section.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/home/featured-categories-section.tsx)**
+*   **Thay đổi**: Thêm hiệu ứng co giãn mượt mà khi nhấn vào các danh mục nổi bật (`active scale transition` với tỉ lệ `0.94`) giúp giao diện có phản hồi trực quan sống động.
+
+#### 3. **[components/product/list/suggested-product-card.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/list/suggested-product-card.tsx)**
+*   **Thay đổi**: Tích hợp hoạt ảnh nhấn co giãn (`scale transition` tỉ lệ `0.97`) khi click vào các thẻ sản phẩm gợi ý, mang lại trải nghiệm bấm mượt mà chuẩn premium app.
+
+#### 4. **[components/product/detail/product-bottom-action-bar.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/detail/product-bottom-action-bar.tsx)**
+*   **Thay đổi**: 
+    *   Tích hợp bộ tiện ích thông báo cục bộ `triggerLocalNotification`.
+    *   Kích hoạt thông báo khi người dùng nhấn "Thêm vào giỏ" thành công (`Thêm vào giỏ hàng thành công 🛒`).
+    *   Kích hoạt thông báo đẩy khi người dùng thêm hoặc xóa sản phẩm khỏi danh sách yêu thích (`Danh sách yêu thích ❤️`).
+
+#### 5. **[app/auth/login.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/auth/login.tsx)**
+*   **Thay đổi**: Tích hợp thông báo đẩy local khi người dùng đăng nhập thành công (`Đăng nhập thành công 🎉`) để chào mừng và tạo sự thân thiện ngay từ màn hình đầu tiên.
+
+#### 6. **[app/product/write-review.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/product/write-review.tsx)**
+*   **Thay đổi**: Thêm thông báo đẩy local chúc mừng và cảm ơn khi người dùng gửi đánh giá sản phẩm thành công (`Đánh giá thành công! 🌟`).
+
+#### 7. **[app/_layout.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/_layout.tsx)**
+*   **Thay đổi**: Điều chỉnh cơ chế chạy ngầm (background polling) của tài khoản Admin. Thay vì tải toàn bộ danh sách lịch sử thông báo hệ thống (vốn chứa toàn bộ thông báo gửi cho khách hàng), Admin giờ đây chỉ truy vấn và hiển thị thông báo đẩy cho các tin nhắn liên hệ trực tiếp gửi riêng tới Admin. Điều này giải quyết hoàn toàn lỗi các Admin bị nhận thông báo đẩy liên tục cho các sự kiện/thông báo quảng cáo do chính mình tạo ra.
+
+---
+
+## 📅 Bản Cập Nhật Trước: Ghi Nhớ Đăng Nhập Tự Động (Remember Login) & Nâng Cấp Tìm Kiếm Địa Điểm Định Vị Thông Minh
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[app/auth/login.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/auth/login.tsx)**
+*   **Thay đổi**:
+    *   **Tích hợp Ghi nhớ Đăng nhập (Remember Login)**: Bổ sung ô tích chọn (Checkbox) "Ghi nhớ đăng nhập" được thiết kế custom cực kỳ bắt mắt đồng bộ theo tone màu xanh `#157bb8` của Sello.
+    *   **Tự động tải thông tin phiên cũ**: Khi mở màn hình, ứng dụng sử dụng `AsyncStorage` để kiểm tra và tự động điền (autofill) lại thông tin tài khoản & mật khẩu đã lưu trước đó nếu người dùng đã tích chọn ghi nhớ.
+    *   **Lưu trữ an toàn khi đăng nhập**: Cập nhật hàm `submitLogin` để lưu lại Email/Sđt và Password vào `AsyncStorage` khi đăng nhập thành công nếu Checkbox được kích hoạt, hoặc xóa bỏ các trường này khỏi bộ nhớ nếu người dùng bỏ tích chọn.
+
+#### 2. **[hooks/customer/use-addresses-view.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/hooks/customer/use-addresses-view.ts)**
+*   **Thay đổi**: Bổ sung tham số cấu hình tùy chọn `{ lazy?: boolean }` vào hook `useAddressesView`. Nếu được thiết lập `lazy: true`, hook sẽ bỏ qua việc kích hoạt yêu cầu API danh sách địa chỉ tự động khi mount (`useEffect`), cho phép component bên ngoài tự kiểm soát thời điểm nạp dữ liệu bằng phương thức `fetchAddresses`.
+
+#### 3. **[app/main/(address)/addresses.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/(address)/addresses.tsx)**
+*   **Thay đổi**:
+    *   Tích hợp hook `useFocusEffect` từ thư viện `expo-router` kết hợp với `useCallback`.
+    *   Cấu hình gọi hook `useAddressesView` ở chế độ `{ lazy: true }` để tránh các yêu cầu API bị trùng lặp khi mount màn hình.
+    *   Kích hoạt nạp lại danh sách địa chỉ `fetchAddresses()` thông qua `useFocusEffect` mỗi khi người dùng truy cập hoặc quay trở lại màn hình Danh sách địa chỉ từ màn hình Thêm/Sửa địa chỉ, giúp cập nhật tức thời 100% dữ liệu mới mà không cần F5 hoặc tải lại ứng dụng.
+
+#### 4. **[components/main/address/address-form.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/address/address-form.tsx)**
+*   **Thay đổi**:
+    *   **Loại bỏ hoàn toàn thư viện native `react-native-maps`**: Giải quyết triệt để lỗi màn hình bản đồ bị xám/trắng do thiếu Google Maps API Key khi chạy thử nghiệm trên Android Emulator.
+    *   **Tích hợp `react-native-webview` để tải Bản đồ Leaflet + OpenStreetMap**: Tạo và nhúng mã nguồn HTML/JS Leaflet tải các lát gạch bản đồ miễn phí từ OpenStreetMap vào trong một `<WebView>`. Bản đồ hiển thị siêu tốc, mượt mà và hoàn toàn miễn phí mà không cần bất kỳ API Key nào.
+    *   **Giữ nguyên trải nghiệm kéo thả cao cấp (Ghim tâm bản đồ)**: Sử dụng cấu trúc ghim Marker tĩnh ở trung tâm màn hình thông qua Absolute Layout và lắng nghe sự kiện di chuyển bản đồ kết thúc (`moveend`) của Leaflet để gửi tọa độ mới về qua cơ chế `window.ReactNativeWebView.postMessage`.
+    *   **Cơ chế khóa tọa độ khởi tạo (Initialize Coordinate Locking)**: Triển khai state `initialMapCoords` ghi nhận duy nhất một lần tọa độ hiện tại khi mở Modal bản đồ để gán làm tọa độ tâm khởi tạo cho WebView, ngăn chặn hiện tượng WebView tự động tải lại (reload) liên tục mỗi khi kéo rê bản đồ cập nhật tọa độ.
+    *   **Tương tác mượt mà hai chiều**:
+        *   Cập nhật tọa độ ghim hiện tại từ bản đồ Leaflet về state `markerPosition` thông qua hàm xử lý `handleMapMessage`.
+        *   Tích hợp `injectJavaScript` điều khiển bản đồ dịch chuyển mượt mà tới tâm điểm mới (`window.setCenter`) khi người dùng lựa chọn kết quả tìm kiếm.
+    *   **Đồng bộ tọa độ khi lưu**: Cập nhật hàm `onSubmit` trong component Form để thu thập và gửi kèm các trường tọa độ `latitude` và `longitude` chính xác về Backend khi thêm mới hoặc cập nhật địa chỉ.
+    *   **Tích hợp giải pháp Giải mã tọa độ ngược Nominatim & Photon (Dual Geocoding Fallbacks)**:
+        *   Nâng cấp cơ chế lấy địa chỉ từ tọa độ khi nhấn "Xác nhận vị trí này". Chuyển sang sử dụng **Nominatim (cơ sở dữ liệu chính thức của OpenStreetMap)** làm nguồn chính, có mức độ phân tích địa chỉ cấp phường/xã cực kỳ sâu và chi tiết tại Việt Nam.
+        *   Tích hợp thuật toán chống trùng lặp: Tự động phát hiện và loại bỏ phần trùng lặp của các cấp hành chính (như lấy trùng Quận/Huyện cho Phường/Xã) giúp địa chỉ đổ ra form cực kỳ chuẩn xác và sạch sẽ.
+        *   Triển khai cơ chế dự phòng (fail-over fallback): Nếu Nominatim gặp lỗi kết nối hoặc bị giới hạn, hệ thống sẽ tự động chuyển sang gọi Photon API làm dự phòng một cách âm thầm, đảm bảo 100% không bao giờ crash hoặc báo lỗi trắng.
+    *   **Nâng cấp Tìm kiếm Địa điểm Kết hợp Đa nguồn**:
+        *   Đổi mới cơ chế tìm kiếm địa chỉ thời gian thực (Debounced 600ms): Nếu Photon API gặp sự cố hoặc bị nhà mạng chặn tại Việt Nam, hệ thống lập tức tự động truy vấn thay thế qua Nominatim Search API.
+        *   Thống nhất cấu trúc trả về dưới dạng định dạng chung `UnifiedSearchResult` giúp giao diện hiển thị mượt mà, đồng bộ và tránh hoàn toàn các lỗi hiển thị do sai cấu trúc dữ liệu.
+        *   Bổ sung bộ định vị thông minh (location bias) thông qua tham số `lat` và `lon` của Photon API, tự động ưu tiên các địa điểm gần ghim bản đồ hiện tại nhất để đảm bảo kết quả chính xác 100% tại Việt Nam.
+        *   Chuyển đổi icon tìm kiếm thành nút bấm `Pressable` màu xanh thương hiệu giúp người dùng có thể kích hoạt tìm kiếm tức thời một cách rõ ràng.
+
+---
+
+## 📅 Bản Cập Nhật Trước: Chế Độ Khách (Guest Mode) Premium & Chọn Vị Trí Trên Bản Đồ Số (Address Map Picker)
+
+### 📂 Chi tiết các file được bổ sung mới (New Files)
+
+#### 1. **[components/ui/guest-placeholder.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/ui/guest-placeholder.tsx)**
+*   **Thay đổi**: Thiết kế và tạo mới UI component `GuestPlaceholder` dùng chung có icon Feather động, cấu trúc hiển thị bo góc, hiệu ứng bóng mờ sang trọng và nút hành động nổi bật dẫn người dùng đi Đăng nhập.
+
+---
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[components/ui/index.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/ui/index.ts)**
+*   **Thay đổi**: Xuất (export) component `GuestPlaceholder` để sử dụng dễ dàng ở toàn bộ mã nguồn.
+
+#### 2. **[app/main/cart.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/cart.tsx)**
+*   **Thay đổi**: Kiểm tra trạng thái `!token`, nếu là Khách hàng chưa đăng nhập sẽ hiển thị `GuestPlaceholder` giỏ hàng trống thân thiện thay vì thông báo lỗi thô ráp.
+
+#### 3. **[app/main/(order)/orders.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/(order)/orders.tsx)**
+*   **Thay đổi**: 
+    *   Kiểm tra trạng thái `!token`, nếu là Khách hàng chưa đăng nhập sẽ hiển thị `GuestPlaceholder` theo dõi đơn hàng bắt mắt.
+    *   **Giữ lại phần sản phẩm gợi ý `RecommendedProducts` bên dưới** để kích cầu mua sắm.
+
+#### 4. **[app/main/chat.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/chat.tsx)**
+*   **Thay đổi**: Kiểm tra trạng thái `!token`, ẩn hoàn toàn khung chat rỗng và thanh nhập tin nhắn bên dưới (tránh lỗi gửi tin của khách) và thay thế bằng `GuestPlaceholder` chat hỗ trợ toàn màn hình cực kỳ tinh tế.
+
+#### 5. **[app/main/profile.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/app/main/profile.tsx)**
+*   **Thay đổi**: Kiểm tra trạng thái `!token`, ẩn toàn bộ các tùy chọn thông tin nhạy cảm của người dùng (Đổi mật khẩu, Địa chỉ, Yêu thích) để tránh lỗi/crash và thay thế bằng `GuestPlaceholder` hồ sơ cá nhân hướng dẫn đăng nhập.
+
+#### 6. **[components/product/detail/product-bottom-action-bar.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/product/detail/product-bottom-action-bar.tsx)**
+*   **Thay đổi**: Nâng cấp luồng sự kiện của các nút bấm **"Thêm vào giỏ"**, **"Mua hàng"** và **"Yêu thích"**. Nếu chưa đăng nhập (`!token`), hiển thị popup `Alert` thông minh chuẩn Shopee cho phép người dùng lựa chọn chuyển hướng ngay sang trang Đăng nhập `/auth/login`.
+
+#### 7. **[components/main/address/address-form.tsx](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-E-commerce-mobile-app/components/main/address/address-form.tsx)**
+*   **Thay đổi**:
+    *   Tích hợp nút **"Chọn vị trí trên bản đồ số"** mở Modal chọn bản đồ full screen.
+    *   Tích hợp bản đồ số thông minh `react-native-maps` cho phép người dùng kéo rê bản đồ dưới ghim Marker cố định ở chính giữa tâm bản đồ.
+    *   Tích hợp thanh tìm kiếm địa điểm và gợi ý nhanh (Search Autocomplete) sử dụng Photon API.
+    *   Tích hợp giải mã địa lý ngược (Reverse Geocoding) tự động trích xuất thông tin tọa độ thành các trường: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã và Địa chỉ chi tiết để tự động điền (Autofill) vào Form, hỗ trợ người dùng nhập liệu siêu tốc.
+    *   **Tích hợp `UrlTile` hiển thị bản đồ miễn phí OpenStreetMap**: Đè các lát gạch bản đồ miễn phí OpenStreetMap lên trên MapView để đảm bảo bản đồ hiển thị chi tiết đầy đủ 100% trên Android mà không bắt buộc phải cấu hình Google Maps API Key phức tạp ở chế độ phát triển local.
+    *   **Chuyển đổi 4 trường địa phương thành Select Box**: Đổi các trường *Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Loại địa chỉ* từ ô nhập văn bản tự do thành các hộp lựa chọn thông minh.
+    *   **Bộ lọc tìm kiếm động (Search In Options)**: Khi nhấn mở Select Box, hiển thị Modal liệt kê tùy chọn kèm ô tìm kiếm nhanh (Search Bar) giúp lọc nhanh trong danh sách 63 tỉnh thành Việt Nam.
+    *   **Cơ chế Tự nhập thủ công (Manual Input Dialog) dự phòng**: Để đảm bảo tính linh hoạt 100%, thiết kế thêm nút *"Tự nhập thủ công"* ở đầu danh sách lựa chọn. Nếu địa điểm của người dùng không có trong danh sách định nghĩa sẵn hoặc muốn nhập địa phương khác, một hộp thoại Dialog nhập tay tinh tế sẽ mở ra cho phép họ điền tự do.
+
+---
+
+## 📅 Bản Cập Nhật Trước: Đồng Bộ Ảnh Đơn Hàng & Giao Diện Quản Lý Đơn Hàng Admin Kiểu Shopee
 
 ### 📂 Chi tiết các file thay đổi (Modified Files)
 

@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { UICard } from "@/components/ui";
 import { ProductCard } from "@/types/main";
 
@@ -13,7 +14,7 @@ export function ProductListCard({ product }: ProductListCardProps) {
 
   return (
     <Pressable
-      className="w-[48.5%]"
+      className="w-full"
       onPress={() => {
         if (!canOpenDetail) return;
         router.push(`/product/detail?id=${product.id}` as Href);
@@ -21,7 +22,7 @@ export function ProductListCard({ product }: ProductListCardProps) {
     >
       <UICard className="w-full pb-3 overflow-hidden">
         <View className="relative h-[170px]">
-          <Image source={{ uri: product.imageUrl }} className="h-full w-full" resizeMode="cover" />
+          <Image source={{ uri: product.imageUrl }} className="h-full w-full" contentFit="cover" />
           <Pressable className="absolute right-2 top-2 h-7 w-7 items-center justify-center rounded-full bg-white/80">
             <Feather name="heart" size={13} color="#495463" />
           </Pressable>

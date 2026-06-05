@@ -13,6 +13,7 @@ import { Address, CartItem, CreateAddressPayload, UpdateAddressPayload } from "@
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { useMemo, useState } from "react";
+import { triggerLocalNotification } from "@/utils/local-notification";
 import {
   ActivityIndicator,
   Alert,
@@ -80,6 +81,11 @@ export default function CheckoutScreen() {
       });
 
       router.replace((`/main/payment?${params.toString()}` as unknown) as Href);
+      
+      triggerLocalNotification(
+        "Đặt hàng thành công! 🎉",
+        `Đơn hàng Sello của bạn trị giá ${new Intl.NumberFormat("vi-VN").format(pricing.totalAmount)}đ đã được tạo thành công.`
+      );
     } catch (err: any) {
       Alert.alert("Loi", err.message ?? "Khong the dat hang.");
     }

@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { CartItem } from "@/types/customer";
 
 type CartItemCardProps = {
@@ -36,6 +37,7 @@ export function CartItemCard({
             "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80",
         }}
         className="h-16 w-16 rounded-[8px]"
+        contentFit="cover"
       />
 
       <View className="flex-1">

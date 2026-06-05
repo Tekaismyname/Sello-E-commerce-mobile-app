@@ -3,9 +3,11 @@ import { useAuth } from "@/contexts/auth-context";
 import { useAddressesView } from "@/hooks/customer/use-addresses-view";
 import { Address } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
+import { Href, router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { triggerLocalNotification } from "@/utils/local-notification";
 
 const toFriendlyAddressError = (message?: string) => {
   if (!message) {
@@ -25,7 +27,13 @@ const toFriendlyAddressError = (message?: string) => {
 
 export default function AddressesScreen() {
   const { token } = useAuth();
-  const { addresses, loading, saving, error, setDefaultAddress, deleteAddress } = useAddressesView(token);
+  const { addresses, loading, saving, error, setDefaultAddress, deleteAddress, fetchAddresses } = useAddressesView(token, { lazy: true });
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAddresses();
+    }, [fetchAddresses])
+  );
 
   const openCreate = () => {
     router.push("/main/address-form" as Href);
@@ -66,9 +74,16 @@ export default function AddressesScreen() {
                 address={item}
                 onEdit={openEdit}
                 onSetDefault={(address) => {
-                  setDefaultAddress(address.id).catch((err: any) => {
-                    Alert.alert("Lỗi", err?.message ?? "Không thể đặt mặc định.");
-                  });
+                  setDefaultAddress(address.id)
+                    .then(() => {
+                      triggerLocalNotification(
+                        "Cập nhật địa chỉ mặc định! 🎉",
+                        `Đã đặt địa chỉ tại ${address.detailAddress} làm mặc định.`
+                      );
+                    })
+                    .catch((err: any) => {
+                      Alert.alert("Lỗi", err?.message ?? "Không thể đặt mặc định.");
+                    });
                 }}
                 onDelete={(address) => {
                   Alert.alert("Xóa địa chỉ", "Bạn chắc chắn muốn xóa địa chỉ này?", [

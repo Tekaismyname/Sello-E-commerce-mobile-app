@@ -4,8 +4,10 @@ Ung dung mobile frontend cho Sello E-commerce, xay dung bang Expo, React Native,
 
 ## Tinh Nang Chinh
 
-- Auth: dang ky, dang nhap, OTP, quen mat khau, reset mat khau, luu phien bang auth context.
-- Customer: home, category, search, product list/detail, cart, checkout, orders, profile, address, wishlist, notification, review.
+- Auth: dang ky, dang nhap, OTP, quen mat khau, reset mat khau, luu phien bang auth context, ghi nho/luu thong tin dang nhap tu dong (AsyncStorage). Tích hợp thông báo chào mừng khi đăng nhập thành công.
+- Customer: home, category, search, product list/detail, cart, checkout, orders, profile, address, wishlist, notification, review. Hoạt động tương tác mượt mà với banner khuyến mãi có thể nhấn mở danh sách sản phẩm, các hiệu ứng tap scale animation sống động (0.94 - 0.98) cho tất cả thẻ sản phẩm gợi ý và danh mục nổi bật.
+- Flash Sale Shopee: Giao diện Flash Sale cực đẹp chuẩn phong cách Shopee với tông màu cam đỏ rực rỡ, đồng hồ đếm ngược đen đặc trưng phân tách bằng dấu hai chấm đỏ, các thẻ sản phẩm Flash Sale hỗ trợ tap scale hoạt ảnh mượt mà dẫn tới trang chi tiết, thanh tiến trình "Đang bán chạy" / "Sắp cháy hàng" được tính toán trực quan.
+- Local Notifications: Tiện ích thông báo cục bộ `triggerLocalNotification` thông minh tương thích cả Expo Go (sử dụng fallback Alert) và native builds (sử dụng expo-notifications), tự động kích hoạt thông báo đẩy trên thiết bị khi Đăng nhập thành công, Thêm vào giỏ hàng thành công, Thay đổi danh sách yêu thích, Thêm/sửa địa chỉ mới, Đặt địa chỉ mặc định, Tạo đơn hàng thành công, và Gửi đánh giá sản phẩm thành công.
 - Chat thoi gian thuc: Khach hang lien he ho tro truc tiep va Admin (tat ca level co quyen `chats:read`) doc, reply tin nhan qua Socket.IO va REST API.
 - Orders: danh sach don hang, chi tiet don, huy don, theo doi don hang, lich su trang thai, hien thi san pham da mua ro rang theo tung order.
 - Order tracking map: frontend dung Leaflet trong WebView, nen map tu OpenStreetMap, route geometry va quang duong tu backend.
@@ -29,6 +31,8 @@ Ung dung mobile frontend cho Sello E-commerce, xay dung bang Expo, React Native,
 - TypeScript 5.9
 - React Native WebView
 - Leaflet (render trong WebView)
+- Shopify FlashList v2.x (Tái sử dụng view cuộn hiệu năng cao)
+- Expo Image (Lưu đệm và kết xuất ảnh mượt mà)
 
 ## Cai Dat
 
@@ -110,6 +114,18 @@ Frontend render:
 Neu OSM tile hoac CDN khong tai duoc, map co the khong hien thi day du tren emulator/thiet bi.
 
 ## Cap Nhat UI Gan Day
+
+### Tối Ưu Hóa Hiệu Năng Mobile (Mới nhất)
+
+- **Shopify FlashList**: Refactor màn hình danh sách sản phẩm (`app/main/(catalog)/product-list.tsx`) sử dụng `<FlashList>` v2.x với tính năng tự động tính toán kích thước phần tử và tái sử dụng view (recycling) thay cho `ScrollView` truyền thống, giúp cuộn mượt mà không bị giật lag.
+- **Expo Image**: Thay thế component `Image` của React Native bằng `expo-image` trên các component cuộn chính (suggested-product-card, flash-sales-section, home-promo-banner, cart-item-card, product-list-card) để tối ưu bộ nhớ đệm ảnh và giảm chi phí xử lý luồng giao diện.
+- **Giải phóng tài nguyên WebView Leaflet**: Điều chỉnh cơ chế mount bản đồ trong form địa chỉ (`components/main/address/address-form.tsx`). WebView bản đồ chỉ được khởi tạo khi modal hiển thị và tự động hủy bỏ hoàn toàn khi đóng modal, tránh tình trạng rò rỉ tài nguyên nền.
+
+### Dang Nhap & Dia Chi (Bản trước)
+
+- **Ghi nho dang nhap tu dong (Remember Login)**: Bo sung checkbox "Ghi nho dang nhap" vao form dang nhap. Khi duoc kich hoat, thong tin dang nhap (Email/Sdt va mat khau) se duoc luu tru an toan bang `AsyncStorage` de tu dong dien (autofill) o cac lan dang nhap tiep theo.
+- **Ban do OpenStreetMap qua Leaflet WebView**: Thay the ban do native bang `<WebView>` render Leaflet, hien thi chi tiet, muot ma 100% tren ca Android va iOS ma khong can bat ky Google Maps API Key nao. Dong thoi tich hop tim kiem dia diem Photon co tinh nang tu dong goi y thoi gian thuc (Debounced 600ms) va uu tien vi tri gan nguoi dung (Location bias).
+- **Tu dong cap nhat danh sach dia chi (Focus refetch)**: Tich hop hook `useFocusEffect` cua `expo-router` de tu dong tai lai danh sach dia chi moi nhat ngay khi nguoi dung quay ve tu form tao/sua dia chi.
 
 ### Orders & Tracking (Khach hang)
 
