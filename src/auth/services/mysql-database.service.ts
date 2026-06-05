@@ -411,6 +411,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   };
 
   private readonly pool: Pool = createPool(this.getPoolOptions());
+  private expiryCheckInterval: any = null;
 
   async checkConnection() {
     await this.pool.query('SELECT 1');
@@ -419,7 +420,49 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     await this.ensureAdminFeatureColumns();
     await this.ensureMockPaymentColumns();
     await this.ensureOrderStatusSchema();
+    await this.ensurePaypalPaymentMethod();
     this.logger.log('Connected to MySQL successfully');
+
+    // Run a scan for expired payments immediately on startup
+    this.cancelAllExpiredPayments().catch((err) => {
+      this.logger.error('Failed to run initial expired payment check:', err);
+    });
+
+    // Start background task to check and cancel expired payments every 30 seconds
+    this.expiryCheckInterval = setInterval(() => {
+      this.cancelAllExpiredPayments().catch((err) => {
+        this.logger.error('Failed to run periodic expired payment check:', err);
+      });
+    }, 30000);
+  }
+
+  async cancelAllExpiredPayments() {
+    try {
+      const [rows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT payment_id, order_id
+          FROM payments
+          WHERE payment_status = 'pending'
+            AND mock_confirm_expires_at IS NOT NULL
+            AND mock_confirm_expires_at < ?
+        `,
+        [new Date()]
+      );
+
+      if (rows.length > 0) {
+        this.logger.log(`Found ${rows.length} expired payments. Processing cancellation...`);
+        for (const row of rows) {
+          try {
+            await this.cancelExpiredPayment(row.payment_id, row.order_id);
+            this.logger.log(`Successfully cancelled expired payment ID ${row.payment_id} for order ID ${row.order_id}`);
+          } catch (err) {
+            this.logger.error(`Error cancelling payment ID ${row.payment_id}:`, err);
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error in cancelAllExpiredPayments interval:', error);
+    }
   }
 
   async findUserByEmailOrPhone(email?: string, phone?: string) {
@@ -1110,6 +1153,28 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         };
       }
 
+      if (paymentMethod.method_code === 'PAYPAL') {
+        await connection.execute(
+          `
+            UPDATE payments
+            SET mock_confirm_expires_at = ?
+            WHERE payment_id = ?
+          `,
+          [mockPaymentExpiresAt, paymentId],
+        );
+
+        await connection.commit();
+        return {
+          orderId,
+          orderCode,
+          paymentId,
+          paymentType: 'paypal',
+          paymentStatus: 'pending',
+          orderStatus: 'pending',
+          totalAmount,
+        };
+      }
+
       await connection.execute(
         `
           UPDATE payments
@@ -1268,18 +1333,106 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       expiresAt !== null &&
       expiresAt.getTime() < Date.now();
 
+    if (isExpired) {
+      this.cancelExpiredPayment(payment.payment_id, payment.order_id).catch(() => {});
+      return {
+        paymentId: payment.payment_id,
+        orderId: payment.order_id,
+        orderCode: payment.order_code,
+        amount: Number(payment.amount),
+        paymentStatus: 'expired',
+        orderStatus: 'cancelled',
+        orderPaymentStatus: 'failed',
+        paidAt: null,
+        failReason: 'Payment timeout (expired)',
+        expiresAt,
+      };
+    }
+
     return {
       paymentId: payment.payment_id,
       orderId: payment.order_id,
       orderCode: payment.order_code,
       amount: Number(payment.amount),
-      paymentStatus: isExpired ? 'expired' : payment.payment_status,
+      paymentStatus: payment.payment_status,
       orderStatus: payment.order_status,
       orderPaymentStatus: payment.order_payment_status,
       paidAt: payment.paid_at ? new Date(payment.paid_at) : null,
       failReason: payment.fail_reason,
       expiresAt,
     };
+  }
+
+  private async cancelExpiredPayment(paymentId: number, orderId: number) {
+    const connection = await this.pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const [rows] = await connection.query<RowDataPacket[]>(
+        `
+          SELECT payment_status FROM payments WHERE payment_id = ? FOR UPDATE
+        `,
+        [paymentId]
+      );
+      
+      if (rows[0]?.payment_status !== 'pending') {
+        await connection.rollback();
+        return;
+      }
+
+      await connection.execute(
+        `
+          UPDATE payments
+          SET payment_status = 'failed', fail_reason = 'Payment timeout (expired)'
+          WHERE payment_id = ?
+        `,
+        [paymentId]
+      );
+
+      await connection.execute(
+        `
+          UPDATE orders
+          SET order_status = 'cancelled', payment_status = 'failed', updated_at = CURRENT_TIMESTAMP
+          WHERE order_id = ?
+        `,
+        [orderId]
+      );
+
+      await connection.execute(
+        `
+          INSERT INTO order_status_histories (order_id, status, description)
+          VALUES (?, 'cancelled', 'Order cancelled automatically due to payment timeout')
+        `,
+        [orderId]
+      );
+
+      const [items] = await connection.query<RowDataPacket[]>(
+        `
+          SELECT variant_id, quantity FROM order_items WHERE order_id = ?
+        `,
+        [orderId]
+      );
+      
+      for (const item of items) {
+        if (item.variant_id) {
+          await connection.execute(
+            `
+              UPDATE product_variants
+              SET stock_qty = stock_qty + ?
+              WHERE variant_id = ?
+            `,
+            [item.quantity, item.variant_id]
+          );
+        }
+      }
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      this.logger.error(`Failed to cancel expired payment ${paymentId}:`, error);
+    } finally {
+      connection.release();
+    }
   }
 
   async getMockPaymentConfirmPage(paymentId: number, token: string) {
@@ -4450,6 +4603,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    if (this.expiryCheckInterval) {
+      clearInterval(this.expiryCheckInterval);
+    }
     await this.pool.end();
   }
 
@@ -4871,6 +5027,155 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     );
 
     return rows[0] ? this.mapRefreshToken(rows[0]) : undefined;
+  }
+
+  private async ensurePaypalPaymentMethod() {
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT COUNT(*) AS total
+        FROM payment_methods
+        WHERE method_code = 'PAYPAL'
+      `
+    );
+    if (Number(rows[0]?.total ?? 0) === 0) {
+      await this.pool.execute(
+        `
+          INSERT INTO payment_methods (method_code, method_name, status)
+          VALUES ('PAYPAL', 'Ví điện tử PayPal', 'active')
+        `
+      );
+    }
+  }
+
+  async updatePaymentTransactionCode(paymentId: number, transactionCode: string) {
+    await this.pool.execute(
+      `
+        UPDATE payments
+        SET transaction_code = ?
+        WHERE payment_id = ?
+      `,
+      [transactionCode, paymentId],
+    );
+  }
+
+  async getPaymentByTransactionCode(transactionCode: string) {
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT payment_id AS paymentId, order_id AS orderId, amount, payment_status AS paymentStatus
+        FROM payments
+        WHERE transaction_code = ?
+        LIMIT 1
+      `,
+      [transactionCode],
+    );
+    return rows[0];
+  }
+
+  async completePaypalPayment(
+    paymentId: number,
+    paypalOrderId: string,
+    result: 'success' | 'failed',
+  ) {
+    const connection = await this.pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const [rows] = await connection.query<RowDataPacket[]>(
+        `
+          SELECT p.payment_id, p.order_id, p.amount, p.payment_status,
+                 o.order_code, o.user_id
+          FROM payments p
+          INNER JOIN orders o ON o.order_id = p.order_id
+          WHERE p.payment_id = ?
+          LIMIT 1
+        `,
+        [paymentId],
+      );
+      const payment = rows[0];
+
+      if (!payment) {
+        await connection.rollback();
+        throw new NotFoundException('Payment not found');
+      }
+
+      if (payment.payment_status !== 'pending') {
+        await connection.rollback();
+        return this.getMockPaymentStatus(paymentId);
+      }
+
+      await connection.execute(
+        `
+          UPDATE payments
+          SET payment_status = ?,
+              paid_at = ${result === 'success' ? 'CURRENT_TIMESTAMP' : 'NULL'},
+              transaction_code = ?,
+              fail_reason = ?
+          WHERE payment_id = ?
+        `,
+        [
+          result === 'success' ? 'success' : 'failed',
+          paypalOrderId,
+          result === 'success' ? null : 'PayPal payment captured failed or cancelled',
+          paymentId,
+        ],
+      );
+
+      await connection.execute(
+        `
+          UPDATE orders
+          SET payment_status = ? ${result === 'success' ? ", order_status = 'confirmed'" : ''}
+          WHERE order_id = ?
+        `,
+        [result === 'success' ? 'paid' : 'failed', payment.order_id],
+      );
+
+      if (result === 'success') {
+        const [cartRows] = await connection.query<CartRow[]>(
+          `
+            SELECT cart_id, user_id, status
+            FROM carts
+            WHERE user_id = ?
+            LIMIT 1
+          `,
+          [payment.user_id],
+        );
+
+        if (cartRows[0]) {
+          await connection.execute(
+            `
+              DELETE FROM cart_items
+              WHERE cart_id = ? AND selected = TRUE
+            `,
+            [cartRows[0].cart_id],
+          );
+        }
+      }
+
+      await connection.execute(
+        `
+          INSERT INTO notifications (user_id, title, content, notification_type)
+          VALUES (?, ?, ?, 'order')
+        `,
+        [
+          payment.user_id,
+          result === 'success'
+            ? `Thanh toán PayPal đơn hàng ${payment.order_code} thành công`
+            : `Thanh toán PayPal đơn hàng ${payment.order_code} thất bại`,
+          result === 'success'
+            ? 'Giao dịch thanh toán qua ví PayPal của bạn đã được xác nhận thành công.'
+            : 'Giao dịch thanh toán qua ví PayPal của bạn đã bị từ chối hoặc thất bại.',
+        ],
+      );
+
+      await connection.commit();
+      return this.getMockPaymentStatus(paymentId);
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   }
 
   private async ensureRefreshTokenTable() {

@@ -197,6 +197,11 @@
       "key": "mockPaymentExpiresAt",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "paypalOrderId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -1968,6 +1973,62 @@
                 "cancel"
               ]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Capture PayPal Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": {{paymentId}},\n  \"paypalOrderId\": \"{{paypalOrderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/paypal/capture",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "paypal",
+                "capture"
+              ]
+            },
+            "description": "Programmatic endpoint to capture a PayPal order on the backend. This is usually triggered automatically via the PayPal Web Return Callback or can be run manually."
+          },
+          "response": []
+        },
+        {
+          "name": "PayPal Web Return Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/paypal/return?token={{mockPaymentToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "paypal",
+                "return"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{mockPaymentToken}}",
+                  "description": "The PayPal Order ID / token redirect parameter"
+                }
+              ]
+            },
+            "description": "Simulates PayPal returning to Sello backend after user approves payment. This endpoint captures the PayPal transaction and displays a static HTML success page."
           },
           "response": []
         }

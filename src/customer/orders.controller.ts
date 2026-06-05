@@ -86,6 +86,50 @@ export class OrdersController {
     return this.customerService.getMockPaymentStatus(paymentId);
   }
 
+  @Post('payments/paypal/capture')
+  async capturePaypalPayment(
+    @Body('paymentId', ParseIntPipe) paymentId: number,
+    @Body('paypalOrderId') paypalOrderId: string,
+  ) {
+    return this.customerService.capturePaypalPayment(paymentId, paypalOrderId);
+  }
+
+  @Get('payments/paypal/return')
+  async paypalReturn(
+    @Query('token') token: string,
+    @Res() response: Response,
+  ) {
+    const payment = await this.customerService.getPaymentByTransactionCode(token);
+    if (!payment) {
+      return response.type('html').send(
+        this.buildPaypalResultPage('Lỗi', 'Không tìm thấy thông tin giao dịch PayPal tương ứng.')
+      );
+    }
+
+    const captureResult = await this.customerService.capturePaypalPayment(
+      payment.paymentId,
+      token,
+    );
+
+    if (captureResult.status === 'COMPLETED') {
+      return response.type('html').send(
+        this.buildPaypalResultPage(
+          'Thanh toán thành công',
+          `Giao dịch PayPal ${token} đã được thanh toán thành công. Đơn hàng của bạn đã được cập nhật. Bạn có thể đóng trình duyệt này và quay lại ứng dụng Sello.`,
+          token
+        )
+      );
+    } else {
+      return response.type('html').send(
+        this.buildPaypalResultPage(
+          'Thanh toán thất bại',
+          `Giao dịch PayPal ${token} không thành công hoặc đã bị từ chối.`,
+          token
+        )
+      );
+    }
+  }
+
   @Get('payments/mock/:paymentId/confirm-page')
   async getMockPaymentConfirmPage(
     @Param('paymentId', ParseIntPipe) paymentId: number,
@@ -154,6 +198,41 @@ export class OrdersController {
           </style>
         </head>
         <body><main><section><h1>${title}</h1><p>${message}</p></section></main></body>
+      </html>
+    `;
+  }
+
+  private buildPaypalResultPage(title: string, message: string, token?: string) {
+    const redirectScript = '';
+    const redirectButton = token
+      ? `<a href="selloecommerce://checkout/paypal/success?token=${encodeURIComponent(token)}" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background-color: #0369a1; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-family: sans-serif;">Quay lại ứng dụng Sello</a>`
+      : '';
+
+    return `
+      <!doctype html>
+      <html lang="vi">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>${title}</title>
+          <style>
+            body { margin: 0; font-family: Arial, sans-serif; background: #eef4f8; color: #16202a; }
+            main { min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+            section { width: 100%; max-width: 420px; background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 16px 40px rgba(15, 76, 107, .14); text-align: center; }
+            h1 { margin: 0; font-size: 24px; color: #0f4c6b; }
+            p { color: #52616f; line-height: 1.55; }
+          </style>
+          ${redirectScript}
+        </head>
+        <body>
+          <main>
+            <section>
+              <h1>${title}</h1>
+              <p>${message}</p>
+              ${redirectButton}
+            </section>
+          </main>
+        </body>
       </html>
     `;
   }

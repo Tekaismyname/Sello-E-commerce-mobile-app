@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { MySqlDatabaseService } from '../auth/services/mysql-database.service';
 import { PasswordService } from '../auth/services/password.service';
+import { PaypalService } from './paypal.service';
 import {
   AddCartItemDto,
   ApplyVoucherDto,
@@ -27,6 +28,7 @@ export class CustomerService {
   constructor(
     private readonly database: MySqlDatabaseService,
     private readonly passwordService: PasswordService,
+    private readonly paypalService: PaypalService,
   ) {}
 
   async getCart(userId: number) {
@@ -121,10 +123,54 @@ export class CustomerService {
   async createOrder(userId: number, payload: CreateOrderDto) {
     const result = await this.database.createOrderFromCart(userId, payload);
 
+    if (result.paymentType === 'paypal') {
+      try {
+        const paypalOrder = await this.paypalService.createOrder(
+          (result as any).totalAmount,
+          result.orderCode,
+        );
+        await this.database.updatePaymentTransactionCode(
+          result.paymentId,
+          paypalOrder.paypalOrderId,
+        );
+        (result as any).paymentUrl = paypalOrder.approvalUrl;
+      } catch (err) {
+        throw new BadRequestException('Không thể khởi tạo thanh toán PayPal. Vui lòng thử lại.');
+      }
+    }
+
     return {
       message: 'Order created successfully',
       data: result,
     };
+  }
+
+  async capturePaypalPayment(paymentId: number, paypalOrderId: string) {
+    const captureResult = await this.paypalService.captureOrder(paypalOrderId);
+    
+    if (captureResult.status === 'COMPLETED') {
+      const result = await this.database.completePaypalPayment(
+        paymentId,
+        paypalOrderId,
+        'success',
+      );
+      return {
+        message: 'Thanh toán PayPal thành công',
+        status: 'COMPLETED',
+        data: result,
+      };
+    } else {
+      const result = await this.database.completePaypalPayment(
+        paymentId,
+        paypalOrderId,
+        'failed',
+      );
+      return {
+        message: 'Thanh toán PayPal thất bại hoặc chưa hoàn tất',
+        status: captureResult.status,
+        data: result,
+      };
+    }
   }
 
   async handleMockPaymentCallback(
@@ -446,5 +492,9 @@ export class CustomerService {
       message: 'Review created successfully',
       data: await this.database.createProductReview(userId, payload),
     };
+  }
+
+  async getPaymentByTransactionCode(transactionCode: string) {
+    return this.database.getPaymentByTransactionCode(transactionCode);
   }
 }

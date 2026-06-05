@@ -100,6 +100,33 @@ Dự án kết nối trực tiếp đến MySQL qua thư viện `mysql2/promise`
 
 **Định dạng Tiếng Việt**: Connection pool được thiết lập với `charset: utf8mb4` và thực thi lệnh sql `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci` ngay khi khởi tạo để hỗ trợ lưu và truy vấn tiếng Việt có dấu. 
 
+### 🔄 Khôi Phục Dữ Liệu Demo (Database Seed Reset)
+Khi phát triển hoặc kiểm thử, bạn có thể thiết lập lại toàn bộ dữ liệu sạch bằng script `reset_database.sql` ở thư mục gốc của dự án.
+* **Hành vi**: Xóa sạch (Truncate) toàn bộ bảng dữ liệu và chèn lại dữ liệu mẫu bao gồm:
+  * 4 danh mục và 5 thương hiệu mẫu.
+  * **30 sản phẩm thực tế** được chọn lọc kĩ càng với tên sản phẩm rõ ràng và hình ảnh Unsplash sắc nét tương ứng cho từng loại.
+  * Phương thức thanh toán đầy đủ (`COD`, `MOMO`, `CARD`, `PAYPAL`).
+* **Thông tin tài khoản mặc định**:
+  * Các tài khoản Khách hàng: `a@gmail.com`, `b@gmail.com`, `c@gmail.com` (mật khẩu: `12345678`).
+  * Admin Cấp 1 (Quản trị viên tối cao): `admin@gmail.com` (mật khẩu: `12345678`).
+  * Admin Cấp 2 (Quản lý vận hành): `admin2@gmail.com` (mật khẩu: `Admin12345`).
+  * Admin Cấp 3 (Nhân viên hỗ trợ): `admin3@gmail.com` (mật khẩu: `Admin12345`).
+
+Để reset database, chạy lệnh SQL trong script `reset_database.sql` vào MySQL client của bạn (nhớ cấu hình `USE Sello_commerce;`).
+
+---
+
+## ⏳ Bộ Tự Động Hủy Đơn Hàng & Hoàn Kho (Auto-Cancellation & Stock Recovery)
+
+Hệ thống tích hợp một trình dọn dẹp chạy nền (Background Worker) phục vụ các đơn hàng thanh toán trực tuyến:
+* **Thời gian quét**: Định kỳ mỗi **30 giây** (và quét ngay một lần khi server vừa khởi động).
+* **Điều kiện hết hạn (TTL)**: Đơn hàng ở phương thức thanh toán trực tuyến (Mock/PayPal) mà giao dịch thanh toán vẫn giữ trạng thái `pending` quá **5 phút** kể từ thời điểm khởi tạo (`expiresAt`).
+* **Hành vi tự động**:
+  1. Đổi trạng thái thanh toán thành `failed` với lý do `'Payment timeout (expired)'`.
+  2. Đổi trạng thái đơn hàng sang `cancelled`.
+  3. Ghi nhận nhật ký trạng thái đơn hàng: `Order cancelled automatically due to payment timeout`.
+  4. Duyệt qua từng chi tiết đơn hàng, tự động cộng ngược số lượng sản phẩm/biến thể mua trở lại kho (`stock_qty` trong `product_variants`) để đảm bảo không bị thất thoát hàng hóa của cửa hàng.
+
 ---
 
 ## 📡 Chi Tiết Endpoints API (HTTP)
@@ -118,6 +145,7 @@ POST /auth/reset-password          # Xác nhận đổi mật khẩu mới bằn
 POST /auth/logout                  # Đăng xuất tài khoản
 GET /auth/google                   # Cổng đăng nhập Google OAuth
 GET /auth/icloud                   # Cổng đăng nhập Apple (Giả lập)
+GET /payments/paypal/return         # Redirect URL từ PayPal sau khi khách hàng duyệt thanh toán
 ```
 
 ### 🔒 API Cho Khách Hàng (Customer Protected Endpoints)
@@ -138,7 +166,12 @@ GET /orders/me                     # Danh sách đơn hàng cá nhân
 GET /orders/:orderId               # Chi tiết một đơn hàng cụ thể
 POST /orders/:orderId/cancel       # Hủy đơn hàng (Chỉ áp dụng khi đơn ở trạng thái Pending hoặc Confirmed)
 GET /orders/:orderId/tracking      # Lấy dữ liệu theo dõi tuyến đường vận chuyển (Shipper)
-POST /payments/mock/:paymentId/callback # Callback giả lập thanh toán
+GET /payments/mock/:paymentId/status   # Lấy trạng thái thanh toán giả lập & thời gian hết hạn (expiresAt)
+GET /payments/mock/:paymentId/confirm-page # Giao diện Sello Mock Bank
+POST /payments/mock/:paymentId/confirm  # Xác nhận thanh toán từ trang ngân hàng giả lập
+POST /payments/mock/:paymentId/decline  # Từ chối thanh toán từ trang ngân hàng giả lập
+POST /payments/mock/:paymentId/callback # Callback giả lập thanh toán (Đã tắt - khuyến nghị Confirm/Decline)
+POST /payments/paypal/capture           # Yêu cầu capture thanh toán PayPal chủ động từ phía Client
 GET /me                            # Lấy thông tin cá nhân mở rộng
 PUT /me                            # Cập nhật thông tin cá nhân
 PUT /me/password                   # Đổi mật khẩu
@@ -325,6 +358,26 @@ Hệ thống hỗ trợ quy trình thanh toán giả lập thông qua mã QR đ�
 
 > [!NOTE]  
 > Khi chạy ứng dụng trên thiết bị di động thật và backend chạy trên máy tính cá nhân, bạn phải đảm bảo cấu hình địa chỉ IP LAN của máy tính vào biến môi trường `MOCK_PAYMENT_PUBLIC_BASE_URL` trong file `.env` để điện thoại có thể truy cập được trang web ngân hàng giả lập.
+
+---
+
+## 💳 Quy Trình Thanh Toán PayPal (PayPal Payment Flow)
+
+Hệ thống hỗ trợ cổng thanh toán quốc tế PayPal tích hợp đầy đủ quy trình xử lý đơn hàng trực tuyến an toàn.
+
+1. **Khởi tạo đơn hàng**: Khi khách hàng chọn hình thức thanh toán PayPal lúc đặt hàng (`POST /orders`), Backend sẽ gọi API PayPal Sandbox để tạo Order PayPal tương ứng.
+2. **Trả về đường link duyệt**: API trả về link thanh toán `paymentUrl` (chứa PayPal Approval Link dạng `https://www.sandbox.paypal.com/checkoutnow?token=EC-XXXXX`).
+3. **Thanh toán trên Web**: Khách hàng được dẫn hướng qua trình duyệt Web hoặc WebView để đăng nhập và duyệt giao dịch trên PayPal.
+4. **Xử lý Redirect an toàn (Cross-Device Return)**: Sau khi được duyệt, PayPal sẽ redirect trình duyệt của người dùng về backend:
+   ```txt
+   GET /payments/paypal/return?token=EC-XXXXX
+   ```
+   * **Đặc thù**: Để tối ưu hóa trải nghiệm người dùng trên các thiết bị di động khác nhau (hoặc các trình duyệt bên thứ ba như Safari/Chrome) mà không phá vỡ luồng WebView, endpoint này sẽ **không tự động thực hiện javascript redirect** về ứng dụng. Thay vào đó, nó hiển thị trang tĩnh thông báo thanh toán thành công/thất bại kèm một nút bấm to, trực quan chứa Custom URI Scheme:
+     ```txt
+     selloecommerce://checkout/paypal/success?token=EC-XXXXX
+     ```
+     Khi người dùng click nút này, thiết bị di động sẽ tự động kích hoạt Expo App / App Native để tiếp nhận kết quả thanh toán.
+5. **Capture giao dịch**: Mobile App hoặc Client có thể chủ động gọi API `POST /payments/paypal/capture` kèm theo `paymentId` và `paypalOrderId` để hoàn thành capture thanh toán trên Sandbox và đồng bộ trạng thái đơn hàng thành `paid`.
 
 ---
 

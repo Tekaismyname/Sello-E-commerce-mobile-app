@@ -5,6 +5,7 @@ import { CartController } from './cart.controller';
 import { CheckoutController } from './checkout.controller';
 import { CustomerService } from './customer.service';
 import { OrdersController } from './orders.controller';
+import { PaypalService } from './paypal.service';
 
 @Module({
   imports: [AuthModule],
@@ -14,6 +15,7 @@ import { OrdersController } from './orders.controller';
     CheckoutController,
     OrdersController,
   ],
-  providers: [CustomerService],
+  providers: [CustomerService, PaypalService],
+  exports: [PaypalService],
 })
 export class CustomerModule {}
