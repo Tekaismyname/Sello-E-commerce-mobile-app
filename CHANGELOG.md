@@ -4,7 +4,18 @@ Tài liệu này ghi nhận toàn bộ các tính năng cốt lõi vừa đượ
 
 ---
 
-## 📅 Bản Cập Nhật Mới Nhất (Chức Năng Cốt Lõi)
+## 📅 Bản Cập Nhật Mới Nhất: Loại Bỏ Admin Khỏi Danh Sách Nhận Thông Báo Của Admin
+
+### 📂 Chi tiết các file thay đổi (Modified Files)
+
+#### 1. **[src/auth/services/mysql-database.service.ts](file:///c:/Users/hokha/Dropbox/PC/Downloads/LearningDocuments/DA-TTLT-A/Sello-Ecommerce-Backend/src/auth/services/mysql-database.service.ts)**
+*   **Thay đổi**:
+    *   **Loại bỏ Admin khỏi danh sách nhận thông báo của Admin**: Cập nhật phương thức `createAdminNotification` để loại bỏ hoàn toàn các tài khoản Admin ra khỏi việc gán/nhận thông báo do Admin tạo ra. Khi `targetScope` là `'all_users'` hoặc `'customer_only'`, câu lệnh SQL chỉ truy vấn và tạo thông báo cho những tài khoản có `role = 'customer'` (bỏ qua `role = 'admin'`). Khi `targetScope` là `'admin_only'`, hệ thống trả về số lượng bản ghi chèn là 0 và không thêm bất kỳ dòng nào vào cơ sở dữ liệu (ngăn chặn việc Admin gửi thông báo cho chính mình hoặc các Admin khác).
+    *   **Sửa lỗi cắt ngắn dữ liệu trạng thái đơn hàng (order_status truncation bug)**: Bổ sung phương thức tự động phục hồi schema `ensureOrderStatusSchema` chạy ngay khi khởi động kết nối cơ sở dữ liệu (`checkConnection()`). Lần lượt thực thi các câu lệnh `ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(32) NOT NULL DEFAULT 'pending'` và `ALTER TABLE order_status_histories MODIFY COLUMN status VARCHAR(32) NOT NULL` bọc trong try-catch an toàn. Điều này giải quyết triệt để lỗi MySQL `WARN_DATA_TRUNCATED: Data truncated for column 'order_status'` khi khách hàng thực hiện yêu cầu trả hàng (`'return_requested'`), giúp hệ thống lưu trữ trạng thái mới trơn tru 100%.
+
+---
+
+## 📅 Bản Cập Nhật Trước (Chức Năng Cốt Lõi)
 
 ### 1. 🔍 API Tìm Kiếm & Bộ Lọc Sản Phẩm Nâng Cao
 

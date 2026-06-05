@@ -86,13 +86,17 @@ http://localhost:3000
 
 ## 💾 Lưu Ý Về Cơ Sở Dữ Liệu
 
-Dự án kết nối trực tiếp đến MySQL qua thư viện `mysql2/promise`. Khi ứng dụng khởi động, Database Service sẽ tự động kiểm tra kết nối và bổ sung các cột cần thiết nếu chưa có trong schema hiện tại:
-* `categories.description`
-* `notifications.image_url`
-* `product_reviews.moderation_status`
-* `product_reviews.moderated_by`
-* `product_reviews.moderated_at`
-* `product_reviews.moderation_note`
+Dự án kết nối trực tiếp đến MySQL qua thư viện `mysql2/promise`. Khi ứng dụng khởi động, Database Service sẽ tự động kiểm tra kết nối và thực hiện tự động phục hồi, nâng cấp schema (Self-healing Migrations) cho các bảng nếu cần thiết:
+* Bổ sung các cột tính năng mới (nếu chưa có):
+  * `categories.description`
+  * `notifications.image_url`
+  * `product_reviews.moderation_status`
+  * `product_reviews.moderated_by`
+  * `product_reviews.moderated_at`
+  * `product_reviews.moderation_note`
+* Tự động điều chỉnh độ rộng cột (MODIFY COLUMN) an toàn bằng try-catch để ngăn chặn các lỗi cắt ngắn dữ liệu (Data Truncation Error):
+  * `orders.order_status` nâng lên kiểu `VARCHAR(32)` để hỗ trợ đầy đủ trạng thái trả hàng `'return_requested'` (16 ký tự, vượt quá giới hạn ENUM cũ).
+  * `order_status_histories.status` nâng lên kiểu `VARCHAR(32)` để đồng bộ hóa lịch sử trạng thái đơn hàng.
 
 **Định dạng Tiếng Việt**: Connection pool được thiết lập với `charset: utf8mb4` và thực thi lệnh sql `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci` ngay khi khởi tạo để hỗ trợ lưu và truy vấn tiếng Việt có dấu. 
 

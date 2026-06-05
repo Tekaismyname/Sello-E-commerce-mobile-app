@@ -361,6 +361,7 @@ interface OsrmRouteResponse {
 @Injectable()
 export class MySqlDatabaseService implements OnModuleDestroy {
   private readonly logger = new Logger(MySqlDatabaseService.name);
+  private readonly columnCache = new Map<string, boolean>();
 
   private normalizeAdminBrandId(brandId?: number | null) {
     return brandId && brandId > 0 ? brandId : null;
@@ -417,6 +418,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     await this.ensureRefreshTokenTable();
     await this.ensureAdminFeatureColumns();
     await this.ensureMockPaymentColumns();
+    await this.ensureOrderStatusSchema();
     this.logger.log('Connected to MySQL successfully');
   }
 
@@ -2942,11 +2944,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }
 
     const targetWhere =
-      input.targetScope === 'customer_only'
+      input.targetScope === 'customer_only' || input.targetScope === 'all_users'
         ? "role = 'customer' AND status = 'active'"
-        : input.targetScope === 'admin_only'
-          ? "role = 'admin' AND status = 'active'"
-          : "status = 'active'";
+        : "1 = 0"; // 'admin_only' targets nobody because admins do not receive notifications from admins
 
     const [users] = await this.pool.query<RowDataPacket[]>(
       `SELECT user_id FROM users WHERE ${targetWhere}`,
@@ -4934,6 +4934,28 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }
   }
 
+  private async ensureOrderStatusSchema() {
+    try {
+      await this.pool.execute(`
+        ALTER TABLE orders
+        MODIFY COLUMN order_status VARCHAR(32) NOT NULL DEFAULT 'pending'
+      `);
+      this.logger.log('Database Schema: Altered orders.order_status to VARCHAR(32) successfully');
+    } catch (err: any) {
+      this.logger.warn(`Failed to alter orders.order_status: ${err.message}`);
+    }
+
+    try {
+      await this.pool.execute(`
+        ALTER TABLE order_status_histories
+        MODIFY COLUMN status VARCHAR(32) NOT NULL
+      `);
+      this.logger.log('Database Schema: Altered order_status_histories.status to VARCHAR(32) successfully');
+    } catch (err: any) {
+      this.logger.warn(`Failed to alter order_status_histories.status: ${err.message}`);
+    }
+  }
+
   private async ensureMockPaymentColumns() {
     if (!(await this.hasColumn('payments', 'mock_confirm_token_hash'))) {
       await this.pool.execute(`
@@ -5172,6 +5194,11 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   }
 
   private async hasColumn(tableName: string, columnName: string) {
+    const cacheKey = `${tableName}:${columnName}`;
+    if (this.columnCache.has(cacheKey)) {
+      return this.columnCache.get(cacheKey)!;
+    }
+
     const [rows] = await this.pool.query<RowDataPacket[]>(
       `
         SELECT COUNT(*) AS total
@@ -5183,7 +5210,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       [process.env.MYSQL_DATABASE ?? 'Sello_commerce', tableName, columnName],
     );
 
-    return Number(rows[0]?.total ?? 0) > 0;
+    const exists = Number(rows[0]?.total ?? 0) > 0;
+    this.columnCache.set(cacheKey, exists);
+    return exists;
   }
 
   private buildMockPaymentQr(
