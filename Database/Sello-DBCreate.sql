@@ -379,14 +379,21 @@ CREATE TABLE chat_rooms (
 ALTER TABLE chat_rooms
 	ADD CONSTRAINT uq_chat_rooms_user UNIQUE (user_id);
 
-CONSTRAINT fk_chat_messages_room
-  FOREIGN KEY (room_id) REFERENCES chat_rooms(room_id) ON DELETE CASCADE,
-CONSTRAINT fk_chat_messages_sender
-  FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE
-
 CREATE INDEX idx_chat_messages_room_id ON chat_messages(room_id);
 CREATE INDEX idx_chat_messages_room_read_sender ON chat_messages(room_id, is_read, sender_type);
 CREATE INDEX idx_chat_rooms_updated_at ON chat_rooms(updated_at);
 
 ALTER TABLE users
 ADD COLUMN admin_level TINYINT NULL;
+
+
+-- Index cho khóa ngoại
+ALTER TABLE products ADD INDEX idx_category_id (category_id);
+ALTER TABLE order_items ADD INDEX idx_order_id (order_id);
+ALTER TABLE order_items ADD INDEX idx_product_id (product_id);
+ALTER TABLE cart_items ADD INDEX idx_cart_id (cart_id);
+
+-- Index cho các trường hay tìm kiếm/lọc
+ALTER TABLE products ADD INDEX idx_product_name (name);
+-- Lệnh SQL đúng cho bảng orders:
+ALTER TABLE orders ADD INDEX idx_order_status (order_status);
