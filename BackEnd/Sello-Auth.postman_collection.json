@@ -1,0 +1,2612 @@
+{
+  "info": {
+    "_postman_id": "8e4379c0-7b0e-4a14-9fb4-4b9190b4d836",
+    "name": "Sello Auth API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for testing Sello Ecommerce auth, customer checkout/orders, mock online payment QR, tracking, and admin flows."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "registerOtp",
+      "value": ""
+    },
+    {
+      "key": "resetOtp",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "customerIdentifier",
+      "value": "a@gmail.com"
+    },
+    {
+      "key": "customerPhone",
+      "value": "0900000001"
+    },
+    {
+      "key": "customerPassword",
+      "value": "Password123"
+    },
+    {
+      "key": "customerNewPassword",
+      "value": "NewPassword123"
+    },
+    {
+      "key": "adminIdentifier",
+      "value": "admin@gmail.com"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin12345"
+    },
+    {
+      "key": "admin2Identifier",
+      "value": "admin2@gmail.com"
+    },
+    {
+      "key": "admin2Password",
+      "value": "Admin12345"
+    },
+    {
+      "key": "admin3Identifier",
+      "value": "admin3@gmail.com"
+    },
+    {
+      "key": "admin3Password",
+      "value": "Admin12345"
+    },
+    {
+      "key": "registerEmail",
+      "value": "testuser@gmail.com"
+    },
+    {
+      "key": "registerPhone",
+      "value": "0901234567"
+    },
+    {
+      "key": "registerDeliveryMethod",
+      "value": "email"
+    },
+    {
+      "key": "forgotPasswordDeliveryMethod",
+      "value": "email"
+    },
+    {
+      "key": "registerVerifyTargetValue",
+      "value": "testuser@gmail.com"
+    },
+    {
+      "key": "registeredUserId",
+      "value": ""
+    },
+    {
+      "key": "resetTargetValue",
+      "value": "a@gmail.com"
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "variantId",
+      "value": "1"
+    },
+    {
+      "key": "cartItemId",
+      "value": ""
+    },
+    {
+      "key": "addressId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "paymentUrl",
+      "value": ""
+    },
+    {
+      "key": "paymentQrPayload",
+      "value": ""
+    },
+    {
+      "key": "paymentQrCodeUrl",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "wishlistItemId",
+      "value": ""
+    },
+    {
+      "key": "trackingOriginLat",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingOriginLng",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingDestinationLat",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingDestinationLng",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteProvider",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteStatus",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteDistanceMeters",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteDurationSeconds",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trackingRouteGeoJson",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mockPaymentToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mockPaymentStatus",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mockPaymentExpiresAt",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paypalOrderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Home Page",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/home",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "home"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register Flow",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const method = pm.collectionVariables.get('registerDeliveryMethod');",
+                  "const email = pm.collectionVariables.get('registerEmail');",
+                  "const phone = pm.collectionVariables.get('registerPhone');",
+                  "pm.collectionVariables.set('registerVerifyTargetValue', method === 'phone' ? phone : email);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.user && data.user.id) {",
+                  "    pm.collectionVariables.set('registeredUserId', String(data.user.id));",
+                  "  }",
+                  "  if (data.otp && data.otp.otpCodePreview) {",
+                  "    pm.collectionVariables.set('registerOtp', data.otp.otpCodePreview);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"{{registerEmail}}\",\n  \"phone\": \"{{registerPhone}}\",\n  \"password\": \"Password123\",\n  \"confirmPassword\": \"Password123\",\n  \"deliveryMethod\": \"{{registerDeliveryMethod}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Register OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetValue\": \"{{registerVerifyTargetValue}}\",\n  \"purpose\": \"register\",\n  \"otpCode\": \"{{registerOtp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Registered User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/users/{{registeredUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "users",
+                "{{registeredUserId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Login Flow",
+      "item": [
+        {
+          "name": "Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.tokens) {",
+                  "    pm.collectionVariables.set('accessToken', data.tokens.accessToken || '');",
+                  "    pm.collectionVariables.set('refreshToken', data.tokens.refreshToken || '');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{customerIdentifier}}\",\n  \"password\": \"{{customerPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.tokens) {",
+                  "    pm.collectionVariables.set('accessToken', data.tokens.accessToken || '');",
+                  "    pm.collectionVariables.set('refreshToken', data.tokens.refreshToken || '');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{adminIdentifier}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin Level 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.tokens) {",
+                  "    pm.collectionVariables.set('accessToken', data.tokens.accessToken || '');",
+                  "    pm.collectionVariables.set('refreshToken', data.tokens.refreshToken || '');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{admin2Identifier}}\",\n  \"password\": \"{{admin2Password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin Level 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.tokens) {",
+                  "    pm.collectionVariables.set('accessToken', data.tokens.accessToken || '');",
+                  "    pm.collectionVariables.set('refreshToken', data.tokens.refreshToken || '');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{admin3Identifier}}\",\n  \"password\": \"{{admin3Password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('accessToken', '');",
+                  "  pm.collectionVariables.set('refreshToken', '');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Ping",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "ping"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Operations Ping",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/operations/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "operations",
+                "ping"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Forgot Password Flow",
+      "item": [
+        {
+          "name": "Forgot Password",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const method = pm.collectionVariables.get('forgotPasswordDeliveryMethod');",
+                  "const email = pm.collectionVariables.get('customerIdentifier');",
+                  "const phone = pm.collectionVariables.get('customerPhone');",
+                  "pm.collectionVariables.set('resetTargetValue', method === 'phone' ? phone : email);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.otp && data.otp.otpCodePreview) {",
+                  "    pm.collectionVariables.set('resetOtp', data.otp.otpCodePreview);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{customerIdentifier}}\",\n  \"deliveryMethod\": \"{{forgotPasswordDeliveryMethod}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{customerIdentifier}}\",\n  \"targetValue\": \"{{resetTargetValue}}\",\n  \"otpCode\": \"{{resetOtp}}\",\n  \"newPassword\": \"{{customerNewPassword}}\",\n  \"confirmNewPassword\": \"{{customerNewPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login With New Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.tokens) {",
+                  "    pm.collectionVariables.set('accessToken', data.tokens.accessToken || '');",
+                  "    pm.collectionVariables.set('refreshToken', data.tokens.refreshToken || '');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{customerIdentifier}}\",\n  \"password\": \"{{customerNewPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "System Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/system/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "system",
+                "dashboard"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update System Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryStatuses\": [\n    {\n      \"categoryId\": 1,\n      \"status\": \"active\"\n    }\n  ],\n  \"paymentMethodStatuses\": [\n    {\n      \"paymentMethodId\": 1,\n      \"status\": \"active\"\n    }\n  ],\n  \"voucherStatuses\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/system/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "system",
+                "config"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"blocked\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\",\n  \"adminLevel\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/1/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "1",
+                "role"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const payment = (json.data && json.data.payment) || {};",
+                  "  if (payment.id) pm.collectionVariables.set('paymentId', String(payment.id));",
+                  "  if (payment.paymentUrl) pm.collectionVariables.set('paymentUrl', payment.paymentUrl);",
+                  "  if (payment.qrPayload) pm.collectionVariables.set('paymentQrPayload', payment.qrPayload);",
+                  "  if (payment.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', payment.qrCodeUrl);",
+                  "}",
+                  "if (pm.collectionVariables.get('paymentUrl')) {",
+                  "  try {",
+                  "    const url = new URL(pm.collectionVariables.get('paymentUrl')); ",
+                  "    const token = url.searchParams.get('token');",
+                  "    if (token) pm.collectionVariables.set('mockPaymentToken', token);",
+                  "  } catch (error) {}",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"description\": \"Confirmed by admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": 1,\n  \"brandId\": 1,\n  \"name\": \"Admin Test Product\",\n  \"basePrice\": 199000,\n  \"status\": \"draft\",\n  \"images\": [\n    {\n      \"imageUrl\": \"https://picsum.photos/seed/admin-product/400/400\",\n      \"isPrimary\": true,\n      \"sortOrder\": 1\n    }\n  ],\n  \"variants\": [\n    {\n      \"color\": \"Black\",\n      \"size\": \"M\",\n      \"price\": 199000,\n      \"stockQty\": 15,\n      \"status\": \"active\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin Test Product Updated\",\n  \"basePrice\": 209000,\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "products",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/products/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "products",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Report Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "overview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Export Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"overview\",\n  \"format\": \"csv\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "export"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public Product",
+      "item": [
+        {
+          "name": "Get Product Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customer Cart & Checkout",
+      "item": [
+        {
+          "name": "Get Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const items = json.data && json.data.items ? json.data.items : [];",
+                  "  if (items.length > 0) {",
+                  "    pm.collectionVariables.set('cartItemId', String(items[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Cart Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const items = json.data && json.data.items ? json.data.items : [];",
+                  "  if (items.length > 0) {",
+                  "    pm.collectionVariables.set('cartItemId', String(items[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{productId}},\n  \"variantId\": {{variantId}},\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/{{cartItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items",
+                "{{cartItemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Select Cart Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"selected\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/{{cartItemId}}/select",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items",
+                "{{cartItemId}}",
+                "select"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Cart Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Checkout Preview",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const addresses = json.data && json.data.addresses ? json.data.addresses : [];",
+                  "  if (addresses.length > 0) {",
+                  "    pm.collectionVariables.set('addressId', String(addresses[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voucherCode\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkout/preview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "checkout",
+                "preview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Apply Voucher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SALE10\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkout/apply-voucher",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "checkout",
+                "apply-voucher"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.orderId) pm.collectionVariables.set('orderId', String(data.orderId));",
+                  "  if (data.paymentId) pm.collectionVariables.set('paymentId', String(data.paymentId));",
+                  "  if (data.paymentUrl) pm.collectionVariables.set('paymentUrl', data.paymentUrl);",
+                  "  if (data.qrPayload) pm.collectionVariables.set('paymentQrPayload', data.qrPayload);",
+                  "  if (data.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', data.qrCodeUrl);",
+                  "  if (data.expiresAt) pm.collectionVariables.set('mockPaymentExpiresAt', data.expiresAt);",
+                  "}",
+                  "if (pm.collectionVariables.get('paymentUrl')) {",
+                  "  try {",
+                  "    const url = new URL(pm.collectionVariables.get('paymentUrl')); ",
+                  "    const token = url.searchParams.get('token');",
+                  "    if (token) pm.collectionVariables.set('mockPaymentToken', token);",
+                  "  } catch (error) {}",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressId\": {{addressId}},\n  \"paymentMethodId\": 2,\n  \"note\": \"Please call before delivery\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Creates an order from selected cart items.\n\nDefault body uses `paymentMethodId: 2` for online mock bank QR payment.\nThe test script stores `orderId`, `paymentId`, `paymentUrl`, `paymentQrPayload`, `paymentQrCodeUrl`, `mockPaymentToken`, and `mockPaymentExpiresAt`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customer Orders",
+      "item": [
+        {
+          "name": "Open Mock Payment QR Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentQrCodeUrl}}",
+              "host": [
+                "{{paymentQrCodeUrl}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Open Mock Bank Confirm Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{paymentUrl}}",
+              "host": [
+                "{{paymentUrl}}"
+              ]
+            },
+            "description": "Open the Sello Mock Bank confirmation page generated inside the QR code. In Postman this returns HTML; in a browser it shows Confirm/Decline buttons."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mock Payment Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "status"
+              ]
+            },
+            "description": "Poll mock bank payment status. Expected pending before confirmation, success after Confirm, failed after Decline, expired after token TTL."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status request succeeded', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "if (data.paymentStatus) pm.collectionVariables.set('mockPaymentStatus', data.paymentStatus);",
+                  "if (data.expiresAt) pm.collectionVariables.set('mockPaymentExpiresAt', data.expiresAt);",
+                  "pm.test('mock payment has a known status', function () {",
+                  "  pm.expect(['pending', 'success', 'paid', 'failed', 'expired']).to.include(data.paymentStatus);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm Mock Bank Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "token",
+                  "value": "{{mockPaymentToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "confirm"
+              ]
+            },
+            "description": "Simulate pressing Confirm on the Sello Mock Bank page. This changes payment to success and order to confirmed."
+          },
+          "response": []
+        },
+        {
+          "name": "Decline Mock Bank Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "token",
+                  "value": "{{mockPaymentToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "decline"
+              ]
+            },
+            "description": "Simulate pressing Decline on the Sello Mock Bank page. This changes payment/order payment status to failed."
+          },
+          "response": []
+        },
+        {
+          "name": "Legacy Mock Payment Callback (Disabled)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"result\": \"success\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/{{paymentId}}/callback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "{{paymentId}}",
+                "callback"
+              ]
+            },
+            "description": "Legacy endpoint kept for compatibility, but backend now rejects it. Use Open Mock Bank Confirm Page or Confirm Mock Bank Payment instead."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('legacy callback is disabled', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const orders = json.data || [];",
+                  "  if (orders.length > 0) {",
+                  "    pm.collectionVariables.set('orderId', String(orders[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const payment = (json.data && json.data.payment) || {};",
+                  "  if (payment.id) pm.collectionVariables.set('paymentId', String(payment.id));",
+                  "  if (payment.paymentUrl) pm.collectionVariables.set('paymentUrl', payment.paymentUrl);",
+                  "  if (payment.qrPayload) pm.collectionVariables.set('paymentQrPayload', payment.qrPayload);",
+                  "  if (payment.qrCodeUrl) pm.collectionVariables.set('paymentQrCodeUrl', payment.qrCodeUrl);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Tracking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/tracking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "tracking"
+              ]
+            },
+            "description": "Fetch customer order tracking data with map enrichment.\n\nBackend behavior:\n- Uses saved address latitude/longitude when available.\n- Geocodes the destination with Photon when coordinates are missing, then caches them in MySQL.\n- Requests an OSRM GeoJSON route from the mock shipper location to the destination.\n- Falls back to a straight line if Photon or OSRM is unavailable.\n\nExpected map payload: `data.map.origin`, `data.map.destination`, and `data.map.route.geometry.coordinates`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('tracking request succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const map = data.map || {};",
+                  "const origin = map.origin || {};",
+                  "const destination = map.destination || data.destination || {};",
+                  "const route = map.route || {};",
+                  "const coordinates = route.geometry && Array.isArray(route.geometry.coordinates)",
+                  "  ? route.geometry.coordinates",
+                  "  : [];",
+                  "",
+                  "pm.test('tracking map payload is present', function () {",
+                  "  pm.expect(origin.latitude, 'origin latitude').to.be.a('number');",
+                  "  pm.expect(origin.longitude, 'origin longitude').to.be.a('number');",
+                  "  pm.expect(destination.latitude, 'destination latitude').to.be.a('number');",
+                  "  pm.expect(destination.longitude, 'destination longitude').to.be.a('number');",
+                  "  pm.expect(coordinates.length, 'route coordinates').to.be.above(1);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('trackingOriginLat', String(origin.latitude ?? ''));",
+                  "pm.collectionVariables.set('trackingOriginLng', String(origin.longitude ?? ''));",
+                  "pm.collectionVariables.set('trackingDestinationLat', String(destination.latitude ?? ''));",
+                  "pm.collectionVariables.set('trackingDestinationLng', String(destination.longitude ?? ''));",
+                  "pm.collectionVariables.set('trackingRouteProvider', route.provider || '');",
+                  "pm.collectionVariables.set('trackingRouteStatus', route.status || '');",
+                  "pm.collectionVariables.set('trackingRouteDistanceMeters', String(route.distanceMeters ?? ''));",
+                  "pm.collectionVariables.set('trackingRouteDurationSeconds', String(route.durationSeconds ?? ''));",
+                  "pm.collectionVariables.set('trackingRouteGeoJson', JSON.stringify(route.geometry || null));",
+                  "",
+                  "const leafletPoints = coordinates.map(function (point) {",
+                  "  return [point[1], point[0]];",
+                  "});",
+                  "",
+                  "pm.visualizer.set(`",
+                  "  <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\" />",
+                  "  <style>",
+                  "    body { margin: 0; font-family: Arial, sans-serif; }",
+                  "    #map { height: 420px; width: 100%; }",
+                  "    .summary { padding: 10px 12px; font-size: 13px; line-height: 1.45; }",
+                  "    .summary strong { display: inline-block; min-width: 92px; }",
+                  "  </style>",
+                  "  <div id=\"map\"></div>",
+                  "  <div class=\"summary\">",
+                  "    <div><strong>Provider</strong>{{provider}} / {{status}}</div>",
+                  "    <div><strong>Distance</strong>{{distanceKm}} km</div>",
+                  "    <div><strong>Duration</strong>{{durationMin}} min</div>",
+                  "    <div><strong>Destination</strong>{{address}}</div>",
+                  "  </div>",
+                  "  <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script>",
+                  "  <script>",
+                  "    const origin = [{{originLat}}, {{originLng}}];",
+                  "    const destination = [{{destinationLat}}, {{destinationLng}}];",
+                  "    const routePoints = {{{routePoints}}};",
+                  "    const map = L.map('map');",
+                  "    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {",
+                  "      maxZoom: 19,",
+                  "      attribution: '&copy; OpenStreetMap contributors'",
+                  "    }).addTo(map);",
+                  "    L.marker(origin).addTo(map).bindPopup('Shipper / origin');",
+                  "    L.marker(destination).addTo(map).bindPopup('Customer destination');",
+                  "    const line = L.polyline(routePoints.length ? routePoints : [origin, destination], { color: '#0b84d8', weight: 5 }).addTo(map);",
+                  "    map.fitBounds(line.getBounds(), { padding: [28, 28] });",
+                  "  </script>",
+                  "`, {",
+                  "  provider: route.provider || 'fallback',",
+                  "  status: route.status || '',",
+                  "  distanceKm: route.distanceMeters ? (route.distanceMeters / 1000).toFixed(2) : 'n/a',",
+                  "  durationMin: route.durationSeconds ? Math.round(route.durationSeconds / 60) : 'n/a',",
+                  "  address: destination.address || '',",
+                  "  originLat: origin.latitude || 0,",
+                  "  originLng: origin.longitude || 0,",
+                  "  destinationLat: destination.latitude || 0,",
+                  "  destinationLng: destination.longitude || 0,",
+                  "  routePoints: JSON.stringify(leafletPoints),",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Capture PayPal Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": {{paymentId}},\n  \"paypalOrderId\": \"{{paypalOrderId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/paypal/capture",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "paypal",
+                "capture"
+              ]
+            },
+            "description": "Programmatic endpoint to capture a PayPal order on the backend. This is usually triggered automatically via the PayPal Web Return Callback or can be run manually."
+          },
+          "response": []
+        },
+        {
+          "name": "PayPal Web Return Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/paypal/return?token={{mockPaymentToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "paypal",
+                "return"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{mockPaymentToken}}",
+                  "description": "The PayPal Order ID / token redirect parameter"
+                }
+              ]
+            },
+            "description": "Simulates PayPal returning to Sello backend after user approves payment. This endpoint captures the PayPal transaction and displays a static HTML success page."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customer Account",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Customer Updated\",\n  \"gender\": \"other\",\n  \"emailOptIn\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{customerPassword}}\",\n  \"newPassword\": \"{{customerNewPassword}}\",\n  \"confirmNewPassword\": \"{{customerNewPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Addresses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const addresses = json.data || [];",
+                  "  if (addresses.length > 0) {",
+                  "    pm.collectionVariables.set('addressId', String(addresses[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.id) pm.collectionVariables.set('addressId', String(data.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientName\": \"Customer Receiver\",\n  \"phone\": \"0912345678\",\n  \"province\": \"Ho Chi Minh\",\n  \"district\": \"District 1\",\n  \"ward\": \"Ben Nghe\",\n  \"detailAddress\": \"123 Nguyen Hue\",\n  \"addressType\": \"home\",\n  \"isDefault\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"detailAddress\": \"456 Le Loi\",\n  \"addressType\": \"office\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses",
+                "{{addressId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isDefault\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addresses/{{addressId}}/default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses",
+                "{{addressId}}",
+                "default"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const notifications = json.data || [];",
+                  "  if (notifications.length > 0) {",
+                  "    pm.collectionVariables.set('notificationId', String(notifications[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Wishlist Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{productId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                "items"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Wishlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const items = json.data && json.data.items ? json.data.items : [];",
+                  "  if (items.length > 0) {",
+                  "    pm.collectionVariables.set('wishlistItemId', String(items[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Wishlist Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/items/{{wishlistItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                "items",
+                "{{wishlistItemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{productId}},\n  \"rating\": 5,\n  \"title\": \"Great product\",\n  \"comment\": \"Very happy with this order\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Social Login Flow",
+      "item": [
+        {
+          "name": "Google Login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "iCloud Login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/icloud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "icloud"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat Flow",
+      "item": [
+        {
+          "name": "Get My Chat Room",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/my-room",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat",
+                "my-room"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Chat Rooms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/admin-rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat",
+                "admin-rooms"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/history/1?limit=50&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat",
+                "history",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
