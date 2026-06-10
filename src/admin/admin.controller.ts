@@ -11,7 +11,13 @@ import {
   Req,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { Request } from 'express';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
@@ -57,6 +63,30 @@ export class AdminController {
   @Permissions('system:dashboard:read')
   getSystemDashboard() {
     return this.adminService.getSystemDashboard();
+  }
+
+  @Post('upload')
+  @Permissions('products:create')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './public/uploads',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `product-${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
+  uploadFile(@UploadedFile() file: any) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return {
+      status: 'success',
+      url: `/uploads/${file.filename}`,
+    };
   }
 
   @Get('system/config-options')
