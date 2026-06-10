@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { DeviceEventEmitter, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePermissions } from "@/hooks/auth/use-permissions";
 
@@ -16,13 +17,20 @@ const tabs: TabMeta[] = [
   { key: "products", label: "Product", icon: "grid", permission: "products:read" },
   { key: "chats", label: "Chat", icon: "message-square", permission: "chats:read" },
   { key: "orders", label: "Orders", icon: "truck", permission: "orders:read" },
-  { key: "system", label: "He thong", icon: "settings", permission: "system:dashboard:read" },
   { key: "menu", label: "Menu", icon: "menu" },
 ];
 
 export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { hasPermission } = usePermissions();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener("pendingOrdersCount", (count: number) => {
+      setPendingCount(count);
+    });
+    return () => sub.remove();
+  }, []);
 
   // Filter tabs based on active admin's permissions
   const visibleTabs = tabs.filter(
@@ -68,7 +76,16 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
               onPress={onPress}
               className="h-[56px] flex-1 items-center justify-center"
             >
-              <Feather name={tab.icon} size={16} color={tintColor} />
+              <View className="relative">
+                <Feather name={tab.icon} size={16} color={tintColor} />
+                {tab.key === "orders" && pendingCount > 0 && (
+                  <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
+                    <Text className="text-[8px] font-bold text-white leading-none">
+                      {pendingCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <Text className={`mt-1 text-[10px] font-bold ${isFocused ? "text-[#006397]" : "text-[#97A0AB]"}`}>
                 {tab.label}
               </Text>

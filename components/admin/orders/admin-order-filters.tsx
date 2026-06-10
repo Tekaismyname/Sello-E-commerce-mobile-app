@@ -11,13 +11,13 @@ type AdminOrderFiltersProps = {
 };
 
 const OPTIONS: { value: AdminOrderFilter; label: string }[] = [
-  { value: "all", label: "Tất cả" },
-  { value: "pending", label: "Chờ xác nhận" },
-  { value: "packed", label: "Chờ lấy hàng" },
-  { value: "shipping", label: "Đang giao" },
-  { value: "delivered", label: "Đã giao" },
-  { value: "cancelled", label: "Đã hủy" },
-  { value: "return", label: "Trả hàng/Hoàn tiền" },
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "packed", label: "Packed" },
+  { value: "shipping", label: "Shipping" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "return", label: "Returns" },
 ];
 
 export function AdminOrderFilters({
@@ -33,7 +33,7 @@ export function AdminOrderFilters({
         <Feather name="search" size={17} color="#6B7280" />
         <TextInput
           className="ml-2 flex-1 text-[14px] text-[#1F2934]"
-          placeholder="Tìm mã đơn hàng, tên khách hàng..."
+          placeholder="Search order code, customer name..."
           placeholderTextColor="#9CA3AF"
           value={search}
           onChangeText={onSearchChange}

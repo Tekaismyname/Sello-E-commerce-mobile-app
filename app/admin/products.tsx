@@ -5,8 +5,8 @@ import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminProduct, AdminProductsData } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -29,6 +29,7 @@ export default function AdminProductsScreen() {
   const { token } = useAuth();
   const { hasPermission } = usePermissions();
   const router = useRouter();
+  const { status } = useLocalSearchParams<{ status?: string }>();
 
   const canReadProducts = hasPermission("products:read");
   const canCreateProducts = hasPermission("products:create");
@@ -38,6 +39,13 @@ export default function AdminProductsScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProductStatusFilter>("all");
+
+  useEffect(() => {
+    if (status && PRODUCT_STATUS_OPTIONS.includes(status as any)) {
+      setStatusFilter(status as ProductStatusFilter);
+    }
+  }, [status]);
+
   const [data, setData] = useState<AdminProductsData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
   const [loading, setLoading] = useState(true);
