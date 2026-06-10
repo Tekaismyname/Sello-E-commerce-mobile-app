@@ -10,7 +10,7 @@ export function useWishlistView(token: string) {
 
   const fetchWishlist = useCallback(async () => {
     if (!token) {
-      setError("Vui long dang nhap de xem wishlist.");
+      setError("Please sign in to view your wishlist.");
       setLoading(false);
       return;
     }
@@ -21,7 +21,7 @@ export function useWishlistView(token: string) {
       const response = await wishlistService.getWishlist(token);
       setWishlist(response.data ?? []);
     } catch (err: any) {
-      setError(err.message ?? "Khong the tai wishlist.");
+      setError(err.message ?? "Unable to load the wishlist.");
     } finally {
       setLoading(false);
     }

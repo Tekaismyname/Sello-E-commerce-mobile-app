@@ -87,8 +87,18 @@ export default function SearchScreen() {
             onClearAll={() => setHistory([])}
           />
 
-          <SearchKeywordListSection title="Tìm kiếm phổ biến" items={popular} onPressItem={runSearch} mode="ranked" />
-          <SearchKeywordListSection title="Gợi ý cho bạn" items={recommended} onPressItem={runSearch} mode="recommended" />
+          <SearchKeywordListSection
+            title="Popular searches"
+            items={popular}
+            onPressItem={runSearch}
+            mode="ranked"
+          />
+          <SearchKeywordListSection
+            title="Recommended for you"
+            items={recommended}
+            onPressItem={runSearch}
+            mode="recommended"
+          />
           <SearchPromoBanner />
         </ScrollView>
       ) : null}

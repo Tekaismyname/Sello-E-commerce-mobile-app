@@ -17,7 +17,7 @@ export default function AuthCallbackScreen() {
       <View className="flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="#157bb8" />
         <Text className="mt-4 text-center text-[16px] font-medium text-[#3f4850]">
-          Completing Google sign in...
+          Completing Google sign-in...
         </Text>
       </View>
     </SafeAreaView>

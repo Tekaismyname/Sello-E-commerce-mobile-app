@@ -28,7 +28,7 @@ const formatDistance = (meters?: number | null) => {
 const formatDuration = (seconds?: number | null) => {
   if (!seconds) return null;
   const minutes = Math.max(1, Math.round(seconds / 60));
-  return `${minutes} phut`;
+  return `${minutes} min`;
 };
 
 const buildMapHtml = (
@@ -130,7 +130,7 @@ const buildMapHtml = (
   </head>
   <body>
     <div id="map">
-      <div id="fallback" class="fallback">Khong tai duoc mot so tile OpenStreetMap, nhung duong di van duoc hien thi tu du lieu OSRM.</div>
+      <div id="fallback" class="fallback">Some OpenStreetMap tiles could not be loaded, but the route is still shown using OSRM data.</div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -140,7 +140,7 @@ const buildMapHtml = (
       function boot() {
         if (!window.L) {
           fallback.style.display = 'block';
-          fallback.textContent = 'Khong tai duoc Leaflet tu CDN.';
+          fallback.textContent = 'Unable to load Leaflet from the CDN.';
           return;
         }
 
@@ -204,13 +204,13 @@ const buildMapHtml = (
           },
         ).addTo(map);
 
-        destinationMarker.bindTooltip('Diem giao', {
+        destinationMarker.bindTooltip('Drop-off point', {
           permanent: false,
           direction: 'top',
           offset: [0, -8],
         });
 
-        shipperMarker.bindTooltip('Shipper', {
+        shipperMarker.bindTooltip('Driver', {
           permanent: false,
           direction: 'top',
           offset: [0, -10],
@@ -243,7 +243,7 @@ export default function OrderTrackingScreen() {
     const id = Number(orderId);
 
     if (!token || !id) {
-      setError("Khong tim thay thong tin van chuyen.");
+      setError("Tracking information was not found.");
       setLoading(false);
       return;
     }
@@ -251,12 +251,12 @@ export default function OrderTrackingScreen() {
     orderService
       .getOrderTracking(token, id)
       .then((response) => setTracking(response.data))
-      .catch((err: Error) => setError(err.message ?? "Khong the tai hanh trinh don hang."))
+      .catch((err: Error) => setError(err.message ?? "Unable to load the delivery journey."))
       .finally(() => setLoading(false));
   }, [orderId, token]);
 
   const latestStatus = useMemo(
-    () => tracking?.timeline[tracking.timeline.length - 1]?.status ?? "Dang cap nhat",
+    () => tracking?.timeline[tracking.timeline.length - 1]?.status ?? "Updating",
     [tracking?.timeline],
   );
 
@@ -313,7 +313,7 @@ export default function OrderTrackingScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#1F2934" />
         </Pressable>
-        <Text className="ml-1 text-[20px] font-extrabold text-[#1F2934]">Theo doi don hang</Text>
+        <Text className="ml-1 text-[20px] font-extrabold text-[#1F2934]">Track order</Text>
       </View>
 
       {loading ? (
@@ -322,7 +322,7 @@ export default function OrderTrackingScreen() {
         </View>
       ) : error || !tracking ? (
         <View className="px-4 py-4">
-          <Text className="text-[14px] font-semibold text-[#BA1A1A]">{error ?? "Khong co du lieu"}</Text>
+          <Text className="text-[14px] font-semibold text-[#BA1A1A]">{error ?? "No data available"}</Text>
         </View>
       ) : (
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-2" showsVerticalScrollIndicator={false}>
@@ -330,7 +330,7 @@ export default function OrderTrackingScreen() {
             <View className="flex-row items-center justify-between">
               <View className="rounded-full bg-[#DBEBFA] px-3 py-1">
                 <Text className="text-[12px] font-bold text-[#0369A1]">
-                  #{tracking.shipment?.trackingCode ?? "DANG CAP NHAT"}
+                  #{tracking.shipment?.trackingCode ?? "UPDATING"}
                 </Text>
               </View>
               <View className="flex-row items-center">
@@ -339,53 +339,47 @@ export default function OrderTrackingScreen() {
               </View>
             </View>
 
-            <Text className="mt-3 text-[20px] font-extrabold leading-[28px] text-[#1F2934]">Kien hang dang toi</Text>
+            <Text className="mt-3 text-[20px] font-extrabold leading-[28px] text-[#1F2934]">Your package is on the way</Text>
             <Text className="mt-1 text-[14px] text-[#4B5563]">
-              Du kien ngay giao:{" "}
+              Estimated delivery:{" "}
               <Text className="font-bold">
                 {tracking.shipment?.estimatedDeliveryAt
-                  ? new Date(tracking.shipment.estimatedDeliveryAt).toLocaleString("vi-VN")
-                  : "Hom nay"}
+                  ? new Date(tracking.shipment.estimatedDeliveryAt).toLocaleString("en-US")
+                  : "Today"}
               </Text>
             </Text>
             {!!tracking.shipment?.driverPhone && (
-              <Text className="mt-1 text-[13px] text-[#4B5563]">Lien he tai xe: {tracking.shipment.driverPhone}</Text>
+              <Text className="mt-1 text-[13px] text-[#4B5563]">Contact driver: {tracking.shipment.driverPhone}</Text>
             )}
 
             {normalizedLatest === "cancelled" ? (
-              <View className="mt-3 items-center justify-center rounded-[14px] bg-[#FEF2F2] border border-[#FEE2E2] p-6 py-8">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-[#FEE2E2] mb-3">
+              <View className="mt-3 items-center justify-center rounded-[14px] border border-[#FEE2E2] bg-[#FEF2F2] p-6 py-8">
+                <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-[#FEE2E2]">
                   <Feather name="x-circle" size={24} color="#EF4444" />
                 </View>
-                <Text className="text-[15px] font-extrabold text-[#991B1B] text-center">
-                  Đơn hàng đã bị hủy
-                </Text>
-                <Text className="mt-1 text-[13px] leading-[19px] text-[#991B1B] opacity-80 text-center px-4">
-                  Đơn hàng đã hủy và không thể theo dõi hành trình giao nhận.
+                <Text className="text-center text-[15px] font-extrabold text-[#991B1B]">Order cancelled</Text>
+                <Text className="mt-1 px-4 text-center text-[13px] leading-[19px] text-[#991B1B] opacity-80">
+                  This order was cancelled and its delivery journey can no longer be tracked.
                 </Text>
               </View>
             ) : normalizedLatest === "returned" || normalizedLatest === "return_requested" ? (
-              <View className="mt-3 items-center justify-center rounded-[14px] bg-[#FFFBEB] border border-[#FEF3C7] p-6 py-8">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-[#FEF3C7] mb-3">
+              <View className="mt-3 items-center justify-center rounded-[14px] border border-[#FEF3C7] bg-[#FFFBEB] p-6 py-8">
+                <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-[#FEF3C7]">
                   <Feather name="rotate-ccw" size={24} color="#D97706" />
                 </View>
-                <Text className="text-[15px] font-extrabold text-[#92400E] text-center">
-                  Yêu cầu trả hàng
-                </Text>
-                <Text className="mt-1 text-[13px] leading-[19px] text-[#92400E] opacity-80 text-center px-4">
-                  Đơn hàng đang trong quy trình xử lý trả hàng hoàn tiền.
+                <Text className="text-center text-[15px] font-extrabold text-[#92400E]">Return requested</Text>
+                <Text className="mt-1 px-4 text-center text-[13px] leading-[19px] text-[#92400E] opacity-80">
+                  This order is currently being processed for return and refund.
                 </Text>
               </View>
             ) : normalizedLatest !== "shipping" && normalizedLatest !== "delivered" ? (
-              <View className="mt-3 items-center justify-center rounded-[14px] bg-[#F1F5F9] border border-[#E2E8F0] p-6 py-8">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-[#E2E8F0] mb-3">
+              <View className="mt-3 items-center justify-center rounded-[14px] border border-[#E2E8F0] bg-[#F1F5F9] p-6 py-8">
+                <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-[#E2E8F0]">
                   <Feather name="box" size={24} color="#64748B" />
                 </View>
-                <Text className="text-[15px] font-extrabold text-[#1F2934] text-center">
-                  Đang chuẩn bị hàng
-                </Text>
-                <Text className="mt-1 text-[13px] leading-[19px] text-[#64748B] text-center px-4">
-                  Cửa hàng đang đóng gói sản phẩm. Lộ trình giao hàng trực tuyến sẽ xuất hiện khi đơn hàng được bàn giao cho đơn vị vận chuyển.
+                <Text className="text-center text-[15px] font-extrabold text-[#1F2934]">Preparing your order</Text>
+                <Text className="mt-1 px-4 text-center text-[13px] leading-[19px] text-[#64748B]">
+                  The store is packing your items. Live delivery tracking will appear once the package is handed over to the carrier.
                 </Text>
               </View>
             ) : (
@@ -415,9 +409,9 @@ export default function OrderTrackingScreen() {
                     </View>
                     <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white/95 p-3">
                       <View className="flex-1 pr-3">
-                        <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
+                        <Text className="text-[13px] text-[#64748B]">Current driver</Text>
                         <Text className="text-[15px] font-extrabold text-[#1F2934]" numberOfLines={1}>
-                          {tracking.shipment?.driverName ?? "Dang cap nhat"}
+                          {tracking.shipment?.driverName ?? "Updating"}
                           {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
                         </Text>
                       </View>
@@ -443,9 +437,9 @@ export default function OrderTrackingScreen() {
                     </View>
                     <View className="absolute bottom-3 left-3 right-3 flex-row items-center justify-between rounded-[12px] bg-white p-3">
                       <View>
-                        <Text className="text-[13px] text-[#64748B]">Tai xe hien tai</Text>
+                        <Text className="text-[13px] text-[#64748B]">Current driver</Text>
                         <Text className="text-[15px] font-extrabold text-[#1F2934]">
-                          {tracking.shipment?.driverName ?? "Dang cap nhat"}{" "}
+                          {tracking.shipment?.driverName ?? "Updating"}{" "}
                           {tracking.shipment?.vehicleNumber ? ` ${tracking.shipment.vehicleNumber}` : ""}
                         </Text>
                       </View>
@@ -463,7 +457,7 @@ export default function OrderTrackingScreen() {
                 <View className="flex-row items-start">
                   <Feather name="map-pin" size={16} color="#BA1A1A" />
                   <View className="ml-2 flex-1">
-                    <Text className="text-[13px] font-bold text-[#1F2934]">Diem giao hang</Text>
+                    <Text className="text-[13px] font-bold text-[#1F2934]">Delivery address</Text>
                     <Text className="mt-1 text-[13px] leading-[19px] text-[#4B5563]">{destinationInfo.address}</Text>
                   </View>
                 </View>
@@ -478,19 +472,19 @@ export default function OrderTrackingScreen() {
           <View className="mt-3 rounded-[16px] bg-white p-4">
             <View className="flex-row items-center">
               <Feather name="truck" size={16} color="#0369A1" />
-              <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Don vi van chuyen</Text>
+              <Text className="ml-2 text-[17px] font-extrabold text-[#1F2934]">Carrier</Text>
             </View>
             <Text className="mt-3 text-[17px] font-extrabold text-[#1F2934]">
-              {tracking.shipment?.carrierName ?? "Dang cap nhat"}
+              {tracking.shipment?.carrierName ?? "Updating"}
             </Text>
             <View className="mt-2 flex-row justify-between">
-              <Text className="text-[14px] text-[#4B5563]">Ma van don</Text>
+              <Text className="text-[14px] text-[#4B5563]">Tracking number</Text>
               <Text className="text-[14px] font-semibold text-[#1F2934]">{tracking.shipment?.trackingCode ?? "N/A"}</Text>
             </View>
             <View className="mt-1 flex-row justify-between">
-              <Text className="text-[14px] text-[#4B5563]">Hinh thuc</Text>
+              <Text className="text-[14px] text-[#4B5563]">Shipping method</Text>
               <Text className="text-[14px] font-semibold text-[#1F2934]">
-                {tracking.shipment?.shippingType ?? "Giao tieu chuan"}
+                {tracking.shipment?.shippingType ?? "Standard delivery"}
               </Text>
             </View>
           </View>

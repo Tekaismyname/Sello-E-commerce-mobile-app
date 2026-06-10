@@ -7,29 +7,29 @@ export function ProductSpecs() {
       <View className="rounded-[12px] bg-[#F2F3F7] p-5">
         <View className="mb-4 flex-row items-center gap-2">
           <Feather name="file-text" size={20} color="#006397" />
-          <Text className="text-[18px] font-extrabold text-[#191C1F]">Thông Số Kỹ Thuật</Text>
+          <Text className="text-[18px] font-extrabold text-[#191C1F]">Technical specifications</Text>
         </View>
 
         <View className="gap-4">
           <View className="flex-row justify-between border-b border-[#E7E8EC] pb-4">
-            <Text className="text-[14px] text-[#3F4850]">Thương hiệu</Text>
+            <Text className="text-[14px] text-[#3F4850]">Brand</Text>
             <Text className="text-[14px] font-bold text-[#191C1F]">Nike Jordan</Text>
           </View>
           <View className="flex-row justify-between border-b border-[#E7E8EC] pb-4">
-            <Text className="text-[14px] text-[#3F4850]">Mã sản phẩm</Text>
+            <Text className="text-[14px] text-[#3F4850]">Product code</Text>
             <Text className="text-[14px] font-bold text-[#191C1F]">AJ1-RETRO-CHI</Text>
           </View>
           <View className="flex-row justify-between border-b border-[#E7E8EC] pb-4">
-            <Text className="text-[14px] text-[#3F4850]">Kiểu dáng</Text>
+            <Text className="text-[14px] text-[#3F4850]">Style</Text>
             <Text className="text-[14px] font-bold text-[#191C1F]">High Top / Lifestyle</Text>
           </View>
           <View className="flex-row justify-between border-b border-[#E7E8EC] pb-4">
-            <Text className="text-[14px] text-[#3F4850]">Chất liệu</Text>
-            <Text className="text-[14px] font-bold text-[#191C1F]">Chất da cao cấp (Full-grain Leather)</Text>
+            <Text className="text-[14px] text-[#3F4850]">Material</Text>
+            <Text className="text-[14px] font-bold text-[#191C1F]">Premium full-grain leather</Text>
           </View>
           <View className="flex-row justify-between">
-            <Text className="text-[14px] text-[#3F4850]">Bảo hành</Text>
-            <Text className="text-[14px] font-bold text-[#191C1F]">12 tháng chính hãng</Text>
+            <Text className="text-[14px] text-[#3F4850]">Warranty</Text>
+            <Text className="text-[14px] font-bold text-[#191C1F]">12-month official warranty</Text>
           </View>
         </View>
       </View>

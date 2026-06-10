@@ -7,11 +7,11 @@ type ReviewRatingSelectorProps = {
 };
 
 export function ReviewRatingSelector({ rating, onRatingChange }: ReviewRatingSelectorProps) {
-  const ratingText = ["", "Rất tệ", "Tệ", "Bình thường", "Tốt", "Rất tốt"];
+  const ratingText = ["", "Very bad", "Bad", "Average", "Good", "Excellent"];
 
   return (
     <View className="mb-6 items-center">
-      <Text className="mb-4 text-[18px] font-extrabold text-[#191C1F]">Bạn thấy sản phẩm này thế nào?</Text>
+      <Text className="mb-4 text-[18px] font-extrabold text-[#191C1F]">How do you feel about this product?</Text>
       <View className="flex-row gap-4">
         {[1, 2, 3, 4, 5].map((star) => (
           <Pressable key={star} onPress={() => onRatingChange(star)}>

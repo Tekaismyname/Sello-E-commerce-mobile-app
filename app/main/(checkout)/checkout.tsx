@@ -10,10 +10,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCheckout } from "@/hooks/customer/use-checkout";
 import { addressService, cartService } from "@/services/customer.service";
 import { Address, CartItem, CreateAddressPayload, UpdateAddressPayload } from "@/types/customer";
+import { triggerLocalNotification } from "@/utils/local-notification";
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { useMemo, useState } from "react";
-import { triggerLocalNotification } from "@/utils/local-notification";
 import {
   ActivityIndicator,
   Alert,
@@ -69,25 +69,25 @@ export default function CheckoutScreen() {
       const orderId = Number(data.orderId ?? data.id ?? 0);
       const paymentId = Number(data.paymentId ?? 0);
       const paymentType = String(data.paymentType ?? "cod");
-      const paymentMethod = preview?.paymentMethods.find((method) => method.id === selectedPaymentMethodId);
+      const paymentMethod = preview?.paymentMethods.find((item) => item.id === selectedPaymentMethodId);
       const params = new URLSearchParams({
         orderId: String(orderId),
         paymentId: String(paymentId),
         amount: String(pricing.totalAmount),
-        method: paymentMethod?.name ?? paymentMethod?.code ?? "Thanh toan",
+        method: paymentMethod?.name ?? paymentMethod?.code ?? "Payment",
         paymentType,
         qrCodeUrl: String(data.qrCodeUrl ?? ""),
         paymentUrl: String(data.paymentUrl ?? ""),
       });
 
       router.replace((`/main/payment?${params.toString()}` as unknown) as Href);
-      
+
       triggerLocalNotification(
-        "Đặt hàng thành công! 🎉",
-        `Đơn hàng Sello của bạn trị giá ${new Intl.NumberFormat("vi-VN").format(pricing.totalAmount)}đ đã được tạo thành công.`
+        "Order created successfully!",
+        `Your Sello order worth ${new Intl.NumberFormat("vi-VN").format(pricing.totalAmount)}d has been created successfully.`,
       );
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the dat hang.");
+      Alert.alert("Error", err.message ?? "Unable to place the order.");
     }
   };
 
@@ -117,7 +117,7 @@ export default function CheckoutScreen() {
       setShowAddressForm(false);
       await refreshCheckout();
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the luu dia chi.");
+      Alert.alert("Error", err.message ?? "Unable to save the address.");
     } finally {
       setSavingAddress(false);
     }
@@ -131,7 +131,7 @@ export default function CheckoutScreen() {
       await cartService.updateCartItem(token, item.id, { quantity: nextQuantity });
       await refreshCheckout();
     } catch (err: any) {
-      Alert.alert("Loi", err.message ?? "Khong the cap nhat so luong.");
+      Alert.alert("Error", err.message ?? "Unable to update the quantity.");
     } finally {
       setUpdatingItemId(null);
     }
@@ -143,7 +143,7 @@ export default function CheckoutScreen() {
         <Pressable className="absolute left-4 h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Thanh toan</Text>
+        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Checkout</Text>
       </View>
 
       {loading ? (
@@ -172,7 +172,7 @@ export default function CheckoutScreen() {
                     onPress={openCreateAddress}
                   >
                     <Feather name="plus" size={15} color="white" />
-                    <Text className="ml-2 text-[13px] font-bold text-white">Them dia chi</Text>
+                    <Text className="ml-2 text-[13px] font-bold text-white">Add address</Text>
                   </Pressable>
                   {selectedAddress ? (
                     <Pressable
@@ -180,7 +180,7 @@ export default function CheckoutScreen() {
                       onPress={() => openEditAddress(selectedAddress)}
                     >
                       <Feather name="edit-2" size={15} color="#0369A1" />
-                      <Text className="ml-2 text-[13px] font-bold text-[#0369A1]">Sua dia chi</Text>
+                      <Text className="ml-2 text-[13px] font-bold text-[#0369A1]">Edit address</Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -215,7 +215,7 @@ export default function CheckoutScreen() {
                 <View className="flex-row gap-2">
                   <TextInput
                     className="h-11 flex-1 rounded-[10px] bg-[#F5F7FB] px-3 text-[13px] text-[#1F2934]"
-                    placeholder="Nhap ma voucher"
+                    placeholder="Enter voucher code"
                     placeholderTextColor="#94A0AE"
                     value={voucherCode}
                     onChangeText={setVoucherCode}
@@ -224,14 +224,14 @@ export default function CheckoutScreen() {
                     onPress={applyVoucher}
                     className="h-11 items-center justify-center rounded-[10px] bg-[#0369A1] px-4"
                   >
-                    <Text className="text-[12px] font-bold text-white">Ap dung</Text>
+                    <Text className="text-[12px] font-bold text-white">Apply</Text>
                   </Pressable>
                 </View>
               </View>
             )}
 
             <View className="mt-3 rounded-[16px] bg-white p-4">
-              <Text className="text-[17px] font-extrabold text-[#1F2934]">Phuong thuc thanh toan</Text>
+              <Text className="text-[17px] font-extrabold text-[#1F2934]">Payment method</Text>
               <View className="mt-3">
                 <CheckoutPaymentSelector
                   paymentMethods={preview?.paymentMethods ?? []}
@@ -262,7 +262,7 @@ export default function CheckoutScreen() {
             <View className="flex-1 bg-[#F3F5FA]">
               <View className="h-[56px] flex-row items-center justify-between bg-white px-4">
                 <Text className="text-[18px] font-extrabold text-[#0F4C6B]">
-                  {editingAddress ? "Sua dia chi" : "Them dia chi moi"}
+                  {editingAddress ? "Edit address" : "Add new address"}
                 </Text>
                 <Pressable className="h-10 w-10 items-center justify-center" onPress={() => setShowAddressForm(false)}>
                   <Feather name="x" size={20} color="#1F2934" />

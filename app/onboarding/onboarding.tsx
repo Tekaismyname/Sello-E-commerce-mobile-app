@@ -14,23 +14,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const slides = [
   {
     id: "intro",
-    title: "Giới thiệu app\nSello\nCommerce",
+    title: "Meet the\nSello\nExperience",
     description:
-      "Trải nghiệm mua sắm đẳng cấp được tuyển chọn kỹ lưỡng, mang phong cách tạp chí thời thượng ngay trên điện thoại của bạn.",
+      "Discover a premium shopping experience curated with care and delivered in a bold, editorial style right on your phone.",
     imageUri: "https://www.figma.com/api/mcp/asset/e6800592-41b2-49f9-a79c-277facfb88b2",
   },
   {
     id: "discover",
-    title: "Khám phá\nBộ sưu tập\nCao cấp",
+    title: "Explore\nCurated\nCollections",
     description:
-      "Theo dõi các bộ sưu tập mới mỗi tuần, sản phẩm được tuyển chọn và đề xuất cá nhân hóa theo sở thích của bạn.",
+      "Stay ahead with fresh weekly picks, hand-selected products, and recommendations tailored to your personal style.",
     imageUri: "https://www.figma.com/api/mcp/asset/e6800592-41b2-49f9-a79c-277facfb88b2",
   },
   {
     id: "checkout",
-    title: "Thanh toán\nNhanh chóng\nAn toàn",
+    title: "Fast,\nSecure\nCheckout",
     description:
-      "Từ giỏ hàng đến xác nhận đơn chỉ trong vài thao tác, với trải nghiệm mượt mà và minh bạch từng bước.",
+      "From cart to confirmation in just a few taps, with a smooth and transparent checkout experience every step of the way.",
     imageUri: "https://www.figma.com/api/mcp/asset/e6800592-41b2-49f9-a79c-277facfb88b2",
   },
 ];
@@ -71,7 +71,7 @@ export default function OnboardingScreen() {
           className="rounded-[12px] px-4 py-2 active:bg-[#e1e2e6]"
           onPress={goToWelcome}
         >
-          <Text className="text-[16px] font-semibold text-[#3f4850]">Bỏ qua</Text>
+          <Text className="text-[16px] font-semibold text-[#3f4850]">Skip</Text>
         </Pressable>
       </View>
 
@@ -102,7 +102,7 @@ export default function OnboardingScreen() {
                   <View className="absolute inset-0 justify-end px-6 pb-6">
                     <View className="self-start rounded-full bg-[#00a757] px-3 py-1">
                       <Text className="text-[10px] font-semibold uppercase tracking-[1px] text-[#003216]">
-                        Mới nhất
+                        New
                       </Text>
                     </View>
                   </View>
@@ -138,7 +138,7 @@ export default function OnboardingScreen() {
                     onPress={handleNext}
                   >
                     <Text className="text-[18px] font-semibold text-white">
-                      {currentSlide === slides.length - 1 ? "Bắt đầu" : "Tiếp tục"}
+                      {currentSlide === slides.length - 1 ? "Get Started" : "Continue"}
                     </Text>
                   </Pressable>
                 ) : null}

@@ -34,17 +34,17 @@ export default function ResetPasswordScreen() {
     setSuccessMessage("");
 
     if (!identifier || !targetValue || !otpCode) {
-      setErrorMessage("Thieu du lieu xac thuc. Vui long quay lai buoc OTP.");
+      setErrorMessage("Missing verification data. Please return to the OTP step.");
       return;
     }
 
     if (!newPassword || newPassword.length < 8) {
-      setErrorMessage("Mật khẩu mới tối thiểu 8 ký tự.");
+      setErrorMessage("New password must be at least 8 characters.");
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      setErrorMessage("Xác nhận mật khẩu mới không khớp.");
+      setErrorMessage("New password confirmation does not match.");
       return;
     }
 
@@ -69,16 +69,16 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <AuthScreenShell title="Đặt lại mật khẩu" subtitle={`Tài khoản: ${identifier}`}>
+    <AuthScreenShell title="Reset Password" subtitle={`Account: ${identifier}`}>
       <AuthInput
-        placeholder="Mật khẩu mới"
+        placeholder="New password"
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}
       />
 
       <AuthInput
-        placeholder="Xác nhận mật khẩu mới"
+        placeholder="Confirm new password"
         secureTextEntry
         value={confirmNewPassword}
         onChangeText={setConfirmNewPassword}
@@ -87,7 +87,7 @@ export default function ResetPasswordScreen() {
       <AuthMessage kind="error" text={errorMessage} />
       <AuthMessage kind="success" text={successMessage} />
 
-      <AuthButton title="Cap nhat mat khau" loading={loading} onPress={submitResetPassword} />
+      <AuthButton title="Update Password" loading={loading} onPress={submitResetPassword} />
     </AuthScreenShell>
   );
 }

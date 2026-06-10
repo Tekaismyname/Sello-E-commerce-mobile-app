@@ -5,31 +5,31 @@ export function ProductFeatures() {
   return (
     <View className="bg-white px-4 py-8">
       <View className="mb-6 items-center">
-        <Text className="text-[20px] font-extrabold text-[#191C1F]">Đặc Điểm Nổi Bật</Text>
+        <Text className="text-[20px] font-extrabold text-[#191C1F]">Key highlights</Text>
         <View className="mt-2 h-1 w-12 rounded-full bg-[#006397]" />
       </View>
 
       <View className="mb-4 overflow-hidden rounded-[12px] bg-[#F2F3F7]">
         <View className="h-[160px] w-full bg-[#006397]">
-          <Image 
-            source={{ uri: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80" }} 
-            className="h-full w-full opacity-60" 
-            resizeMode="cover" 
+          <Image
+            source={{ uri: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80" }}
+            className="h-full w-full opacity-60"
+            resizeMode="cover"
           />
         </View>
         <View className="p-4">
-          <Text className="mb-2 text-[18px] font-extrabold text-[#191C1F]">Công Nghệ Đệm AeroCloud™</Text>
+          <Text className="mb-2 text-[18px] font-extrabold text-[#191C1F]">AeroCloud cushioning technology</Text>
           <Text className="text-[13px] leading-[20px] text-[#3F4850]">
-            Hệ thống đệm khí đa lớp giúp giảm chấn tối đa, bảo vệ xương khớp trong suốt hành trình dài. Mỗi bước chạy là một sự tận hưởng.
+            The multilayer air cushioning system helps absorb impact and protect your joints during long journeys. Every step feels rewarding.
           </Text>
           <View className="mt-4 gap-2">
             <View className="flex-row items-center gap-2">
               <Feather name="check-circle" size={14} color="#006D37" />
-              <Text className="text-[12px] font-bold text-[#006D37]">Giảm 40% lực tác động</Text>
+              <Text className="text-[12px] font-bold text-[#006D37]">40% less impact force</Text>
             </View>
             <View className="flex-row items-center gap-2">
               <Feather name="check-circle" size={14} color="#006D37" />
-              <Text className="text-[12px] font-bold text-[#006D37]">Phản hồi năng lượng 95%</Text>
+              <Text className="text-[12px] font-bold text-[#006D37]">95% energy return</Text>
             </View>
           </View>
         </View>
@@ -40,8 +40,8 @@ export function ProductFeatures() {
           <Feather name="shield" size={20} color="white" />
         </View>
         <View className="flex-1">
-          <Text className="text-[16px] font-bold text-white">Vật Liệu Bền Vững</Text>
-          <Text className="mt-1 text-[12px] text-white/80">Sử dụng 65% vật liệu tái chế, thân thiện môi trường.</Text>
+          <Text className="text-[16px] font-bold text-white">Sustainable materials</Text>
+          <Text className="mt-1 text-[12px] text-white/80">Made with 65% recycled materials for a more eco-friendly footprint.</Text>
         </View>
       </View>
 
@@ -50,8 +50,8 @@ export function ProductFeatures() {
           <Feather name="wind" size={20} color="#006397" />
         </View>
         <View className="flex-1">
-          <Text className="text-[16px] font-bold text-[#191C1F]">Siêu Thoáng Khí</Text>
-          <Text className="mt-1 text-[12px] text-[#3F4850]">Lớp lưới Engineered Mesh tối ưu luồng khí.</Text>
+          <Text className="text-[16px] font-bold text-[#191C1F]">Ultra breathable</Text>
+          <Text className="mt-1 text-[12px] text-[#3F4850]">Engineered mesh optimizes airflow around your feet.</Text>
         </View>
       </View>
 
@@ -60,8 +60,8 @@ export function ProductFeatures() {
           <Feather name="feather" size={20} color="#873DA6" />
         </View>
         <View className="flex-1">
-          <Text className="text-[16px] font-bold text-[#191C1F]">Trọng Lượng Nhẹ</Text>
-          <Text className="mt-1 text-[12px] text-[#3F4850]">Cảm giác nhẹ tênh trên từng bước chân.</Text>
+          <Text className="text-[16px] font-bold text-[#191C1F]">Lightweight feel</Text>
+          <Text className="mt-1 text-[12px] text-[#3F4850]">Experience featherlight comfort with every step.</Text>
         </View>
       </View>
     </View>

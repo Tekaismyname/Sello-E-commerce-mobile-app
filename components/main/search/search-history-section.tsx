@@ -17,9 +17,9 @@ export function SearchHistorySection({
   return (
     <View>
       <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-[18px] font-extrabold text-[#27313d]">Lịch sử tìm kiếm</Text>
+        <Text className="text-[18px] font-extrabold text-[#27313d]">Recent searches</Text>
         <Pressable onPress={onClearAll}>
-          <Text className="text-[13px] font-semibold text-[#2f79dd]">Xóa hết</Text>
+          <Text className="text-[13px] font-semibold text-[#2f79dd]">Clear all</Text>
         </Pressable>
       </View>
 

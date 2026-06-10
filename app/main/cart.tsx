@@ -1,7 +1,7 @@
+import { Href, router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Href, router, useFocusEffect } from "expo-router";
 import {
   CartEmptyState,
   CartErrorState,
@@ -28,7 +28,7 @@ export default function CartScreen() {
     setError(null);
 
     if (!token) {
-      setError("Vui lòng đăng nhập để xem giỏ hàng.");
+      setError("Please sign in to view your cart.");
       setLoading(false);
       return;
     }
@@ -54,7 +54,7 @@ export default function CartScreen() {
     if (newQty < 1) return;
 
     if (!token) {
-      Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
+      Alert.alert("Error", "Your session has expired.");
       return;
     }
 
@@ -62,13 +62,13 @@ export default function CartScreen() {
       await cartService.updateCartItem(token, item.id, { quantity: newQty });
       fetchCart();
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Error", err.message);
     }
   };
 
   const handleToggleSelect = async (item: CartItem) => {
     if (!token) {
-      Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
+      Alert.alert("Error", "Your session has expired.");
       return;
     }
 
@@ -76,19 +76,19 @@ export default function CartScreen() {
       await cartService.selectCartItem(token, item.id, { selected: !item.selected });
       fetchCart();
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      Alert.alert("Error", err.message);
     }
   };
 
   const handleDelete = async (item: CartItem) => {
-    Alert.alert("Xóa sản phẩm", `Bạn có chắc muốn xóa \"${item.productName}\"?`, [
-      { text: "Hủy", style: "cancel" },
+    Alert.alert("Remove product", `Are you sure you want to remove "${item.productName}"?`, [
+      { text: "Cancel", style: "cancel" },
       {
-        text: "Xóa",
+        text: "Remove",
         style: "destructive",
         onPress: async () => {
           if (!token) {
-            Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
+            Alert.alert("Error", "Your session has expired.");
             return;
           }
 
@@ -96,7 +96,7 @@ export default function CartScreen() {
             await cartService.deleteCartItem(token, item.id);
             fetchCart();
           } catch (err: any) {
-            Alert.alert("Lỗi", err.message);
+            Alert.alert("Error", err.message);
           }
         },
       },
@@ -110,14 +110,14 @@ export default function CartScreen() {
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
       <SelloHeader />
       <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
-        <Text className="text-[30px] font-extrabold text-[#1f2934]">Giỏ hàng</Text>
+        <Text className="text-[30px] font-extrabold text-[#1f2934]">Cart</Text>
 
         {loading ? <CartLoadingState /> : null}
         {!loading && !token ? (
           <GuestPlaceholder
             icon="shopping-cart"
-            title="Giỏ hàng trống"
-            description="Hãy đăng nhập tài khoản Sello để xem các sản phẩm trong giỏ hàng của bạn nhé!"
+            title="Your cart is empty"
+            description="Sign in to your Sello account to view the products saved in your cart."
           />
         ) : !loading && error ? (
           <CartErrorState message={error} />

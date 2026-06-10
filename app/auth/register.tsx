@@ -34,17 +34,17 @@ export default function RegisterScreen() {
     setErrorMessage("");
 
     if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      setErrorMessage("Vui lòng nhập đầy đủ họ tên, email và số điện thoại.");
+      setErrorMessage("Please enter your full name, email, and phone number.");
       return;
     }
 
     if (!password || password.length < 8) {
-      setErrorMessage("Mật khẩu tối thiểu 8 ký tự.");
+      setErrorMessage("Password must be at least 8 characters.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage("Xác nhận mật khẩu không khớp.");
+      setErrorMessage("Password confirmation does not match.");
       return;
     }
 
@@ -87,10 +87,10 @@ export default function RegisterScreen() {
           <View className="items-center">
             <SelloAuthLogo />
             <Text className="mt-8 text-center text-[36px] font-extrabold text-[#191c1f]">
-              Tạo tài khoản mới
+              Create a new account
             </Text>
             <Text className="mt-3 text-center text-[16px] leading-[24px] text-[#3f4850]">
-              Tham gia Sello để lưu đơn hàng, theo dõi ưu đãi và mua sắm thuận tiện hơn.
+              Join Sello to save orders, track deals, and enjoy a smoother shopping experience.
             </Text>
           </View>
 
@@ -99,7 +99,7 @@ export default function RegisterScreen() {
               <Feather name="user" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[16px] text-[#191c1f]"
-                placeholder="Họ và tên"
+                placeholder="Full name"
                 placeholderTextColor="#97a0aa"
                 value={fullName}
                 onChangeText={setFullName}
@@ -123,7 +123,7 @@ export default function RegisterScreen() {
               <Feather name="phone" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[16px] text-[#191c1f]"
-                placeholder="Số điện thoại"
+                placeholder="Phone number"
                 placeholderTextColor="#97a0aa"
                 keyboardType="phone-pad"
                 value={phone}
@@ -135,7 +135,7 @@ export default function RegisterScreen() {
               <Feather name="lock" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[16px] text-[#191c1f]"
-                placeholder="Mật khẩu"
+                placeholder="Password"
                 placeholderTextColor="#97a0aa"
                 secureTextEntry={!showPassword}
                 value={password}
@@ -154,7 +154,7 @@ export default function RegisterScreen() {
               <Feather name="shield" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[16px] text-[#191c1f]"
-                placeholder="Nhập lại mật khẩu"
+                placeholder="Confirm password"
                 placeholderTextColor="#97a0aa"
                 secureTextEntry={!showConfirmPassword}
                 value={confirmPassword}
@@ -171,7 +171,7 @@ export default function RegisterScreen() {
 
             <View className="rounded-[12px] border border-[#d9dadf] bg-white p-3">
               <Text className="mb-3 text-[14px] font-semibold text-[#3f4850]">
-                Nhận OTP qua
+                Receive OTP via
               </Text>
               <View className="flex-row gap-2">
                 <Pressable
@@ -210,7 +210,7 @@ export default function RegisterScreen() {
                       deliveryMethod === "phone" ? "text-white" : "text-[#3f4850]"
                     }`}
                   >
-                    SĐT
+                    Phone
                   </Text>
                 </Pressable>
               </View>
@@ -219,7 +219,7 @@ export default function RegisterScreen() {
             <AuthMessage kind="error" text={errorMessage} />
 
             <AuthButton
-              title="Đăng ký"
+              title="Create Account"
               loading={loading}
               className="mt-1 shadow-[0px_10px_18px_rgba(21,123,184,0.28)]"
               onPress={submitRegister}
@@ -228,17 +228,17 @@ export default function RegisterScreen() {
 
           <SocialAuthOptions
             onGooglePress={() =>
-              setErrorMessage("Đăng ký Google sẽ được tích hợp ở bước tiếp theo.")
+              setErrorMessage("Google sign-up will be added in the next step.")
             }
             onApplePress={() =>
-              setErrorMessage("Đăng ký Apple sẽ được tích hợp ở bước tiếp theo.")
+              setErrorMessage("Apple sign-up will be added in the next step.")
             }
           />
 
           <View className="mt-8 flex-row items-center justify-center gap-1">
-            <Text className="text-[14px] text-[#3f4850]">Bạn đã có tài khoản?</Text>
+            <Text className="text-[14px] text-[#3f4850]">Already have an account?</Text>
             <Pressable onPress={() => router.replace("/auth/login" as Href)}>
-              <Text className="text-[14px] font-semibold text-[#157bb8]">Đăng nhập</Text>
+              <Text className="text-[14px] font-semibold text-[#157bb8]">Sign in</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -246,4 +246,3 @@ export default function RegisterScreen() {
     </SafeAreaView>
   );
 }
-

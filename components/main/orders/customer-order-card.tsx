@@ -10,20 +10,20 @@ type CustomerOrderCardProps = {
 };
 
 const statusConfig = {
-  delivered: { label: "DA GIAO HANG", color: "#15803D", icon: "check-circle" as const },
-  shipping: { label: "DANG VAN CHUYEN", color: "#0369A1", icon: "truck" as const },
-  packed: { label: "DANG DONG GOI", color: "#0369A1", icon: "package" as const },
-  confirmed: { label: "CHO XAC NHAN", color: "#7C3AED", icon: "clock" as const },
-  pending: { label: "CHO XAC NHAN", color: "#7C3AED", icon: "clock" as const },
-  cancelled: { label: "DA HUY", color: "#B91C1C", icon: "x-circle" as const },
-  returned: { label: "DA TRA", color: "#92400E", icon: "rotate-ccw" as const },
-  return_requested: { label: "YÊU CẦU TRẢ HÀNG", color: "#DC2626", icon: "rotate-ccw" as const },
+  delivered: { label: "DELIVERED", color: "#15803D", icon: "check-circle" as const },
+  shipping: { label: "IN TRANSIT", color: "#0369A1", icon: "truck" as const },
+  packed: { label: "PACKING", color: "#0369A1", icon: "package" as const },
+  confirmed: { label: "AWAITING CONFIRMATION", color: "#7C3AED", icon: "clock" as const },
+  pending: { label: "AWAITING CONFIRMATION", color: "#7C3AED", icon: "clock" as const },
+  cancelled: { label: "CANCELLED", color: "#B91C1C", icon: "x-circle" as const },
+  returned: { label: "RETURNED", color: "#92400E", icon: "rotate-ccw" as const },
+  return_requested: { label: "RETURN REQUESTED", color: "#DC2626", icon: "rotate-ccw" as const },
 };
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
 const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString("vi-VN", {
+  new Date(value).toLocaleDateString("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -45,7 +45,7 @@ export function CustomerOrderCard({
     primaryItem?.productImage && primaryItem.productImage.trim()
       ? primaryItem.productImage
       : "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80";
-  const orderLabel = order.orderCode?.trim() ? order.orderCode : `DON #${order.id}`;
+  const orderLabel = order.orderCode?.trim() ? order.orderCode : `ORDER #${order.id}`;
   const itemCount = normalizedItems.reduce((total, current) => total + current.quantity, 0);
   const hasMultipleItems = normalizedItems.length > 1;
 
@@ -53,7 +53,7 @@ export function CustomerOrderCard({
     if (order.status === "pending" || order.status === "confirmed") {
       return (
         <Pressable className="rounded-[12px] bg-[#FDECEC] px-4 py-2.5" onPress={() => onCancel(order)}>
-          <Text className="text-[13px] font-bold text-[#BA1A1A]">Hủy đơn</Text>
+          <Text className="text-[13px] font-bold text-[#BA1A1A]">Cancel order</Text>
         </Pressable>
       );
     }
@@ -61,7 +61,7 @@ export function CustomerOrderCard({
     if (order.status === "shipping" || order.status === "packed") {
       return (
         <Pressable className="rounded-[12px] bg-[#E8F1FB] px-4 py-2.5" onPress={() => onOpenTracking(order)}>
-          <Text className="text-[13px] font-bold text-[#0369A1]">Theo dõi đơn</Text>
+          <Text className="text-[13px] font-bold text-[#0369A1]">Track order</Text>
         </Pressable>
       );
     }
@@ -69,7 +69,7 @@ export function CustomerOrderCard({
     if (order.status === "return_requested") {
       return (
         <View className="rounded-[12px] bg-red-50 px-4 py-2.5">
-          <Text className="text-[13px] font-bold text-red-600">Đang chờ duyệt</Text>
+          <Text className="text-[13px] font-bold text-red-600">Awaiting review</Text>
         </View>
       );
     }
@@ -78,10 +78,10 @@ export function CustomerOrderCard({
       return (
         <View className="flex-row gap-2">
           <Pressable className="rounded-[12px] bg-[#E8F1FB] px-3.5 py-2.5" onPress={() => onOpenDetail(order)}>
-            <Text className="text-[13px] font-bold text-[#0369A1]">Viết đánh giá</Text>
+            <Text className="text-[13px] font-bold text-[#0369A1]">Write review</Text>
           </Pressable>
           <Pressable className="rounded-[12px] bg-[#0F6CBD] px-3.5 py-2.5" onPress={() => onOpenDetail(order)}>
-            <Text className="text-[13px] font-bold text-white">Mua lại</Text>
+            <Text className="text-[13px] font-bold text-white">Buy again</Text>
           </Pressable>
         </View>
       );
@@ -89,7 +89,7 @@ export function CustomerOrderCard({
 
     return (
       <Pressable className="rounded-[12px] bg-[#0F6CBD] px-4 py-2.5" onPress={() => onOpenDetail(order)}>
-        <Text className="text-[13px] font-bold text-white">Mua lại</Text>
+        <Text className="text-[13px] font-bold text-white">Buy again</Text>
       </Pressable>
     );
   };
@@ -114,14 +114,14 @@ export function CustomerOrderCard({
           {!hasMultipleItems ? (
             <>
               <Text className="mt-1 text-[17px] font-extrabold leading-[23px] text-[#1F2934]" numberOfLines={2}>
-                {primaryItem?.productName ?? `Đơn hàng #${order.id}`}
+                {primaryItem?.productName ?? `Order #${order.id}`}
               </Text>
               {!!primaryItem?.variantSnapshot && (
                 <Text className="mt-1 text-[13px] text-[#64748B]" numberOfLines={1}>
                   {primaryItem.variantSnapshot}
                 </Text>
               )}
-              <Text className="mt-1 text-[13px] font-medium text-[#64748B]">Số lượng: {primaryItem?.quantity ?? 1}</Text>
+              <Text className="mt-1 text-[13px] font-medium text-[#64748B]">Quantity: {primaryItem?.quantity ?? 1}</Text>
             </>
           ) : (
             <View className="mt-1 gap-1">
@@ -136,7 +136,7 @@ export function CustomerOrderCard({
               ))}
               {normalizedItems.length > 3 ? (
                 <Text className="text-[12px] font-medium text-[#64748B]">
-                  +{normalizedItems.length - 3} sản phẩm khác
+                  +{normalizedItems.length - 3} more products
                 </Text>
               ) : null}
             </View>
@@ -144,7 +144,7 @@ export function CustomerOrderCard({
 
           <View className="mt-2 flex-row flex-wrap items-center gap-2">
             <View className="rounded-full bg-[#EEF5FB] px-2.5 py-1">
-              <Text className="text-[11px] font-bold text-[#0F6CBD]">{itemCount} món</Text>
+              <Text className="text-[11px] font-bold text-[#0F6CBD]">{itemCount} items</Text>
             </View>
             {order.paymentStatus ? (
               <View className="rounded-full bg-[#F4F4F5] px-2.5 py-1">
@@ -159,14 +159,14 @@ export function CustomerOrderCard({
 
       <View className="mt-4 rounded-[14px] bg-[#F8FAFC] px-3 py-2.5">
         <View className="flex-row items-center justify-between">
-          <Text className="text-[12px] font-semibold text-[#64748B]">Mã đơn hàng</Text>
+          <Text className="text-[12px] font-semibold text-[#64748B]">Order code</Text>
           <Text className="text-[12px] font-extrabold text-[#1F2934]">{orderLabel}</Text>
         </View>
       </View>
 
       <View className="mt-4 flex-row items-center justify-between">
         <Pressable onPress={() => onOpenDetail(order)}>
-          <Text className="text-[13px] font-bold text-[#0369A1]">Xem chi tiết</Text>
+          <Text className="text-[13px] font-bold text-[#0369A1]">View details</Text>
         </Pressable>
         {renderActions()}
       </View>

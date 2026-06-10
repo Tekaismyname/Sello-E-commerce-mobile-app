@@ -1,10 +1,10 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
-import { Image, Pressable, ScrollView, Text, View, ActivityIndicator } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/auth-context";
 import { authService } from "@/services/auth.service";
-import { useState } from "react";
 
 const featureImage =
   "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=500&q=80";
@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
       router.replace(redirectPath);
     } catch (err: any) {
       console.log("Google login failed:", err.message);
-      setErrorText(err.message || "Đăng nhập Google thất bại.");
+      setErrorText(err.message || "Google sign-in failed.");
     } finally {
       setLoadingGoogle(false);
     }
@@ -41,7 +41,6 @@ export default function WelcomeScreen() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pb-8 pt-6">
           <View className="items-center">
-            {/* Logo */}
             <View className="h-[90px] w-[90px] items-center justify-center rounded-[24px] bg-[#157bb8] shadow-[0px_8px_16px_rgba(21,123,184,0.2)]">
               <View className="h-[40px] w-[40px] items-center justify-center rounded-[12px] border border-white/25">
                 <Text className="text-[24px] font-extrabold text-white">*</Text>
@@ -56,38 +55,36 @@ export default function WelcomeScreen() {
             </Text>
           </View>
 
-          {/* Action Buttons */}
           <View className="mt-8 gap-3">
             <Pressable
               className="h-[52px] items-center justify-center rounded-[12px] bg-[#157bb8] shadow-[0px_8px_16px_rgba(21,123,184,0.2)] active:opacity-90"
               onPress={() => router.push("/auth/login" as Href)}
             >
-              <Text className="text-[16px] font-semibold text-white">Đăng nhập</Text>
+              <Text className="text-[16px] font-semibold text-white">Sign In</Text>
             </Pressable>
 
             <Pressable
               className="h-[52px] items-center justify-center rounded-[12px] bg-[#d9dadf] active:opacity-90"
               onPress={() => router.push("/auth/register" as Href)}
             >
-              <Text className="text-[16px] font-semibold text-[#157bb8]">Đăng ký</Text>
+              <Text className="text-[16px] font-semibold text-[#157bb8]">Create Account</Text>
             </Pressable>
 
             <Pressable
-              className="items-center justify-center py-2 mt-1"
+              className="mt-1 items-center justify-center py-2"
               onPress={() => router.replace("/main/home" as Href)}
             >
               <Text className="text-center text-[14px] font-semibold text-[#3f4850] underline">
-                Tiếp tục không đăng nhập
+                Continue without signing in
               </Text>
             </Pressable>
           </View>
 
-          {/* Social Auth */}
           <View className="mt-6 items-center">
             <View className="w-full flex-row items-center justify-between">
               <View className="h-[1px] flex-1 bg-[#cfd3da]" />
               <Text className="px-4 text-[12px] font-bold tracking-[1px] text-[#8c96a2]">
-                HOẶC THAM GIA BẰNG
+                OR CONTINUE WITH
               </Text>
               <View className="h-[1px] flex-1 bg-[#cfd3da]" />
             </View>
@@ -98,7 +95,7 @@ export default function WelcomeScreen() {
               </Text>
             ) : null}
 
-            <View className="mt-4 flex-row gap-4 justify-center items-center">
+            <View className="mt-4 flex-row items-center justify-center gap-4">
               <Pressable
                 onPress={handleGoogleLogin}
                 disabled={loadingGoogle}
@@ -119,7 +116,6 @@ export default function WelcomeScreen() {
             </View>
           </View>
 
-          {/* Banner Trends */}
           <View className="mt-8 rounded-[20px] bg-[#e8edf2] p-3">
             <View className="flex-row gap-3">
               <View className="h-[110px] flex-1 overflow-hidden rounded-[14px] bg-[#d3dbe5]">
@@ -131,18 +127,17 @@ export default function WelcomeScreen() {
               </View>
 
               <View className="h-[110px] flex-1 items-center justify-center rounded-[14px] bg-[#e5ddf1]">
-                <Text className="text-[26px] font-extrabold text-[#6b2eb5]">Xu hướng</Text>
+                <Text className="text-[26px] font-extrabold text-[#6b2eb5]">Trends</Text>
                 <Text className="mt-0.5 text-[12px] font-semibold tracking-[0.4px] text-[#6b2eb5]">
-                  MÙA THU 2026
+                  FALL 2026
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Footer Copyright */}
           <View className="mt-6 pb-2 pt-4">
             <Text className="text-center text-[11px] font-semibold tracking-[0.5px] text-[#9fa4ad]">
-              BẢN QUYỀN © 2024 SELLO COMMERCE. MỌI QUYỀN ĐƯỢC BẢO LƯU.
+              COPYRIGHT © 2024 SELLO COMMERCE. ALL RIGHTS RESERVED.
             </Text>
           </View>
         </View>

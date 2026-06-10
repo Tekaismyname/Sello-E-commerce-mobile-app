@@ -16,13 +16,16 @@ export type ProductCard = {
 
 export type QuickCategory = {
   id: string;
+  categoryId: number;
   label: string;
   icon: string;
+  iconLibrary?: "feather" | "material";
   color: string;
 };
 
 export type CategoryTile = {
   id: string;
+  categoryId: number;
   title: string;
   subtitle?: string;
   imageUrl: string;

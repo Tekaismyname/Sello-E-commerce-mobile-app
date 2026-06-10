@@ -19,12 +19,12 @@ export function useAccountCompletion() {
 
   const submit = async () => {
     if (!token) {
-      setErrorMessage("Vui long dang nhap lai.");
+      setErrorMessage("Please sign in again.");
       return false;
     }
 
     if (!canSubmit) {
-      setErrorMessage("Vui long nhap so dien thoai va dia chi giao hang.");
+      setErrorMessage("Please enter your phone number and delivery address.");
       return false;
     }
 
@@ -48,10 +48,10 @@ export function useAccountCompletion() {
       const existingDefault = addressesResponse.data.find((item) => item.isDefault) ?? addressesResponse.data[0];
 
       const payload = {
-        recipientName: user?.fullName || "Nguoi nhan",
+        recipientName: user?.fullName || "Recipient",
         phone: phone.trim(),
-        province: province || "TP. Ho Chi Minh",
-        district: district || "Quan 1",
+        province: province || "Ho Chi Minh City",
+        district: district || "District 1",
         ward: ward || "Ben Nghe",
         detailAddress: rest.join(", ") || address.trim(),
         isDefault: true,
@@ -67,7 +67,7 @@ export function useAccountCompletion() {
       router.replace("/main/home" as Href);
       return true;
     } catch (error: any) {
-      setErrorMessage(error?.message ?? "Khong the cap nhat thong tin.");
+      setErrorMessage(error?.message ?? "Unable to update your information.");
       return false;
     } finally {
       setLoading(false);

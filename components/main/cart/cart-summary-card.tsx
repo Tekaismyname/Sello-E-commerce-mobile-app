@@ -16,7 +16,9 @@ export function CartSummaryCard({
   return (
     <View className="mt-2 rounded-[14px] bg-white p-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-[13px] font-semibold text-[#5E6A78]">Da chon {selectedCount} sản phẩm</Text>
+        <Text className="text-[13px] font-semibold text-[#5E6A78]">
+          {selectedCount} item(s) selected
+        </Text>
         <Text className="text-[16px] font-extrabold text-[#006397]">{formatPrice(selectedSubtotal)}</Text>
       </View>
 
@@ -27,7 +29,7 @@ export function CartSummaryCard({
           selectedCount ? "bg-[#006397]" : "bg-[#AFC8D8]"
         }`}
       >
-        <Text className="text-[14px] font-extrabold text-white">Tiến hành thanh toán</Text>
+        <Text className="text-[14px] font-extrabold text-white">Proceed to Checkout</Text>
       </Pressable>
     </View>
   );

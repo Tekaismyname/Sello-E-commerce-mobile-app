@@ -10,7 +10,7 @@ export function useAddressesView(token: string, options?: { lazy?: boolean }) {
 
   const fetchAddresses = useCallback(async () => {
     if (!token) {
-      setError("Vui long dang nhap de quan ly dia chi.");
+      setError("Please sign in to manage your addresses.");
       setLoading(false);
       return;
     }
@@ -21,7 +21,7 @@ export function useAddressesView(token: string, options?: { lazy?: boolean }) {
       const response = await addressService.listAddresses(token);
       setAddresses(response.data ?? []);
     } catch (err: any) {
-      setError(err.message ?? "Khong the tai dia chi.");
+      setError(err.message ?? "Unable to load addresses.");
     } finally {
       setLoading(false);
     }

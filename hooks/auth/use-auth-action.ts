@@ -24,7 +24,7 @@ export function useAuthAction() {
       const result = await action();
       return result;
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Yêu cầu thất bại");
+      setErrorMessage(error instanceof Error ? error.message : "Request failed.");
       return null;
     } finally {
       setLoading(false);

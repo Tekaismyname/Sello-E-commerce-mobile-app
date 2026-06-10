@@ -14,11 +14,11 @@ export function CheckoutVoucherRow({ appliedCode, onPress }: CheckoutVoucherRowP
     >
       <View className="flex-row items-center">
         <Feather name="tag" size={17} color="#9333EA" />
-        <Text className="ml-2 text-[17px] font-bold text-[#1F2934]">Uu dai cua shop</Text>
+        <Text className="ml-2 text-[17px] font-bold text-[#1F2934]">Shop offers</Text>
       </View>
       <View className="flex-row items-center">
         <Text className="text-[14px] text-[#4B5563]">
-          {appliedCode ? appliedCode : "Chon hoac nhap ma"}
+          {appliedCode ? appliedCode : "Choose or enter a code"}
         </Text>
         <Feather name="chevron-right" size={17} color="#64748B" />
       </View>

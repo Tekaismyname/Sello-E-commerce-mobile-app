@@ -11,9 +11,11 @@ export function SearchPromoBanner() {
         resizeMode="cover"
       />
       <View className="absolute bottom-0 left-0 right-0 bg-black/35 px-3 py-3">
-        <Text className="text-[24px] font-extrabold leading-[27px] text-white">Khám phá phong cách riêng của bạn</Text>
+        <Text className="text-[24px] font-extrabold leading-[27px] text-white">
+          Discover your own style
+        </Text>
         <Text className="mt-1 text-[12px] font-semibold text-[#e5edf5]">
-          Bộ sưu tập được chọn lọc bởi những chuyên gia thời trang.
+          Curated collections selected by fashion experts.
         </Text>
       </View>
     </View>

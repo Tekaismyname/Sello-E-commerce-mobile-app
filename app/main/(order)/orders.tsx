@@ -2,6 +2,7 @@ import { CustomerOrderCard } from "@/components/main/orders/customer-order-card"
 import { OrderFilterTabs } from "@/components/main/orders/order-filter-tabs";
 import { RecommendedProducts } from "@/components/main/orders/recommended-products";
 import { SelloHeader } from "@/components/main/sello-header";
+import { GuestPlaceholder } from "@/components/ui";
 import { useAuth } from "@/contexts/auth-context";
 import { useOrdersView } from "@/hooks/customer/use-orders-view";
 import { useHomeData } from "@/hooks/main/use-main-data";
@@ -11,7 +12,6 @@ import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GuestPlaceholder } from "@/components/ui";
 
 export default function OrdersScreen() {
   const { token } = useAuth();
@@ -27,14 +27,14 @@ export default function OrdersScreen() {
   };
 
   const handleCancel = (order: Order) => {
-    Alert.alert("Hủy đơn hàng", `Bạn có chắc muốn hủy đơn #${order.id}?`, [
-      { text: "Không", style: "cancel" },
+    Alert.alert("Cancel order", `Are you sure you want to cancel order #${order.id}?`, [
+      { text: "No", style: "cancel" },
       {
-        text: "Hủy đơn",
+        text: "Cancel order",
         style: "destructive",
         onPress: async () => {
           if (!token) {
-            Alert.alert("Lỗi", "Phiên đăng nhập đã hết hạn.");
+            Alert.alert("Error", "Your session has expired.");
             return;
           }
 
@@ -42,7 +42,7 @@ export default function OrdersScreen() {
             await orderService.cancelOrder(token, order.id);
             await fetchOrders();
           } catch (err: any) {
-            Alert.alert("Lỗi", err.message ?? "Không thể hủy đơn.");
+            Alert.alert("Error", err.message ?? "Unable to cancel the order.");
           }
         },
       },
@@ -53,16 +53,16 @@ export default function OrdersScreen() {
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top"]}>
       <SelloHeader />
       <ScrollView className="flex-1" contentContainerClassName="px-4 pb-8 pt-6">
-        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">Đơn hàng của bạn</Text>
+        <Text className="text-[22px] font-extrabold leading-[30px] text-[#1F2934]">Your orders</Text>
         <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
-          Theo dõi và quản lý lịch sử mua sắm một cách dễ dàng.
+          Track and manage your shopping history with ease.
         </Text>
 
         {!token ? (
           <GuestPlaceholder
             icon="package"
-            title="Quản lý đơn hàng"
-            description="Hãy đăng nhập tài khoản Sello để theo dõi đơn hàng và xem lịch sử mua sắm của bạn!"
+            title="Manage orders"
+            description="Sign in to your Sello account to track orders and view your shopping history."
           />
         ) : (
           <>
@@ -95,7 +95,7 @@ export default function OrdersScreen() {
                 {!filteredOrders.length && (
                   <View className="items-center rounded-[16px] bg-white p-6">
                     <Feather name="package" size={42} color="#B6C1CD" />
-                    <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">Chưa có đơn hàng phù hợp</Text>
+                    <Text className="mt-3 text-[15px] font-semibold text-[#4B5563]">No matching orders yet</Text>
                   </View>
                 )}
               </View>

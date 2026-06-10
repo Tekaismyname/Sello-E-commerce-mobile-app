@@ -1,11 +1,11 @@
+import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SelloHeader } from "@/components/main/sello-header";
-import { profileService } from "@/services/customer.service";
 import { authService } from "@/services/auth.service";
+import { profileService } from "@/services/customer.service";
 import { UserProfile } from "@/types/customer";
 import { useAuth } from "@/contexts/auth-context";
 import { GuestPlaceholder } from "@/components/ui";
@@ -42,7 +42,7 @@ export default function ProfileScreen() {
     router.replace("/onboarding/welcome" as Href);
   };
 
-  const displayName = profile?.fullName || "Thành viên Sello";
+  const displayName = profile?.fullName || "Sello Member";
   const displayEmail = profile?.email || "member@sello.app";
   const initials = displayName.charAt(0).toUpperCase();
 
@@ -52,8 +52,8 @@ export default function ProfileScreen() {
       {!token ? (
         <GuestPlaceholder
           icon="user"
-          title="Tài khoản của tôi"
-          description="Hãy đăng nhập tài khoản Sello để quản lý thông tin giao hàng, danh sách yêu thích và đổi mật khẩu!"
+          title="My Account"
+          description="Sign in to manage your shipping information, wishlist, and password settings."
         />
       ) : (
         <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
@@ -67,9 +67,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text className="mt-3 text-[20px] font-extrabold text-[#1f2934]">{displayName}</Text>
                 <Text className="text-[12px] text-[#7d8896]">{displayEmail}</Text>
-                {profile?.phone && (
-                  <Text className="text-[12px] text-[#7d8896]">{profile.phone}</Text>
-                )}
+                {profile?.phone ? <Text className="text-[12px] text-[#7d8896]">{profile.phone}</Text> : null}
               </>
             )}
           </View>
@@ -79,7 +77,7 @@ export default function ProfileScreen() {
               className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
               onPress={() => router.push("/auth/account-completion" as Href)}
             >
-              <Text className="text-[14px] font-semibold text-[#364150]">Thông tin tài khoản</Text>
+              <Text className="text-[14px] font-semibold text-[#364150]">Account Information</Text>
               <Feather name="chevron-right" size={16} color="#7e8997" />
             </Pressable>
 
@@ -87,7 +85,7 @@ export default function ProfileScreen() {
               className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
               onPress={() => router.push("/main/addresses" as Href)}
             >
-              <Text className="text-[14px] font-semibold text-[#364150]">Địa chỉ giao hàng</Text>
+              <Text className="text-[14px] font-semibold text-[#364150]">Shipping Addresses</Text>
               <Feather name="chevron-right" size={16} color="#7e8997" />
             </Pressable>
 
@@ -95,7 +93,7 @@ export default function ProfileScreen() {
               className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
               onPress={() => router.push("/main/notifications" as Href)}
             >
-              <Text className="text-[14px] font-semibold text-[#364150]">Thông báo</Text>
+              <Text className="text-[14px] font-semibold text-[#364150]">Notifications</Text>
               <Feather name="chevron-right" size={16} color="#7e8997" />
             </Pressable>
 
@@ -103,7 +101,7 @@ export default function ProfileScreen() {
               className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
               onPress={() => router.push("/main/wishlist" as Href)}
             >
-              <Text className="text-[14px] font-semibold text-[#364150]">Yêu thích</Text>
+              <Text className="text-[14px] font-semibold text-[#364150]">Wishlist</Text>
               <Feather name="chevron-right" size={16} color="#7e8997" />
             </Pressable>
 
@@ -111,7 +109,7 @@ export default function ProfileScreen() {
               className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
               onPress={() => router.push("/main/chat" as Href)}
             >
-              <Text className="text-[14px] font-semibold text-[#364150]">Hỗ trợ trực tuyến (Chat)</Text>
+              <Text className="text-[14px] font-semibold text-[#364150]">Live Support Chat</Text>
               <Feather name="chevron-right" size={16} color="#7e8997" />
             </Pressable>
 
@@ -119,7 +117,7 @@ export default function ProfileScreen() {
               className="h-[48px] flex-row items-center justify-between rounded-[12px] bg-white px-3"
               onPress={() => router.push("/main/change-password" as Href)}
             >
-              <Text className="text-[14px] font-semibold text-[#364150]">Đổi mật khẩu</Text>
+              <Text className="text-[14px] font-semibold text-[#364150]">Change Password</Text>
               <Feather name="chevron-right" size={16} color="#7e8997" />
             </Pressable>
           </View>
@@ -128,7 +126,7 @@ export default function ProfileScreen() {
             className="mt-6 h-[46px] items-center justify-center rounded-[12px] border border-[#d7deea] bg-white"
             onPress={handleLogout}
           >
-            <Text className="text-[14px] font-bold text-[#BA1A1A]">Đăng xuất</Text>
+            <Text className="text-[14px] font-bold text-[#BA1A1A]">Sign Out</Text>
           </Pressable>
         </ScrollView>
       )}

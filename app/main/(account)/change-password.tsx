@@ -14,23 +14,23 @@ export default function ChangePasswordScreen() {
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
-      if (!token) {
-        Alert.alert("Lỗi", "Vui long dang nhap lai.");
+    if (!token) {
+      Alert.alert("Error", "Please sign in again.");
       return;
     }
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      Alert.alert("Thiếu dữ liệu", "Vui long nhap day du thong tin.");
+      Alert.alert("Missing information", "Please fill in all required fields.");
       return;
     }
 
     if (newPassword.length < 8) {
-      Alert.alert("Mật khẩu yếu", "Mật khẩu mới phải có ít nhất 8 ký tự.");
+      Alert.alert("Weak password", "Your new password must contain at least 8 characters.");
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      Alert.alert("Không khớp", "ác nhận mật khẩu mới chưa khớp.");
+      Alert.alert("Mismatch", "New password confirmation does not match.");
       return;
     }
 
@@ -41,10 +41,10 @@ export default function ChangePasswordScreen() {
         newPassword,
         confirmNewPassword,
       });
-      Alert.alert("Thành công", "Đã cập nhật mật khẩu.");
+      Alert.alert("Success", "Your password has been updated.");
       router.back();
     } catch (err: any) {
-      Alert.alert("Lỗi", err?.message ?? "Không thể đổi mật khẩu.");
+      Alert.alert("Error", err?.message ?? "Unable to change the password.");
     } finally {
       setSaving(false);
     }
@@ -56,12 +56,12 @@ export default function ChangePasswordScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">Doi mat khau</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">Change password</Text>
       </View>
 
       <View className="p-4">
         <View className="rounded-[14px] bg-white p-4">
-          <Text className="text-[13px] font-bold text-[#111827]">Mật khẩu hiện tại</Text>
+          <Text className="text-[13px] font-bold text-[#111827]">Current password</Text>
           <TextInput
             className="mt-2 h-12 rounded-[10px] bg-[#F3F5FA] px-3"
             secureTextEntry
@@ -69,7 +69,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setCurrentPassword}
           />
 
-          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Mật khẩu mới</Text>
+          <Text className="mt-4 text-[13px] font-bold text-[#111827]">New password</Text>
           <TextInput
             className="mt-2 h-12 rounded-[10px] bg-[#F3F5FA] px-3"
             secureTextEntry
@@ -77,7 +77,7 @@ export default function ChangePasswordScreen() {
             onChangeText={setNewPassword}
           />
 
-          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Xác nhận mật khẩu mới</Text>
+          <Text className="mt-4 text-[13px] font-bold text-[#111827]">Confirm new password</Text>
           <TextInput
             className="mt-2 h-12 rounded-[10px] bg-[#F3F5FA] px-3"
             secureTextEntry
@@ -93,7 +93,7 @@ export default function ChangePasswordScreen() {
             {saving ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-[15px] font-bold text-white">Cap nhat mat khau</Text>
+              <Text className="text-[15px] font-bold text-white">Update password</Text>
             )}
           </Pressable>
         </View>

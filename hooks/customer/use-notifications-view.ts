@@ -10,7 +10,7 @@ export function useNotificationsView(token: string) {
 
   const fetchNotifications = useCallback(async () => {
     if (!token) {
-      setError("Vui long dang nhap de xem thong bao.");
+      setError("Please sign in to view notifications.");
       setLoading(false);
       return;
     }
@@ -21,7 +21,7 @@ export function useNotificationsView(token: string) {
       const response = await notificationService.getNotifications(token);
       setNotifications(response.data ?? []);
     } catch (err: any) {
-      setError(err.message ?? "Khong the tai thong bao.");
+      setError(err.message ?? "Unable to load notifications.");
     } finally {
       setLoading(false);
     }

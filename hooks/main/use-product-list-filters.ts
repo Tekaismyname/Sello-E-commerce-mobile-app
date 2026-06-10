@@ -24,20 +24,20 @@ const syntheticRating = (product: ProductCard) => {
 };
 
 const getPriceLabel = (value: PriceFilterValue) => {
-  if (value === "lt500") return "Giá: < 500k";
-  if (value === "500to1000") return "Giá: 500k-1tr";
-  if (value === "1000to2000") return "Giá: 1tr-2tr";
-  if (value === "gt2000") return "Giá: > 2tr";
-  return "Giá";
+  if (value === "lt500") return "Price: < 500k";
+  if (value === "500to1000") return "Price: 500k-1M";
+  if (value === "1000to2000") return "Price: 1M-2M";
+  if (value === "gt2000") return "Price: > 2M";
+  return "Price";
 };
 
 const getRatingLabel = (value: RatingFilterValue) => {
-  if (value === "4up") return "Đánh giá: từ 4★";
-  if (value === "45up") return "Đánh giá: từ 4.5★";
-  return "Đánh giá";
+  if (value === "4up") return "Rating: 4★+";
+  if (value === "45up") return "Rating: 4.5★+";
+  return "Rating";
 };
 
-export function useProductListFilters(searchKeyword: string) {
+export function useProductListFilters(searchKeyword: string, initialCategoryId?: number) {
   const [openChipId, setOpenChipId] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<PriceFilterValue>("all");
   const [ratingFilter, setRatingFilter] = useState<RatingFilterValue>("all");
@@ -68,10 +68,10 @@ export function useProductListFilters(searchKeyword: string) {
       }
       setError(null);
 
-      let queryCategoryId: number | undefined;
+      let queryCategoryId: number | undefined = initialCategoryId;
       let querySearch: string | undefined = searchKeyword;
 
-      if (metadata && searchKeyword) {
+      if (!queryCategoryId && metadata && searchKeyword) {
         const matchedCat = metadata.categories.find(
           (c) => c.name.trim().toLowerCase() === searchKeyword.toLowerCase()
         );
@@ -140,7 +140,7 @@ export function useProductListFilters(searchKeyword: string) {
 
       setHasMore(currentPage < totalPages);
     } catch (err: any) {
-      setError(err.message ?? "Không thể tải danh sách sản phẩm.");
+      setError(err.message ?? "Unable to load the product list.");
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -151,22 +151,22 @@ export function useProductListFilters(searchKeyword: string) {
   useEffect(() => {
     setPage(1);
     fetchProducts(1, false);
-  }, [searchKeyword, priceFilter, ratingFilter, brandFilter, metadata]);
+  }, [initialCategoryId, searchKeyword, priceFilter, ratingFilter, brandFilter, metadata]);
 
   const brandOptions = useMemo(() => {
-    if (!metadata) return [{ label: "Tất cả", value: "all" }];
+    if (!metadata) return [{ label: "All", value: "all" }];
     return [
-      { label: "Tất cả", value: "all" },
+      { label: "All", value: "all" },
       ...metadata.brands.map((b) => ({ label: b.name, value: String(b.id) })),
     ];
   }, [metadata]);
 
   const chips = useMemo<FilterChipItem[]>(() => {
-    let brandName = "Thương hiệu";
+    let brandName = "Brand";
     if (brandFilter !== "all" && metadata) {
       const found = metadata.brands.find((b) => String(b.id) === brandFilter);
       if (found) {
-        brandName = `Thương hiệu: ${found.name}`;
+        brandName = `Brand: ${found.name}`;
       }
     }
     return [
@@ -179,19 +179,19 @@ export function useProductListFilters(searchKeyword: string) {
   const dropdownOptions = useMemo<DropdownOption[]>(() => {
     if (openChipId === "price") {
       return [
-        { label: "Tất cả", value: "all" },
-        { label: "Dưới 500.000đ", value: "lt500" },
-        { label: "500.000đ - 1.000.000đ", value: "500to1000" },
-        { label: "1.000.000đ - 2.000.000đ", value: "1000to2000" },
-        { label: "Trên 2.000.000đ", value: "gt2000" },
+        { label: "All", value: "all" },
+        { label: "Under 500,000d", value: "lt500" },
+        { label: "500,000d - 1,000,000d", value: "500to1000" },
+        { label: "1,000,000d - 2,000,000d", value: "1000to2000" },
+        { label: "Over 2,000,000d", value: "gt2000" },
       ];
     }
 
     if (openChipId === "rating") {
       return [
-        { label: "Tất cả", value: "all" },
-        { label: "Từ 4★", value: "4up" },
-        { label: "Từ 4.5★", value: "45up" },
+        { label: "All", value: "all" },
+        { label: "4★ and up", value: "4up" },
+        { label: "4.5★ and up", value: "45up" },
       ];
     }
 

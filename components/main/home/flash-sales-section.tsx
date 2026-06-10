@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { ProductCard } from "@/types/main";
 import { Feather } from "@expo/vector-icons";
-import { Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Href, router } from "expo-router";
-import { ProductCard } from "@/types/main";
+import { useEffect, useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 type FlashSalesSectionProps = {
   countdownValues: string[];
@@ -46,19 +46,19 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
   );
 
   return (
-    <View className="mb-5 rounded-[16px] bg-[#FFF3F0] px-3 py-3 border border-[#FFE5DF]">
+    <View className="mb-5 rounded-[16px] border border-[#FFE5DF] bg-[#FFF3F0] px-3 py-3">
       <View className="mb-3 flex-row items-center justify-between">
         <View className="flex-row items-center gap-1.5">
           <Feather name="zap" size={18} color="#EE4D2D" />
-          <Text className="text-[20px] font-black tracking-tighter text-[#EE4D2D] uppercase">FLASH SALE</Text>
+          <Text className="text-[20px] font-black uppercase tracking-tighter text-[#EE4D2D]">FLASH SALE</Text>
         </View>
         <View className="flex-row items-center gap-1">
           {displayedCountdown.map((value, index) => (
             <View key={`${value}-${index}`} className="flex-row items-center">
-              <View className="min-w-[22px] h-[20px] justify-center items-center rounded-[4px] bg-[#222222] px-1">
+              <View className="min-w-[22px] h-[20px] items-center justify-center rounded-[4px] bg-[#222222] px-1">
                 <Text className="text-center text-[11px] font-black text-white">{value}</Text>
               </View>
-              {index < 2 && <Text className="mx-[2px] font-extrabold text-[#EE4D2D] text-[12px] self-center">:</Text>}
+              {index < 2 && <Text className="mx-[2px] self-center text-[12px] font-extrabold text-[#EE4D2D]">:</Text>}
             </View>
           ))}
         </View>
@@ -71,7 +71,7 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
             <Pressable
               key={`${product.id}-${index}`}
               onPress={() => router.push(`/product/detail?id=${product.id}` as Href)}
-              className="w-[120px] overflow-hidden rounded-[12px] bg-white pb-3 shadow-[0px_4px_10px_rgba(0,0,0,0.03)] border border-[#FFE5DF]"
+              className="w-[120px] overflow-hidden rounded-[12px] border border-[#FFE5DF] bg-white pb-3 shadow-[0px_4px_10px_rgba(0,0,0,0.03)]"
               style={({ pressed }) => ({
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               })}
@@ -85,15 +85,14 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
                 ) : null}
               </View>
               <Text className="px-2 pt-2 text-[12px] font-black leading-[16px] text-[#EE4D2D]">{product.price}</Text>
-              
-              {/* Shopee Progress Bar */}
-              <View className="mx-2 mt-2 h-[13px] justify-center overflow-hidden rounded-full bg-[#FFE5DF] relative border border-[#EE4D2D]/10">
+
+              <View className="relative mx-2 mt-2 h-[13px] justify-center overflow-hidden rounded-full border border-[#EE4D2D]/10 bg-[#FFE5DF]">
                 <View
                   style={{ width: `${percent}%` }}
                   className="absolute left-0 top-0 h-full rounded-full bg-[#EE4D2D]"
                 />
-                <Text className="absolute w-full text-center text-[7.5px] font-black uppercase text-white z-10">
-                  {percent > 80 ? "Sắp cháy hàng" : `Đang bán chạy`}
+                <Text className="absolute z-10 w-full text-center text-[7.5px] font-black uppercase text-white">
+                  {percent > 80 ? "Almost sold out" : "Best seller"}
                 </Text>
               </View>
             </Pressable>

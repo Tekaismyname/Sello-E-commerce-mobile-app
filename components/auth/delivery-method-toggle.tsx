@@ -1,5 +1,5 @@
-import { Pressable, Text, View } from "react-native";
 import { OtpDeliveryMethod } from "@/types/auth";
+import { Pressable, Text, View } from "react-native";
 
 type DeliveryMethodToggleProps = {
   value: OtpDeliveryMethod;
@@ -27,10 +27,10 @@ export function DeliveryMethodToggle({ value, onChange }: DeliveryMethodTogglePr
 
   return (
     <View>
-      <Text className="mb-2 text-[14px] font-medium text-[#3f4850]">Nhan OTP qua</Text>
+      <Text className="mb-2 text-[14px] font-medium text-[#3f4850]">Receive OTP via</Text>
       <View className="flex-row gap-2">
         {renderButton("email", "Email")}
-        {renderButton("phone", "So dien thoai")}
+        {renderButton("phone", "Phone number")}
       </View>
     </View>
   );

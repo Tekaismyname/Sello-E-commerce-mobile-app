@@ -34,7 +34,11 @@ export function SearchKeywordListSection({
               <Feather name="trending-up" size={15} color="#8793a0" />
             )}
 
-            <Text className={`flex-1 text-[13px] font-semibold ${mode === "ranked" ? "text-[#414d5a]" : "ml-2 text-[#465362]"}`}>
+            <Text
+              className={`flex-1 text-[13px] font-semibold ${
+                mode === "ranked" ? "text-[#414d5a]" : "ml-2 text-[#465362]"
+              }`}
+            >
               {item}
             </Text>
             <Feather name="chevron-right" size={15} color="#8b95a0" />

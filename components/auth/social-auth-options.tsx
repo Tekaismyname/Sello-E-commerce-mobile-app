@@ -14,7 +14,9 @@ export function SocialAuthOptions({
     <View className="mt-8 items-center">
       <View className="w-full flex-row items-center justify-between">
         <View className="h-[1px] flex-1 bg-[#cfd3da]" />
-        <Text className="px-4 text-[14px] font-semibold tracking-[1px] text-[#3f4850]">HOẶC THAM GIA BẰNG</Text>
+        <Text className="px-4 text-[14px] font-semibold tracking-[1px] text-[#3f4850]">
+          OR CONTINUE WITH
+        </Text>
         <View className="h-[1px] flex-1 bg-[#cfd3da]" />
       </View>
 
@@ -35,4 +37,3 @@ export function SocialAuthOptions({
     </View>
   );
 }
-

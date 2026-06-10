@@ -1,4 +1,4 @@
-import { Text, View, Pressable } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { ReviewData, ReviewItem } from "./review-item";
 
 type ReviewListProps = {
@@ -7,7 +7,7 @@ type ReviewListProps = {
 
 export function ReviewList({ reviews }: ReviewListProps) {
   return (
-    <View className="px-4 mt-2">
+    <View className="mt-2 px-4">
       {reviews.map((review, index) => (
         <View key={review.id}>
           <ReviewItem review={review} />
@@ -17,10 +17,10 @@ export function ReviewList({ reviews }: ReviewListProps) {
                 <Text className="text-[120px] font-extrabold text-white">99</Text>
               </View>
               <Text className="text-[20px] font-extrabold leading-[30px] text-white">
-                Sự hài lòng của bạn là nguồn cảm hứng lớn nhất của chúng tôi.
+                Your satisfaction is our greatest source of inspiration.
               </Text>
               <Text className="mt-3 text-[14px] leading-[22px] text-white/90">
-                Chúng tôi luôn lắng nghe từng góp ý để cải thiện chất lượng dịch vụ mỗi ngày.
+                We listen to every piece of feedback to improve our service quality every day.
               </Text>
             </View>
           )}
@@ -28,7 +28,7 @@ export function ReviewList({ reviews }: ReviewListProps) {
       ))}
 
       <Pressable className="mb-8 mt-2 h-12 w-full flex-row items-center justify-center rounded-[12px] bg-[#E7E8EC]">
-        <Text className="text-[15px] font-bold text-[#006397]">Xem thêm đánh giá</Text>
+        <Text className="text-[15px] font-bold text-[#006397]">See more reviews</Text>
       </Pressable>
     </View>
   );

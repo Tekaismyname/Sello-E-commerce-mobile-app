@@ -25,7 +25,7 @@ export function SearchHeaderBar({
         <Feather name="search" size={16} color="#8c96a2" />
         <TextInput
           className="ml-2 flex-1 text-[15px] text-[#2d3741]"
-          placeholder="Tìm sản phẩm, thương hiệu..."
+          placeholder="Search products, brands..."
           placeholderTextColor="#8c96a2"
           value={query}
           onChangeText={onChangeQuery}

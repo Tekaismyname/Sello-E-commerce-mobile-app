@@ -2,7 +2,7 @@ import { CartItem } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
 import { Image, Pressable, Text, View } from "react-native";
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
 type CheckoutOrderSummaryProps = {
   items: CartItem[];
@@ -17,7 +17,7 @@ export function CheckoutOrderSummary({
 }: CheckoutOrderSummaryProps) {
   return (
     <View className="rounded-[16px] bg-white p-4">
-      <Text className="text-[17px] font-extrabold text-[#1F2934]">Tóm tắt đơn hàng</Text>
+      <Text className="text-[17px] font-extrabold text-[#1F2934]">Order summary</Text>
 
       <View className="mt-3 gap-3">
         {items.map((item) => (
@@ -35,7 +35,7 @@ export function CheckoutOrderSummary({
                 {item.productName}
               </Text>
               <Text className="mt-1 text-[14px] text-[#64748B]">
-                {item.variantId ? `Phân loại: #${item.variantId}` : "Phân loại: Mặc định"}
+                {item.variantId ? `Variant: #${item.variantId}` : "Variant: Default"}
               </Text>
               <View className="mt-1 flex-row items-center">
                 <Text className="text-[15px] font-extrabold text-[#0369A1]">{formatPrice(item.price)}</Text>
@@ -69,7 +69,7 @@ export function CheckoutOrderSummary({
         ))}
 
         {!items.length && (
-          <Text className="text-[14px] text-[#64748B]">Không có sản phẩm được chọn để thanh toán.</Text>
+          <Text className="text-[14px] text-[#64748B]">No products have been selected for checkout.</Text>
         )}
       </View>
     </View>

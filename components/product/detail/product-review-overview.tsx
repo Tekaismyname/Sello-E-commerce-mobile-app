@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
+import { router } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 type ProductReviewOverviewProps = {
@@ -12,7 +12,7 @@ export function ProductReviewOverview({ productId, productName, productImage }: 
   return (
     <View className="bg-white py-5">
       <View className="mb-4 flex-row items-center justify-between px-4">
-        <Text className="text-[16px] font-extrabold uppercase tracking-wider text-[#191C1F]">Đánh giá thực tế</Text>
+        <Text className="text-[16px] font-extrabold uppercase tracking-wider text-[#191C1F]">Real reviews</Text>
         <Pressable
           onPress={() =>
             router.push({
@@ -25,11 +25,11 @@ export function ProductReviewOverview({ productId, productName, productImage }: 
             } as any)
           }
         >
-          <Text className="text-[14px] font-bold text-[#006397]">Xem tất cả</Text>
+          <Text className="text-[14px] font-bold text-[#006397]">See all</Text>
         </Pressable>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="px-4 gap-3">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-4">
         <View className="w-[280px] rounded-[12px] border border-[#E7E8EC] bg-white p-4">
           <View className="mb-3 flex-row gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -37,13 +37,13 @@ export function ProductReviewOverview({ productId, productName, productImage }: 
             ))}
           </View>
           <Text className="text-[13px] leading-[20px] text-[#3F4850]" numberOfLines={3}>
-            Giày đẹp, đóng gói kỹ, giao nhanh. Chất liệu mềm và dễ phối đồ.
+            Beautiful shoes, carefully packed, and fast delivery. The material feels soft and easy to style.
           </Text>
         </View>
 
         <View className="w-[160px] items-center justify-center rounded-[12px] bg-[#F8D8FF] p-4">
           <Text className="text-[28px] font-extrabold text-[#320047]">+150</Text>
-          <Text className="mt-1 text-[13px] text-[#320047]/80">Ảnh từ khách</Text>
+          <Text className="mt-1 text-[13px] text-[#320047]/80">Customer photos</Text>
         </View>
       </ScrollView>
     </View>

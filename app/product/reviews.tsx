@@ -1,3 +1,5 @@
+import { useAuth } from "@/contexts/auth-context";
+import { orderService } from "@/services/customer.service";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -10,8 +12,6 @@ import {
   ReviewSummary,
   WriteReviewFab,
 } from "@/components/product";
-import { useAuth } from "@/contexts/auth-context";
-import { orderService } from "@/services/customer.service";
 
 export default function ProductReviewsScreen() {
   const params = useLocalSearchParams<{
@@ -20,7 +20,7 @@ export default function ProductReviewsScreen() {
     productName?: string;
     productImage?: string;
   }>();
-  const [selectedFilter, setSelectedFilter] = useState("Tat ca");
+  const [selectedFilter, setSelectedFilter] = useState("All");
   const productId = typeof params.id === "string" ? params.id : params.productId;
   const productName = params.productName;
   const productImage = params.productImage;
@@ -50,7 +50,7 @@ export default function ProductReviewsScreen() {
       });
   }, [token, productId]);
 
-  const filters = ["Tat ca", "5 Sao", "4 Sao", "3 Sao", "2 Sao", "1 Sao", "Co hinh anh"];
+  const filters = ["All", "5 stars", "4 stars", "3 stars", "2 stars", "1 star", "With images"];
 
   const reviews: ReviewData[] = [
     {
@@ -59,7 +59,7 @@ export default function ProductReviewsScreen() {
       avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80",
       rating: 5,
       date: "12/05/2026",
-      content: "Áo đẹp, chất liệu mát mẻ. Form chuẩn như mô tả. Giao hàng nhanh chóng.",
+      content: "Beautiful shirt, cool fabric, and a fit that matches the description. Delivery was quick too.",
       images: [
         "https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=200&q=80",
       ],
@@ -72,7 +72,7 @@ export default function ProductReviewsScreen() {
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80",
       rating: 4,
       date: "10/05/2026",
-      content: "Chất lượng ổn trong tầm giá. Màu sắc giống hình, tuy nhiên phần cổ áo hơi cứng một chút.",
+      content: "Great quality for the price. The color matches the photo, though the collar feels slightly stiff.",
       images: [],
       color: "Navy",
       size: "M",
@@ -83,7 +83,7 @@ export default function ProductReviewsScreen() {
       avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80",
       rating: 5,
       date: "05/05/2026",
-      content: "Rất ưng ý, sẽ ủng hộ shop dài dài. Mua 2 cái mặc thay đổi đi làm rất tiện.",
+      content: "Very satisfied. I will definitely keep supporting this shop. Bought two for work rotation and they are super convenient.",
       images: [],
       color: "White",
       size: "XL",

@@ -27,7 +27,7 @@ export default function ForgotPasswordScreen() {
     setErrorMessage("");
 
     if (!identifier.trim()) {
-      setErrorMessage("Vui lòng nhập email hoặc số điện thoại.");
+      setErrorMessage("Please enter your email or phone number.");
       return;
     }
 
@@ -66,10 +66,10 @@ export default function ForgotPasswordScreen() {
           <View className="items-center">
             <SelloAuthLogo />
             <Text className="mt-8 text-center text-[34px] font-extrabold text-[#191c1f]">
-              Quên mật khẩu
+              Forgot Password
             </Text>
             <Text className="mt-3 text-center text-[16px] leading-[24px] text-[#3f4850]">
-              Nhập thông tin tài khoản, chúng tôi sẽ gửi OTP để bạn đặt lại mật khẩu nhanh chóng.
+              Enter your account details and we&apos;ll send you an OTP so you can reset your password quickly.
             </Text>
           </View>
 
@@ -78,7 +78,7 @@ export default function ForgotPasswordScreen() {
               <Feather name="mail" size={18} color="#6b7682" />
               <TextInput
                 className="ml-3 flex-1 text-[16px] text-[#191c1f]"
-                placeholder="Email hoặc số điện thoại"
+                placeholder="Email or phone number"
                 placeholderTextColor="#97a0aa"
                 autoCapitalize="none"
                 value={identifier}
@@ -88,7 +88,7 @@ export default function ForgotPasswordScreen() {
 
             <View className="rounded-[12px] border border-[#d9dadf] bg-white p-3">
               <Text className="mb-3 text-[14px] font-semibold text-[#3f4850]">
-                Nhận OTP qua
+                Receive OTP via
               </Text>
               <View className="flex-row gap-2">
                 <Pressable
@@ -127,20 +127,20 @@ export default function ForgotPasswordScreen() {
                       deliveryMethod === "phone" ? "text-white" : "text-[#3f4850]"
                     }`}
                   >
-                    SĐT
+                    Phone
                   </Text>
                 </Pressable>
               </View>
             </View>
 
             <Text className="rounded-[10px] bg-[#eef4fb] px-3 py-2 text-[13px] text-[#0f4c81]">
-              OTP sẽ hết hạn sau vài phút. Vui lòng kiểm tra đúng email/SĐT trước khi gửi.
+              The OTP will expire after a few minutes. Please double-check your email or phone number before sending.
             </Text>
 
             <AuthMessage kind="error" text={errorMessage} />
 
             <AuthButton
-              title="Gửi OTP"
+              title="Send OTP"
               loading={loading}
               className="mt-1 shadow-[0px_10px_18px_rgba(21,123,184,0.28)]"
               onPress={submitForgotPassword}
@@ -148,9 +148,9 @@ export default function ForgotPasswordScreen() {
           </View>
 
           <View className="mt-8 flex-row items-center justify-center gap-1">
-            <Text className="text-[14px] text-[#3f4850]">Nhớ mật khẩu rồi?</Text>
+            <Text className="text-[14px] text-[#3f4850]">Remember your password?</Text>
             <Pressable onPress={() => router.replace("/auth/login" as Href)}>
-              <Text className="text-[14px] font-semibold text-[#157bb8]">Đăng nhập</Text>
+              <Text className="text-[14px] font-semibold text-[#157bb8]">Sign in</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -158,4 +158,3 @@ export default function ForgotPasswordScreen() {
     </SafeAreaView>
   );
 }
-

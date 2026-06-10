@@ -120,14 +120,14 @@ function RootLayoutInner() {
                   // Direct in-app alert fallback for Expo Go to completely bypass native notifications module
                   Alert.alert(
                     item.title,
-                    item.content || "Bạn có thông báo mới từ Sello!"
+                    item.content || "You have a new notification from Sello!"
                   );
                 } else {
                   try {
                     await Notifications.scheduleNotificationAsync({
                       content: {
                         title: item.title,
-                        body: item.content || "Bạn có thông báo mới từ Sello!",
+                        body: item.content || "You have a new notification from Sello!",
                         sound: true,
                         badge: unreadCount,
                       },
@@ -137,7 +137,7 @@ function RootLayoutInner() {
                     console.warn("expo-notifications fallback activated:", e);
                     Alert.alert(
                       item.title,
-                      item.content || "Bạn có thông báo mới từ Sello!"
+                      item.content || "You have a new notification from Sello!"
                     );
                   }
                 }
@@ -163,14 +163,14 @@ function RootLayoutInner() {
                   // Direct in-app alert fallback for Admin in Expo Go
                   Alert.alert(
                     item.title,
-                    item.content || "Bạn có thông báo mới!"
+                    item.content || "You have a new notification!"
                   );
                 } else {
                   try {
                     await Notifications.scheduleNotificationAsync({
                       content: {
                         title: item.title,
-                        body: item.content || "Bạn có thông báo mới!",
+                        body: item.content || "You have a new notification!",
                         sound: true,
                         badge: unreadCount,
                       },
@@ -180,7 +180,7 @@ function RootLayoutInner() {
                     console.warn("expo-notifications fallback activated for Admin:", e);
                     Alert.alert(
                       item.title,
-                      item.content || "Bạn có thông báo mới!"
+                      item.content || "You have a new notification!"
                     );
                   }
                 }

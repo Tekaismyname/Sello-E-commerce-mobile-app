@@ -1,11 +1,11 @@
+import { UIButton } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
 import { cartService, wishlistService } from "@/services/customer.service";
+import { triggerLocalNotification } from "@/utils/local-notification";
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
-import { UIButton } from "@/components/ui/button";
-import { useAuth } from "@/contexts/auth-context";
-import { triggerLocalNotification } from "@/utils/local-notification";
 
 type ProductBottomActionBarProps = {
   productId: number;
@@ -50,15 +50,15 @@ export function ProductBottomActionBar({
   const addToCart = async (goCheckout = false) => {
     if (!token) {
       Alert.alert(
-        "Yêu cầu đăng nhập",
-        "Bạn cần đăng nhập tài khoản Sello để thực hiện chức năng này.",
+        "Sign-in required",
+        "You need to sign in to your Sello account to use this feature.",
         [
-          { text: "Để sau", style: "cancel" },
+          { text: "Later", style: "cancel" },
           {
-            text: "Đăng nhập ngay",
+            text: "Sign in now",
             onPress: () => router.push("/auth/login" as Href),
           },
-        ]
+        ],
       );
       return;
     }
@@ -73,25 +73,25 @@ export function ProductBottomActionBar({
       if (goCheckout) {
         router.push("/main/checkout" as Href);
       } else {
-        triggerLocalNotification("Thêm vào giỏ hàng thành công 🛒", "Sản phẩm đã được thêm vào giỏ hàng của bạn.");
+        triggerLocalNotification("Added to cart", "The product has been added to your cart.");
       }
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể thêm vào giỏ hàng.");
+      Alert.alert("Error", err.message ?? "Unable to add this product to the cart.");
     }
   };
 
   const toggleWishlist = async () => {
     if (!token) {
       Alert.alert(
-        "Yêu cầu đăng nhập",
-        "Bạn cần đăng nhập tài khoản Sello để thực hiện chức năng này.",
+        "Sign-in required",
+        "You need to sign in to your Sello account to use this feature.",
         [
-          { text: "Để sau", style: "cancel" },
+          { text: "Later", style: "cancel" },
           {
-            text: "Đăng nhập ngay",
+            text: "Sign in now",
             onPress: () => router.push("/auth/login" as Href),
           },
-        ]
+        ],
       );
       return;
     }
@@ -108,11 +108,13 @@ export function ProductBottomActionBar({
       const latest = await wishlistService.getWishlist(token);
       setWishlistItems((latest.data ?? []).map((item) => ({ id: item.id, productId: item.productId })));
       triggerLocalNotification(
-        "Danh sách yêu thích ❤️",
-        existingWishlistItem ? "Đã xóa sản phẩm khỏi danh sách yêu thích." : "Đã thêm sản phẩm vào danh sách yêu thích.",
+        "Wishlist updated",
+        existingWishlistItem
+          ? "The product has been removed from your wishlist."
+          : "The product has been added to your wishlist.",
       );
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể cập nhật danh sách yêu thích.");
+      Alert.alert("Error", err.message ?? "Unable to update your wishlist.");
     } finally {
       setWishlistLoading(false);
     }
@@ -129,16 +131,16 @@ export function ProductBottomActionBar({
       </Pressable>
 
       <UIButton
-        title="Thêm vào giỏ"
+        title="Add to cart"
         variant="light"
-        className="flex-1 h-[52px] rounded-[20px] border border-[#1872cc] bg-white"
+        className="h-[52px] flex-1 rounded-[20px] border border-[#1872cc] bg-white"
         textClassName="text-[#1872cc] font-bold text-[15px]"
         onPress={() => addToCart(false)}
       />
 
       <UIButton
-        title="Mua hàng"
-        className="flex-1 rounded-[12px] bg-[#1872cc] h-[52px] items-center justify-center"
+        title="Buy now"
+        className="h-[52px] flex-1 items-center justify-center rounded-[12px] bg-[#1872cc]"
         textClassName="text-white-600 font-bold text-[15px]"
         onPress={() => addToCart(true)}
       />

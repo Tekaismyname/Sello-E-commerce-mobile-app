@@ -10,12 +10,12 @@ type TabMeta = {
 };
 
 const tabs: TabMeta[] = [
-  { key: "home", label: "Trang chủ", icon: "home" },
-  { key: "categories", label: "Danh mục", icon: "grid" },
-  { key: "cart", label: "Giỏ hàng", icon: "shopping-cart" },
-  { key: "orders", label: "Đơn hàng", icon: "file-text" },
-  { key: "chat", label: "Hỗ trợ", icon: "message-square" },
-  { key: "profile", label: "Tài khoản", icon: "user" },
+  { key: "home", label: "Home", icon: "home" },
+  { key: "categories", label: "Categories", icon: "grid" },
+  { key: "cart", label: "Cart", icon: "shopping-cart" },
+  { key: "orders", label: "Orders", icon: "file-text" },
+  { key: "chat", label: "Support", icon: "message-square" },
+  { key: "profile", label: "Account", icon: "user" },
 ];
 
 const hiddenRoutes = new Set(["search", "product-list"]);

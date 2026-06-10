@@ -19,13 +19,13 @@ type ReviewItemProps = {
 
 export function ReviewItem({ review }: ReviewItemProps) {
   return (
-    <View className="mb-4 bg-white rounded-[16px] p-5 shadow-sm">
+    <View className="mb-4 rounded-[16px] bg-white p-5 shadow-sm">
       <View className="flex-row items-start justify-between">
         <View className="flex-row items-center gap-3">
           <Image source={{ uri: review.avatar }} className="h-10 w-10 rounded-full" />
           <View>
             <Text className="text-[14px] font-bold text-[#191C1F]">{review.user}</Text>
-            <View className="flex-row items-center gap-2 mt-0.5">
+            <View className="mt-0.5 flex-row items-center gap-2">
               <View className="flex-row gap-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Feather
@@ -36,7 +36,7 @@ export function ReviewItem({ review }: ReviewItemProps) {
                   />
                 ))}
               </View>
-              <Text className="text-[10px] font-bold text-[#6b7682] uppercase tracking-wider">Đã Mua Hàng</Text>
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-[#6b7682]">Verified purchase</Text>
             </View>
           </View>
         </View>
@@ -47,8 +47,8 @@ export function ReviewItem({ review }: ReviewItemProps) {
 
       {review.images.length > 0 && (
         <View className="mt-4 flex-row gap-2">
-          {review.images.map((img, i) => (
-            <Image key={i} source={{ uri: img }} className="h-[80px] w-[80px] rounded-[8px]" />
+          {review.images.map((img, index) => (
+            <Image key={index} source={{ uri: img }} className="h-[80px] w-[80px] rounded-[8px]" />
           ))}
         </View>
       )}
@@ -56,11 +56,11 @@ export function ReviewItem({ review }: ReviewItemProps) {
       <View className="mt-5 flex-row items-center gap-5">
         <Pressable className="flex-row items-center gap-1.5">
           <Feather name="thumbs-up" size={16} color="#6b7682" />
-          <Text className="text-[13px] font-semibold text-[#6b7682]">Hữu ích (24)</Text>
+          <Text className="text-[13px] font-semibold text-[#6b7682]">Helpful (24)</Text>
         </Pressable>
         <Pressable className="flex-row items-center gap-1.5">
           <Feather name="message-square" size={16} color="#6b7682" />
-          <Text className="text-[13px] font-semibold text-[#6b7682]">Phản hồi</Text>
+          <Text className="text-[13px] font-semibold text-[#6b7682]">Reply</Text>
         </Pressable>
       </View>
     </View>

@@ -9,10 +9,6 @@ import {
   SearchData,
 } from "@/types/main";
 
-const quickCategoryIcons = ["smartphone", "shopping-bag", "home", "book-open", "monitor", "watch", "headphones"] as const;
-
-const quickCategoryColors = ["#eaf5ff", "#f2ecff", "#edfff3", "#eef5ff", "#f5f6ff", "#fff3e8", "#ecfbff"] as const;
-
 const fallbackImages = [
   "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=900&q=80",
@@ -28,8 +24,104 @@ const countdownValues = ["00", "00", "00"];
 let cachedHomePromise: Promise<BackendHomeResponse> | null = null;
 let cachedHomeData: BackendHomeResponse | null = null;
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 const pad2 = (value: number) => String(Math.max(0, value)).padStart(2, "0");
+
+const CATEGORY_TRANSLATIONS: Record<string, string> = {
+  ao: "Fashion",
+  "ao nam/nu": "Fashion",
+  "ao nam nu": "Fashion",
+  quan: "Pants",
+  "quan thoi trang": "Pants",
+  giay: "Sneakers",
+  "giay sneakers": "Sneakers",
+  "phu kien": "Accessories",
+  "san pham": "Product",
+};
+
+const normalizeLookupKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const translateCategoryLabel = (value: string) => {
+  const translated = CATEGORY_TRANSLATIONS[normalizeLookupKey(value)];
+  return translated ?? value;
+};
+
+const getCategoryVisual = (value: string, fallbackIndex = 0) => {
+  const key = normalizeLookupKey(value);
+
+  if (key.includes("fashion") || key.includes("ao") || key.includes("apparel")) {
+    return {
+      icon: "tshirt-crew-outline",
+      iconLibrary: "material" as const,
+      color: "#eaf2ff",
+      imageUrl:
+        "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80",
+    };
+  }
+
+  if (key.includes("pant") || key.includes("quan")) {
+    return {
+      icon: "hanger",
+      iconLibrary: "material" as const,
+      color: "#f4ecff",
+      imageUrl:
+        "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80",
+    };
+  }
+
+  if (key.includes("sneaker") || key.includes("shoe") || key.includes("giay")) {
+    return {
+      icon: "shoe-sneaker",
+      iconLibrary: "material" as const,
+      color: "#edfbed",
+      imageUrl:
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    };
+  }
+
+  if (key.includes("accessor") || key.includes("phu kien")) {
+    return {
+      icon: "watch-variant",
+      iconLibrary: "material" as const,
+      color: "#eef5ff",
+      imageUrl:
+        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
+    };
+  }
+
+  if (key.includes("phone") || key.includes("smart")) {
+    return {
+      icon: "cellphone",
+      iconLibrary: "material" as const,
+      color: "#eaf5ff",
+      imageUrl: fallbackImages[0]!,
+    };
+  }
+
+  if (key.includes("laptop") || key.includes("computer")) {
+    return {
+      icon: "laptop",
+      iconLibrary: "material" as const,
+      color: "#f5f6ff",
+      imageUrl: fallbackImages[1]!,
+    };
+  }
+
+  return {
+    icon: "tag-outline",
+    iconLibrary: "material" as const,
+    color: ["#eaf5ff", "#f2ecff", "#edfff3", "#eef5ff", "#f5f6ff", "#fff3e8", "#ecfbff"][fallbackIndex % 7]!,
+    imageUrl: fallbackImages[fallbackIndex % fallbackImages.length]!,
+  };
+};
 
 const getNextFlashSaleEndAt = (now = new Date()) => {
   const current = new Date(now);
@@ -96,8 +188,8 @@ const mapBackendProductToCard = (
     title: product.name,
     subtitle: brandName,
     brandName,
-    categoryName,
-    searchKeywords: [product.name, brandName, categoryName],
+    categoryName: translateCategoryLabel(categoryName),
+    searchKeywords: [product.name, brandName, translateCategoryLabel(categoryName)],
     priceValue: basePrice,
     ratingValue,
     price: formatPrice(basePrice),
@@ -113,11 +205,15 @@ const mapCategoryPlaceholderToCard = (categoryName: string, index: number): Prod
 
   return {
     id: `placeholder-${index}-${categoryName}`,
-    title: `${categoryName} noi bat`,
+    title: `${translateCategoryLabel(categoryName)} Featured`,
     subtitle: "Sello",
     brandName: "Sello",
-    categoryName,
-    searchKeywords: [categoryName, `${categoryName} gia re`, `${categoryName} ban chay`],
+    categoryName: translateCategoryLabel(categoryName),
+    searchKeywords: [
+      translateCategoryLabel(categoryName),
+      `${translateCategoryLabel(categoryName)} deals`,
+      `${translateCategoryLabel(categoryName)} best sellers`,
+    ],
     priceValue: basePrice,
     ratingValue: 4 + (index % 8) / 10,
     price: formatPrice(basePrice),
@@ -130,14 +226,16 @@ const mapCategoryPlaceholderToCard = (categoryName: string, index: number): Prod
 
 const mapQuickCategories = (payload: BackendHomeResponse): QuickCategory[] =>
   payload.categories.slice(0, 5).map((category, index) => ({
+    ...getCategoryVisual(category.name, index),
     id: `cat-${category.id}`,
-    label: category.name,
-    icon: quickCategoryIcons[index % quickCategoryIcons.length],
-    color: quickCategoryColors[index % quickCategoryColors.length],
+    categoryId: category.id,
+    label: translateCategoryLabel(category.name),
   }));
 
 const mapHomeData = (payload: BackendHomeResponse): HomeData => {
-  const categoryMap = new Map<number, string>(payload.categories.map((c) => [c.id, c.name]));
+  const categoryMap = new Map<number, string>(
+    payload.categories.map((c) => [c.id, translateCategoryLabel(c.name)]),
+  );
   const now = new Date();
   const flashSaleEndAt = getNextFlashSaleEndAt(now).toISOString();
   const categoryCounts = new Map<number, number>();
@@ -147,7 +245,7 @@ const mapHomeData = (payload: BackendHomeResponse): HomeData => {
   }
 
   const mappedProducts = payload.featuredProducts.map((product, index) =>
-    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index),
+    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Product", index),
   );
 
   const sortedForFlashSale = payload.featuredProducts
@@ -170,7 +268,7 @@ const mapHomeData = (payload: BackendHomeResponse): HomeData => {
   }));
 
   const flashSaleProducts = (sortedForFlashSale.length ? sortedForFlashSale : fallbackFlashSale).map(({ product, index }) =>
-    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index, true),
+    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Product", index, true),
   );
 
   const suggestedProducts = mappedProducts;
@@ -187,9 +285,10 @@ const mapHomeData = (payload: BackendHomeResponse): HomeData => {
 const mapCategoriesData = (payload: BackendHomeResponse): CategoriesData => ({
   categoryTiles: payload.categories.slice(0, 7).map((category, index) => ({
     id: `tile-${category.id}`,
-    title: category.name,
+    categoryId: category.id,
+    title: translateCategoryLabel(category.name),
     subtitle: undefined,
-    imageUrl: fallbackImages[index % fallbackImages.length],
+    imageUrl: getCategoryVisual(category.name, index).imageUrl,
   })),
   popularBrands: uniqueList(payload.brands.map((brand) => brand.name), 6),
 });
@@ -197,19 +296,29 @@ const mapCategoriesData = (payload: BackendHomeResponse): CategoriesData => ({
 const mapSearchData = (payload: BackendHomeResponse): SearchData => ({
   searchHistory: uniqueList(payload.featuredProducts.map((product) => product.name), 4),
   popularSearches: uniqueList(
-    [...payload.categories.map((category) => category.name), ...payload.brands.map((brand) => `${brand.name} khuyến mãi`)],
+    [
+      ...payload.categories.map((category) => translateCategoryLabel(category.name)),
+      ...payload.brands.map((brand) => `${brand.name} deals`),
+    ],
     5,
   ),
-  recommendedKeywords: uniqueList(payload.featuredProducts.map((product) => `${product.name} giá tốt`), 4),
+  recommendedKeywords: uniqueList(payload.featuredProducts.map((product) => `${product.name} best price`), 4),
 });
 
 const mapProductListData = (payload: BackendHomeResponse): ProductListData => {
-  const categoryMap = new Map<number, string>(payload.categories.map((c) => [c.id, c.name]));
-  const mappedProducts = payload.featuredProducts.map((product, index) =>
-    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Sản phẩm", index, index % 2 === 1),
+  const categoryMap = new Map<number, string>(
+    payload.categories.map((c) => [c.id, translateCategoryLabel(c.name)]),
   );
-  const categorySeeds = ["Áo", "Quần", "Giày", "Phụ kiện"];
-  const allCategoryNames = Array.from(new Set([...payload.categories.map((category) => category.name), ...categorySeeds]));
+  const mappedProducts = payload.featuredProducts.map((product, index) =>
+    mapBackendProductToCard(product, categoryMap.get(product.categoryId) ?? "Product", index, index % 2 === 1),
+  );
+  const categorySeeds = ["Fashion", "Pants", "Sneakers", "Accessories"];
+  const allCategoryNames = Array.from(
+    new Set([
+      ...payload.categories.map((category) => translateCategoryLabel(category.name)),
+      ...categorySeeds,
+    ]),
+  );
   const categoryNamesInProducts = new Set(
     mappedProducts.map((item) => (item.categoryName ?? "").trim().toLowerCase()).filter(Boolean),
   );
@@ -218,8 +327,8 @@ const mapProductListData = (payload: BackendHomeResponse): ProductListData => {
     .map((categoryName, index) => mapCategoryPlaceholderToCard(categoryName, mappedProducts.length + index));
 
   return {
-    filterChips: ["Giá", "Đánh giá", "Thương hiệu"],
-    sortTabs: ["Phổ biến", "Bán chạy", "Giá thấp > cao"],
+    filterChips: ["Price", "Rating", "Brand"],
+    sortTabs: ["Popular", "Best selling", "Price: low to high"],
     productListItems: [...mappedProducts, ...missingCategoryProducts],
   };
 };
@@ -232,7 +341,7 @@ const mapPublicProductToCard = (
   const oldPrice = basePrice > 0 ? Math.round(basePrice * 1.15) : 0;
   const ratingValue = 3.8 + (index % 13) / 10;
   const brandName = product.brand?.name ?? "Sello";
-  const categoryName = product.category?.name ?? "Sản phẩm";
+  const categoryName = translateCategoryLabel(product.category?.name ?? "Product");
   
   return {
     id: String(product.id),
@@ -269,7 +378,7 @@ async function requestMain<T>(path: string): Promise<T> {
   }
 
   if (!response) {
-    throw new Error(`Không thể kết nối backend cho dữ liệu main. Đã thử: ${triedBaseUrls.join(", ")}.`);
+    throw new Error(`Unable to connect to the backend for main data. Tried: ${triedBaseUrls.join(", ")}.`);
   }
 
   const raw = await response.text();
@@ -284,7 +393,7 @@ async function requestMain<T>(path: string): Promise<T> {
   }
 
   if (!response.ok) {
-    const message = typeof payload.message === "string" ? payload.message : "Tải dữ liệu main thất bại";
+    const message = typeof payload.message === "string" ? payload.message : "Failed to load main data.";
     throw new Error(message);
   }
 
@@ -349,7 +458,10 @@ export const mainService = {
   async getFilterMetadata() {
     const homeData = await getBackendHomeData();
     return {
-      categories: homeData.categories,
+      categories: homeData.categories.map((category) => ({
+        ...category,
+        name: translateCategoryLabel(category.name),
+      })),
       brands: homeData.brands,
     };
   },

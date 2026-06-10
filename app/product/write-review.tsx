@@ -1,17 +1,17 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ReviewImageUploader } from "@/components/product/review/review-image-uploader";
 import {
   ReviewRatingSelector,
   ReviewSubmitBar,
   ReviewTextBox,
   WriteReviewHeader,
 } from "@/components/product";
-import { ReviewImageUploader } from "@/components/product/review/review-image-uploader";
 import { useAuth } from "@/contexts/auth-context";
 import { reviewService } from "@/services/customer.service";
 import { triggerLocalNotification } from "@/utils/local-notification";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WriteReviewScreen() {
   const params = useLocalSearchParams<{
@@ -31,24 +31,24 @@ export default function WriteReviewScreen() {
   const parsedProductId = Number(rawProductId);
   const productId = Number.isFinite(parsedProductId) && parsedProductId > 0 ? parsedProductId : null;
 
-  const productName = params.productName ?? "Sản phẩm";
+  const productName = params.productName ?? "Product";
   const productImage =
     params.productImage ??
     "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80";
 
   const submitReview = async () => {
     if (!productId) {
-      Alert.alert("Lỗi", "Sản phẩm không hợp lệ. Vui lòng quay lại trang chi tiết.");
+      Alert.alert("Error", "Invalid product. Please go back to the product details page.");
       return;
     }
 
     if (rating === 0) {
-      Alert.alert("Thông báo", "Vui lòng chọn số sao đánh giá.");
+      Alert.alert("Notice", "Please choose a star rating.");
       return;
     }
 
     if (!token) {
-      Alert.alert("Lỗi", "Vui lòng đăng nhập để viết đánh giá.");
+      Alert.alert("Error", "Please sign in to write a review.");
       return;
     }
 
@@ -61,13 +61,13 @@ export default function WriteReviewScreen() {
         comment: reviewText || undefined,
       });
 
-      triggerLocalNotification("Đánh giá thành công! 🌟", "Cảm ơn bạn đã đóng góp ý kiến cho sản phẩm này.");
+      triggerLocalNotification("Review submitted!", "Thank you for sharing your feedback on this product.");
 
-      Alert.alert("Thành công", "Đánh giá đã được gửi!", [
+      Alert.alert("Success", "Your review has been submitted!", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message || "Không thể gửi đánh giá.");
+      Alert.alert("Error", err.message || "Unable to submit your review.");
     } finally {
       setSubmitting(false);
     }
@@ -83,15 +83,12 @@ export default function WriteReviewScreen() {
       >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerClassName="p-4">
           <View className="mb-6 flex-row items-center gap-4 rounded-[16px] bg-white p-4 shadow-sm">
-            <Image
-              source={{ uri: productImage }}
-              className="h-16 w-16 rounded-[8px]"
-            />
+            <Image source={{ uri: productImage }} className="h-16 w-16 rounded-[8px]" />
             <View className="flex-1">
-              <Text className="text-[16px] font-extrabold text-[#191C1F] leading-[22px]" numberOfLines={2}>
+              <Text className="text-[16px] font-extrabold leading-[22px] text-[#191C1F]" numberOfLines={2}>
                 {productName}
               </Text>
-              <Text className="mt-1 text-[12px] text-[#6b7682]">Hãy để lại đánh giá của bạn</Text>
+              <Text className="mt-1 text-[12px] text-[#6b7682]">Share your thoughts about this product</Text>
             </View>
           </View>
 

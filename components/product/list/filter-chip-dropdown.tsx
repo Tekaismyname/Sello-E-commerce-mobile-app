@@ -1,5 +1,5 @@
-import { Pressable, Text, View } from "react-native";
 import { DropdownOption } from "@/hooks/main/use-product-list-filters";
+import { Pressable, Text, View } from "react-native";
 
 type FilterChipDropdownProps = {
   options: DropdownOption[];
@@ -16,7 +16,7 @@ export function FilterChipDropdown({ options, onSelect }: FilterChipDropdownProp
           className="h-[38px] flex-row items-center justify-between rounded-[8px] px-3"
         >
           <Text className="text-[13px] font-semibold text-[#3f4a57]">{option.label}</Text>
-          <Text className="text-[12px] font-bold text-[#8d97a5]">Chọn</Text>
+          <Text className="text-[12px] font-bold text-[#8d97a5]">Select</Text>
         </Pressable>
       ))}
     </View>

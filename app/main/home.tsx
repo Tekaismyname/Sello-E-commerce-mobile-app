@@ -45,7 +45,7 @@ export default function HomeScreen() {
       {!loading && data ? (
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-7" showsVerticalScrollIndicator={false}>
           <SearchTriggerBar
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder="Search for products..."
             onPress={() => router.push("/main/search" as Href)}
           />
           <HomePromoBanner />
@@ -66,4 +66,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-

@@ -29,7 +29,7 @@ export default function OtpScreen() {
     setErrorMessage("");
 
     if (!/^\d{6}$/.test(otpCode)) {
-      setErrorMessage("OTP phai gom 6 chu so.");
+      setErrorMessage("OTP must contain 6 digits.");
       return;
     }
 
@@ -59,8 +59,8 @@ export default function OtpScreen() {
 
   return (
     <AuthScreenShell
-      title="Xac thuc OTP"
-      subtitle={`Ma OTP da gui toi: ${targetValue || "(khong co targetValue)"}`}
+      title="Verify OTP"
+      subtitle={`OTP was sent to: ${targetValue || "(missing destination)"}`}
     >
       <AuthInput
         placeholder="000000"
@@ -76,13 +76,13 @@ export default function OtpScreen() {
       <AuthMessage kind="error" text={errorMessage} />
 
       <AuthButton
-        title={purpose === "register" ? "Xác thực tài khoản" : "Tiếp tục đặt lại mật khẩu"}
+        title={purpose === "register" ? "Verify account" : "Continue to reset password"}
         loading={loading}
         onPress={submitOtp}
       />
 
       <Pressable onPress={() => router.back()}>
-        <Text className="text-center text-[14px] font-semibold text-[#157bb8]">Quay lai</Text>
+        <Text className="text-center text-[14px] font-semibold text-[#157bb8]">Go back</Text>
       </Pressable>
     </AuthScreenShell>
   );

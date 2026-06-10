@@ -4,8 +4,8 @@ import { Pressable, Text, View } from "react-native";
 
 export function ReviewHeader() {
   return (
-    <View className="bg-white px-4 pt-3 pb-5 shadow-sm z-10 border-b border-[#F2F3F7]">
-      <View className="flex-row items-center justify-between mb-4">
+    <View className="z-10 border-b border-[#F2F3F7] bg-white px-4 pb-5 pt-3 shadow-sm">
+      <View className="mb-4 flex-row items-center justify-between">
         <Pressable
           className="h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
           onPress={() => router.back()}
@@ -23,15 +23,15 @@ export function ReviewHeader() {
           </View>
         </View>
       </View>
-      
-      <View className="flex-row items-center gap-1 mb-2">
-        <Text className="text-[13px] text-[#6b7682]">Sản phẩm</Text>
+
+      <View className="mb-2 flex-row items-center gap-1">
+        <Text className="text-[13px] text-[#6b7682]">Product</Text>
         <Feather name="chevron-right" size={14} color="#6b7682" />
-        <Text className="text-[13px] font-semibold text-[#191C1F]">Đánh giá khách hàng</Text>
+        <Text className="text-[13px] font-semibold text-[#191C1F]">Customer reviews</Text>
       </View>
 
-      <Text className="text-[28px] font-extrabold text-[#191C1F] mb-1">Đánh giá & Phản hồi</Text>
-      <Text className="text-[14px] text-[#3F4850] leading-[22px]">Khám phá những trải nghiệm thực tế từ cộng đồng người dùng của chúng tôi.</Text>
+      <Text className="mb-1 text-[28px] font-extrabold text-[#191C1F]">Reviews & feedback</Text>
+      <Text className="text-[14px] leading-[22px] text-[#3F4850]">Discover real experiences shared by our customer community.</Text>
     </View>
   );
 }

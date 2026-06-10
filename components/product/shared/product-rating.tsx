@@ -13,12 +13,12 @@ export function ProductRating({ rating, reviewsCount, soldCount }: ProductRating
       <Feather name="star" size={14} color="#006D37" />
       <Text className="text-[14px] font-bold text-[#006D37]">{rating}</Text>
       {reviewsCount !== undefined ? (
-        <Text className="text-[12px] font-medium text-[#6b7682]">({reviewsCount} đánh giá)</Text>
+        <Text className="text-[12px] font-medium text-[#6b7682]">({reviewsCount} reviews)</Text>
       ) : null}
       {soldCount !== undefined ? (
         <>
           <View className="h-1 w-1 rounded-full bg-[#BFC7D2]" />
-          <Text className="text-[12px] text-[#6b7682]">Đã bán {soldCount}</Text>
+          <Text className="text-[12px] text-[#6b7682]">Sold {soldCount}</Text>
         </>
       ) : null}
     </View>

@@ -15,7 +15,7 @@ export function useCheckout(token: string) {
   const fetchPreview = useCallback(
     async (voucher?: string) => {
       if (!token) {
-        setError("Vui long dang nhap de thanh toan.");
+        setError("Please sign in to continue to checkout.");
         setLoading(false);
         return;
       }
@@ -40,7 +40,7 @@ export function useCheckout(token: string) {
           setSelectedPaymentMethodId(response.data.paymentMethods[0]!.id);
         }
       } catch (err: any) {
-        setError(err.message ?? "Khong the tai thong tin thanh toan.");
+        setError(err.message ?? "Unable to load checkout information.");
       } finally {
         setLoading(false);
       }
@@ -65,7 +65,7 @@ export function useCheckout(token: string) {
       });
       setPreview(response.data);
     } catch (err: any) {
-      setError(err.message ?? "Khong the ap dung voucher.");
+      setError(err.message ?? "Unable to apply the voucher.");
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export function useCheckout(token: string) {
 
   const placeOrder = useCallback(async () => {
     if (!token || !selectedAddressId || !selectedPaymentMethodId) {
-      throw new Error("Vui long chon dia chi va phuong thuc thanh toan.");
+      throw new Error("Please select an address and a payment method.");
     }
 
     setSubmitting(true);
@@ -90,7 +90,7 @@ export function useCheckout(token: string) {
       const response = await checkoutService.createOrder(token, payload);
       return response;
     } catch (err: any) {
-      const message = err.message ?? "Khong the dat hang.";
+      const message = err.message ?? "Unable to place the order.";
       setError(message);
       throw new Error(message);
     } finally {

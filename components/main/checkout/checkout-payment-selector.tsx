@@ -14,6 +14,17 @@ type CheckoutPaymentSelectorProps = {
   onSelectPaymentMethod: (paymentMethodId: number) => void;
 };
 
+const getPaymentMethodLabel = (method: PaymentMethod) => {
+  const normalizedCode = method.code.trim().toUpperCase();
+
+  if (normalizedCode === "COD") return "Cash on delivery";
+  if (normalizedCode === "MOMO") return "MoMo e-wallet";
+  if (normalizedCode === "CARD") return "Bank card (domestic/international)";
+  if (normalizedCode === "PAYPAL") return "International payment gateway PayPal";
+
+  return method.name;
+};
+
 export function CheckoutPaymentSelector({
   paymentMethods,
   selectedPaymentMethodId,
@@ -34,7 +45,9 @@ export function CheckoutPaymentSelector({
           >
             <View className="flex-row items-center justify-between">
               <View>
-                <Text className="text-[14px] font-bold text-[#1F2934]">{method.name}</Text>
+                <Text className="text-[14px] font-bold text-[#1F2934]">
+                  {getPaymentMethodLabel(method)}
+                </Text>
                 <Text className="mt-1 text-[12px] text-[#5E6A78]">{method.code}</Text>
               </View>
               <Feather
@@ -50,7 +63,7 @@ export function CheckoutPaymentSelector({
       {!paymentMethods.length && (
         <View className="rounded-[12px] bg-[#F8F9FB] p-3">
           <Text className="text-[13px] font-semibold text-[#5E6A78]">
-            Không có phương thức thanh toán khả dụng.
+            No payment methods are currently available.
           </Text>
         </View>
       )}

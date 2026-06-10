@@ -1,17 +1,17 @@
 import { AddressCard } from "@/components/main/address/address-card";
 import { useAuth } from "@/contexts/auth-context";
 import { useAddressesView } from "@/hooks/customer/use-addresses-view";
+import { triggerLocalNotification } from "@/utils/local-notification";
 import { Address } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
 import { Href, router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { triggerLocalNotification } from "@/utils/local-notification";
 
 const toFriendlyAddressError = (message?: string) => {
   if (!message) {
-    return "Không thể xóa địa chỉ.";
+    return "Unable to delete the address.";
   }
 
   const normalized = message.toLowerCase();
@@ -19,7 +19,7 @@ const toFriendlyAddressError = (message?: string) => {
     normalized.includes("cannot delete address that is used by existing orders") ||
     normalized.includes("used by existing orders")
   ) {
-    return "Không thể xóa địa chỉ này vì đang được sử dụng trong một đơn hàng khác.";
+    return "This address cannot be deleted because it is being used in another order.";
   }
 
   return message;
@@ -32,7 +32,7 @@ export default function AddressesScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchAddresses();
-    }, [fetchAddresses])
+    }, [fetchAddresses]),
   );
 
   const openCreate = () => {
@@ -49,13 +49,13 @@ export default function AddressesScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[20px] font-extrabold text-[#0F4C6B]">Danh sách địa chỉ</Text>
+        <Text className="ml-2 text-[20px] font-extrabold text-[#0F4C6B]">Address list</Text>
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
-        <Text className="text-[32px] font-extrabold leading-[38px] text-[#111827]">Địa chỉ nhận hàng</Text>
+        <Text className="text-[32px] font-extrabold leading-[38px] text-[#111827]">Shipping addresses</Text>
         <Text className="mt-2 text-[14px] leading-[22px] text-[#4B5563]">
-          Quản lý các địa điểm giao hàng thường xuyên của bạn.
+          Manage the delivery locations you use most often.
         </Text>
 
         {loading ? (
@@ -77,23 +77,23 @@ export default function AddressesScreen() {
                   setDefaultAddress(address.id)
                     .then(() => {
                       triggerLocalNotification(
-                        "Cập nhật địa chỉ mặc định! 🎉",
-                        `Đã đặt địa chỉ tại ${address.detailAddress} làm mặc định.`
+                        "Default address updated!",
+                        `The address at ${address.detailAddress} has been set as your default.`,
                       );
                     })
                     .catch((err: any) => {
-                      Alert.alert("Lỗi", err?.message ?? "Không thể đặt mặc định.");
+                      Alert.alert("Error", err?.message ?? "Unable to set the default address.");
                     });
                 }}
                 onDelete={(address) => {
-                  Alert.alert("Xóa địa chỉ", "Bạn chắc chắn muốn xóa địa chỉ này?", [
-                    { text: "Hủy", style: "cancel" },
+                  Alert.alert("Delete address", "Are you sure you want to delete this address?", [
+                    { text: "Cancel", style: "cancel" },
                     {
-                      text: "Xóa",
+                      text: "Delete",
                       style: "destructive",
                       onPress: () => {
                         deleteAddress(address.id).catch((err: any) => {
-                          Alert.alert("Lỗi", toFriendlyAddressError(err?.message));
+                          Alert.alert("Error", toFriendlyAddressError(err?.message));
                         });
                       },
                     },
@@ -104,7 +104,7 @@ export default function AddressesScreen() {
 
             {!addresses.length && (
               <View className="items-center rounded-[14px] bg-white p-6">
-                <Text className="text-[14px] text-[#6B7280]">Bạn chưa có địa chỉ nào.</Text>
+                <Text className="text-[14px] text-[#6B7280]">You do not have any saved addresses yet.</Text>
               </View>
             )}
           </View>
@@ -113,13 +113,13 @@ export default function AddressesScreen() {
 
       <View className="border-t border-[#E5E7EB] bg-white p-4">
         <Pressable className="h-12 items-center justify-center rounded-[12px] bg-[#2F95D2]" onPress={openCreate}>
-          <Text className="text-[16px] font-bold text-white">Thêm địa chỉ mới</Text>
+          <Text className="text-[16px] font-bold text-white">Add new address</Text>
         </Pressable>
       </View>
 
       {saving ? (
         <View className="absolute bottom-20 right-5 rounded-full bg-[#111827] px-4 py-2">
-          <Text className="text-[12px] font-semibold text-white">Đang cập nhật...</Text>
+          <Text className="text-[12px] font-semibold text-white">Updating...</Text>
         </View>
       ) : null}
     </SafeAreaView>

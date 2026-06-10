@@ -7,20 +7,20 @@ type OrderHeroStatusCardProps = {
 };
 
 const statusText: Record<Order["status"], string> = {
-  pending: "Chờ xử lý",
-  confirmed: "Đã xác nhận",
-  packed: "Đang đóng gói",
-  shipping: "Đang giao hàng",
-  delivered: "Đã giao hàng",
-  cancelled: "Đã hủy",
-  returned: "Đã trả hàng",
-  return_requested: "Đang yêu cầu trả hàng",
+  pending: "Awaiting processing",
+  confirmed: "Confirmed",
+  packed: "Packing",
+  shipping: "Out for delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  returned: "Returned",
+  return_requested: "Return requested",
 };
 
 export function OrderHeroStatusCard({ order }: OrderHeroStatusCardProps) {
   return (
     <View className="rounded-[16px] bg-[#1579B9] px-5 py-4">
-      <Text className="text-[13px] text-[#D7EEF9]">Mã đơn hàng: #{order.orderCode ?? order.id}</Text>
+      <Text className="text-[13px] text-[#D7EEF9]">Order code: #{order.orderCode ?? order.id}</Text>
       <View className="mt-1 flex-row items-center justify-between">
         <Text className="text-[16px] font-extrabold text-white">{statusText[order.status]}</Text>
         <View className="h-10 w-10 items-center justify-center rounded-full bg-white/25">
@@ -28,7 +28,7 @@ export function OrderHeroStatusCard({ order }: OrderHeroStatusCardProps) {
         </View>
       </View>
       <Text className="mt-1 text-[13px] text-[#D7EEF9]">
-        Dự kiến nhận hàng: {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+        Estimated arrival: {new Date(order.createdAt).toLocaleDateString("en-US")}
       </Text>
     </View>
   );

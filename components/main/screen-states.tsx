@@ -4,7 +4,9 @@ type MainLoadingStateProps = {
   message?: string;
 };
 
-export function MainLoadingState({ message = "Đang tải dữ liệu..." }: MainLoadingStateProps) {
+export function MainLoadingState({
+  message = "Loading data...",
+}: MainLoadingStateProps) {
   return (
     <View className="flex-1 items-center justify-center gap-3">
       <ActivityIndicator size="small" color="#2f7ed6" />

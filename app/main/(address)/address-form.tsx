@@ -1,11 +1,11 @@
 import { AddressForm } from "@/components/main/address/address-form";
 import { useAuth } from "@/contexts/auth-context";
 import { useAddressesView } from "@/hooks/customer/use-addresses-view";
+import { triggerLocalNotification } from "@/utils/local-notification";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { triggerLocalNotification } from "@/utils/local-notification";
 
 export default function AddressFormScreen() {
   const { token } = useAuth();
@@ -21,7 +21,9 @@ export default function AddressFormScreen() {
         <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
-        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}</Text>
+        <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">
+          {initialValue ? "Edit address" : "Add new address"}
+        </Text>
       </View>
 
       <AddressForm
@@ -34,10 +36,10 @@ export default function AddressFormScreen() {
             } else {
               await createAddress(payload);
             }
-            triggerLocalNotification("Thành công! 🎉", "Địa chỉ giao hàng của bạn đã được cập nhật thành công.");
+            triggerLocalNotification("Success!", "Your shipping address has been updated successfully.");
             router.back();
           } catch (err: any) {
-            Alert.alert("Lỗi", err?.message ?? "Không thể lưu địa chỉ.");
+            Alert.alert("Error", err?.message ?? "Unable to save the address.");
           }
         }}
       />

@@ -2,14 +2,14 @@ import { OrderStatus } from "@/types/customer";
 import { Text, View } from "react-native";
 
 const statusLabel: Record<OrderStatus, string> = {
-  pending: "Chờ xử lý",
-  confirmed: "Đã xác nhận",
-  packed: "Đã đóng gói",
-  shipping: "Đang giao",
-  delivered: "Đã giao",
-  cancelled: "Đã hủy",
-  returned: "Đã trả",
-  return_requested: "Yêu cầu trả hàng",
+  pending: "Awaiting processing",
+  confirmed: "Confirmed",
+  packed: "Packed",
+  shipping: "Shipping",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  returned: "Returned",
+  return_requested: "Return requested",
 };
 
 const statusStyle: Record<OrderStatus, { bg: string; text: string }> = {

@@ -240,7 +240,21 @@ const VIETNAM_WARDS: Record<string, string[]> = {
   ]
 };
 
-const ADDRESS_TYPES = ["Nhà riêng", "Công ty"];
+const ADDRESS_TYPES = ["Home", "Office"];
+
+const normalizeAddressType = (value?: string) => {
+  const normalized = value?.trim().toLowerCase();
+
+  if (!normalized) return "Home";
+  if (normalized === "home" || normalized === "nhà riêng" || normalized === "nha rieng") {
+    return "Home";
+  }
+  if (normalized === "office" || normalized === "văn phòng" || normalized === "van phong") {
+    return "Office";
+  }
+
+  return value ?? "Home";
+};
 
 export function AddressForm({ initialValue, loading, onSubmit }: Props) {
   const [recipientName, setRecipientName] = useState(initialValue?.recipientName ?? "");
@@ -251,7 +265,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
   const [district, setDistrict] = useState(initialValue?.district ?? "");
   const [ward, setWard] = useState(initialValue?.ward ?? "");
   const [detailAddress, setDetailAddress] = useState(initialValue?.detailAddress ?? "");
-  const [addressType, setAddressType] = useState(initialValue?.addressType ?? "Nhà riêng");
+  const [addressType, setAddressType] = useState(normalizeAddressType(initialValue?.addressType));
   const [isDefault, setIsDefault] = useState(initialValue?.isDefault ?? false);
 
   // States cho bản đồ
@@ -291,7 +305,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
     setDistrict(initialValue?.district ?? "");
     setWard(initialValue?.ward ?? "");
     setDetailAddress(initialValue?.detailAddress ?? "");
-    setAddressType(initialValue?.addressType ?? "Nhà riêng");
+    setAddressType(normalizeAddressType(initialValue?.addressType));
     setIsDefault(initialValue?.isDefault ?? false);
     if (initialValue?.latitude && initialValue?.longitude) {
       setMarkerPosition({
@@ -331,7 +345,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
               .filter(Boolean)
               .join(", ");
             return {
-              name: props.name || "Địa điểm chưa đặt tên",
+              name: props.name || "Unnamed place",
               description: desc,
               latitude: lat,
               longitude: lon,
@@ -357,7 +371,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
         const data = await response.json();
         if (data && data.length > 0) {
           const formatted = data.map((item: any) => {
-            const name = item.display_name.split(",")[0] || "Địa điểm chưa đặt tên";
+            const name = item.display_name.split(",")[0] || "Unnamed place";
             const desc = item.display_name.split(",").slice(1).join(",").trim();
             return {
               name,
@@ -451,7 +465,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
           const name = data.name || "";
           let parsedDetail = [houseNumber, road, name].filter(Boolean).join(" ");
           if (!parsedDetail) {
-            parsedDetail = data.display_name ? data.display_name.split(",")[0] : "Vị trí đã ghim";
+            parsedDetail = data.display_name ? data.display_name.split(",")[0] : "Pinned location";
           }
 
           setProvince(parsedProvince);
@@ -481,7 +495,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
           const name = props.name || "";
           const street = props.street || "";
           const housenumber = props.housenumber || "";
-          const parsedDetail = [housenumber, street, name].filter(Boolean).join(" ") || "Vị trí đã ghim";
+          const parsedDetail = [housenumber, street, name].filter(Boolean).join(" ") || "Pinned location";
 
           setProvince(parsedProvince);
           setDistrict(parsedDistrict);
@@ -493,13 +507,13 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
 
       if (resolved) {
         setShowMap(false);
-        Alert.alert("Thành công", "Đã cập nhật địa chỉ tự động từ bản đồ!");
+        Alert.alert("Success", "The address was updated automatically from the map.");
       } else {
-        Alert.alert("Lỗi", "Không tìm thấy địa chỉ tại tọa độ này. Bạn vui lòng tự điều chỉnh.");
+        Alert.alert("Error", "No address could be found for this coordinate. Please adjust it manually.");
       }
     } catch (err) {
       console.error("Geocoding error:", err);
-      Alert.alert("Lỗi", "Đã xảy ra lỗi khi lấy địa chỉ từ bản đồ.");
+      Alert.alert("Error", "An error occurred while retrieving the address from the map.");
     } finally {
       setReverseGeocoding(false);
     }
@@ -574,23 +588,23 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
         }}
       >
         <Feather name="map-pin" size={18} color="#2F95D2" />
-        <Text className="text-[15px] font-bold text-[#2F95D2]">Chọn vị trí trên bản đồ số</Text>
+        <Text className="text-[15px] font-bold text-[#2F95D2]">Choose a location on the map</Text>
       </Pressable>
 
       <View className="rounded-[16px] bg-white p-4">
         
         {/* Nhập Người nhận & Số điện thoại */}
-        <Text className="text-[14px] font-bold text-[#111827]">Người nhận</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 border border-[#E5E7EB]" value={recipientName} onChangeText={setRecipientName} placeholder="Nguyễn Văn A" />
+        <Text className="text-[14px] font-bold text-[#111827]">Recipient</Text>
+        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 border border-[#E5E7EB]" value={recipientName} onChangeText={setRecipientName} placeholder="Nguyen Van A" />
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Số điện thoại</Text>
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Phone number</Text>
         <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 border border-[#E5E7EB]" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="0901234567" />
 
         {/* --- CHUYỂN CÁC TRƯỜNG DƯỚI ĐÂY THÀNH SELECT BOX PREMIUM --- */}
         
         {/* 1. Tỉnh / Thành phố */}
-        {renderSelectorField("Tỉnh / Thành phố", province, "Chọn Tỉnh/Thành phố...", () => {
-          openPicker("Chọn Tỉnh/Thành phố", VIETNAM_PROVINCES, (val) => {
+        {renderSelectorField("Province / City", province, "Choose a province/city...", () => {
+          openPicker("Choose a province/city", VIETNAM_PROVINCES, (val) => {
             if (val !== province) {
               setProvince(val);
               setDistrict(""); // Reset các giá trị con khi thay đổi cấp cha
@@ -600,13 +614,13 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
         })}
 
         {/* 2. Quận / Huyện */}
-        {renderSelectorField("Quận / Huyện", district, "Chọn Quận/Huyện...", () => {
+        {renderSelectorField("District", district, "Choose a district...", () => {
           if (!province) {
-            Alert.alert("Thông báo", "Vui lòng chọn Tỉnh/Thành phố trước.");
+            Alert.alert("Notice", "Please choose a province/city first.");
             return;
           }
           const options = VIETNAM_DISTRICTS[province] ?? [];
-          openPicker(`Chọn Quận/Huyện (${province})`, options, (val) => {
+          openPicker(`Choose a district (${province})`, options, (val) => {
             if (val !== district) {
               setDistrict(val);
               setWard(""); // Reset phường xã con
@@ -615,31 +629,31 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
         })}
 
         {/* 3. Phường / Xã */}
-        {renderSelectorField("Phường / Xã", ward, "Chọn Phường/Xã...", () => {
+        {renderSelectorField("Ward / Commune", ward, "Choose a ward/commune...", () => {
           if (!district) {
-            Alert.alert("Thông báo", "Vui lòng chọn Quận/Huyện trước.");
+            Alert.alert("Notice", "Please choose a district first.");
             return;
           }
           const options = VIETNAM_WARDS[district] ?? [];
-          openPicker(`Chọn Phường/Xã (${district})`, options, (val) => {
+          openPicker(`Choose a ward/commune (${district})`, options, (val) => {
             setWard(val);
           });
         })}
 
         {/* Địa chỉ chi tiết */}
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Địa chỉ chi tiết</Text>
-        <TextInput className="mt-2 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3 border border-[#E5E7EB]" multiline value={detailAddress} onChangeText={setDetailAddress} placeholder="Số nhà, tên đường..." />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Detailed address</Text>
+        <TextInput className="mt-2 min-h-[92px] rounded-[12px] bg-[#F3F5FA] px-3 py-3 border border-[#E5E7EB]" multiline value={detailAddress} onChangeText={setDetailAddress} placeholder="House number, street name..." />
 
         {/* 4. Loại địa chỉ */}
-        {renderSelectorField("Loại địa chỉ", addressType, "Chọn loại địa chỉ...", () => {
-          openPicker("Chọn loại địa chỉ", ADDRESS_TYPES, (val) => {
+        {renderSelectorField("Address type", addressType, "Choose an address type...", () => {
+          openPicker("Choose an address type", ADDRESS_TYPES, (val) => {
             setAddressType(val);
           });
         })}
 
         {/* Địa chỉ mặc định */}
         <View className="mt-4 flex-row items-center justify-between rounded-[12px] bg-[#F8FAFC] px-3 py-3 border border-[#E5E7EB]">
-          <Text className="text-[14px] font-semibold text-[#111827]">Đặt làm địa chỉ mặc định</Text>
+          <Text className="text-[14px] font-semibold text-[#111827]">Set as default address</Text>
           <Switch value={isDefault} onValueChange={setIsDefault} />
         </View>
       </View>
@@ -662,7 +676,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
           });
         }}
       >
-        <Text className="text-[15px] font-bold text-white">Lưu địa chỉ</Text>
+        <Text className="text-[15px] font-bold text-white">Save address</Text>
       </Pressable>
 
       {/* --- MODAL SELECT OPTION (SELECT BOX PICKER) --- */}
@@ -685,7 +699,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
                 <TextInput
                   value={pickerSearchQuery}
                   onChangeText={setPickerSearchQuery}
-                  placeholder="Gõ từ khóa tìm kiếm nhanh..."
+                  placeholder="Type a quick search keyword..."
                   placeholderTextColor="#94A3B8"
                   className="flex-1 text-[13px] text-[#1E293B]"
                 />
@@ -719,28 +733,28 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
                   className="flex-row items-center py-4 px-6 border-b border-[#E2E8F0] bg-[#eaf4ff] active:bg-[#d6e8fc]"
                   onPress={() => {
                     setPickerVisible(false);
-                    openCustomInput(`Tự nhập ${pickerTitle.toLowerCase().replace("chọn ", "")}`, (val) => {
+                    openCustomInput(`Manually enter ${pickerTitle.toLowerCase().replace("choose ", "")}`, (val) => {
                       onSelectCallback(val);
                     });
                   }}
                 >
                   <Feather name="edit-3" size={15} color="#2F95D2" className="mr-2.5" />
-                  <Text className="text-[14px] font-bold text-[#2F95D2]">Không có trong danh sách? Tự nhập thủ công</Text>
+                  <Text className="text-[14px] font-bold text-[#2F95D2]">Not in the list? Enter it manually</Text>
                 </Pressable>
               }
               ListEmptyComponent={
                 <View className="items-center py-10">
-                  <Text className="text-[13px] text-[#64748B] mb-4">Không tìm thấy địa phương phù hợp</Text>
+                  <Text className="text-[13px] text-[#64748B] mb-4">No matching location found</Text>
                   <Pressable
                     className="h-10 px-4 items-center justify-center rounded-full bg-[#2F95D2]"
                     onPress={() => {
                       setPickerVisible(false);
-                      openCustomInput(`Tự nhập ${pickerTitle.toLowerCase().replace("chọn ", "")}`, (val) => {
+                      openCustomInput(`Manually enter ${pickerTitle.toLowerCase().replace("choose ", "")}`, (val) => {
                         onSelectCallback(val);
                       });
                     }}
                   >
-                    <Text className="text-[13px] font-bold text-white">Tự nhập ngay</Text>
+                    <Text className="text-[13px] font-bold text-white">Enter manually</Text>
                   </Pressable>
                 </View>
               }
@@ -761,7 +775,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
               autoFocus
               value={customInputValue}
               onChangeText={setCustomInputValue}
-              placeholder="Nhập giá trị của bạn..."
+              placeholder="Enter your value..."
               placeholderTextColor="#94A3B8"
               className="h-12 border border-[#E2E8F0] rounded-[12px] bg-[#F8FAFC] px-3 text-[14px] text-[#1E293B] mb-5"
             />
@@ -771,7 +785,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
                 className="flex-1 h-11 items-center justify-center rounded-[12px] bg-[#F1F5F9] border border-[#E2E8F0]"
                 onPress={() => setCustomInputVisible(false)}
               >
-                <Text className="text-[14px] font-semibold text-[#64748B]">Hủy bỏ</Text>
+                <Text className="text-[14px] font-semibold text-[#64748B]">Cancel</Text>
               </Pressable>
 
               <Pressable
@@ -784,7 +798,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
                   }
                 }}
               >
-                <Text className="text-[14px] font-bold text-white">Xác nhận</Text>
+                <Text className="text-[14px] font-bold text-white">Confirm</Text>
               </Pressable>
             </View>
 
@@ -801,7 +815,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
             <Pressable className="h-10 w-10 items-center justify-center" onPress={() => setShowMap(false)}>
               <Feather name="x" size={22} color="#1E293B" />
             </Pressable>
-            <Text className="text-[16px] font-bold text-[#0F4C6B]">Chọn vị trí giao hàng</Text>
+            <Text className="text-[16px] font-bold text-[#0F4C6B]">Choose delivery location</Text>
             <View className="w-10" />
           </View>
 
@@ -844,7 +858,7 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   onSubmitEditing={() => handleLocationSearch(searchQuery)}
-                  placeholder="Tìm đường, phường, tòa nhà..."
+                  placeholder="Search for a street, ward, or building..."
                   placeholderTextColor="#94A3B8"
                   className="flex-1 text-[14px] text-[#1E293B]"
                 />
@@ -900,10 +914,10 @@ export function AddressForm({ initialValue, loading, onSubmit }: Props) {
                 {reverseGeocoding ? (
                   <View className="flex-row items-center gap-2">
                     <ActivityIndicator size="small" color="white" />
-                    <Text className="text-[15px] font-bold text-white">Đang phân tích địa chỉ...</Text>
+                    <Text className="text-[15px] font-bold text-white">Analyzing address...</Text>
                   </View>
                 ) : (
-                  <Text className="text-[15px] font-bold text-white">Xác nhận vị trí này</Text>
+                  <Text className="text-[15px] font-bold text-white">Confirm this location</Text>
                 )}
               </Pressable>
             </View>

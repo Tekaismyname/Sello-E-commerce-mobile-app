@@ -15,7 +15,7 @@ export function useOrdersView(token: string) {
     setError(null);
 
     if (!token) {
-      setError("Vui long dang nhap de xem don hang.");
+      setError("Please sign in to view your orders.");
       setLoading(false);
       return;
     }
@@ -24,7 +24,7 @@ export function useOrdersView(token: string) {
       const response = await orderService.getMyOrders(token);
       setOrders(response.data);
     } catch (err: any) {
-      setError(err.message ?? "Khong the tai danh sach don hang.");
+      setError(err.message ?? "Unable to load your orders.");
     } finally {
       setLoading(false);
     }

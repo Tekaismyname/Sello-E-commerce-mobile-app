@@ -1,7 +1,5 @@
-import { Href, router, useLocalSearchParams } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { FlashList } from "@shopify/flash-list";
+import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
+import { SelloHeader } from "@/components/main/sello-header";
 import {
   FilterChipDropdown,
   FilterChipGroup,
@@ -11,13 +9,16 @@ import {
   ProductListHeaderInfo,
   SortTabGroup,
 } from "@/components/product";
-import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
-import { SelloHeader } from "@/components/main/sello-header";
 import { useProductListFilters } from "@/hooks/main/use-product-list-filters";
+import { FlashList } from "@shopify/flash-list";
+import { Href, router, useLocalSearchParams } from "expo-router";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProductListScreen() {
-  const params = useLocalSearchParams<{ keyword?: string }>();
+  const params = useLocalSearchParams<{ keyword?: string; categoryId?: string }>();
   const searchKeyword = params.keyword?.toString().trim() ?? "";
+  const categoryId = Number(params.categoryId);
 
   const {
     chips,
@@ -32,7 +33,7 @@ export default function ProductListScreen() {
     handleLoadMore,
     loading,
     error,
-  } = useProductListFilters(searchKeyword);
+  } = useProductListFilters(searchKeyword, Number.isFinite(categoryId) ? categoryId : undefined);
 
   return (
     <SafeAreaView className="flex-1 bg-[#f3f5f8]" edges={["top"]}>
@@ -62,22 +63,22 @@ export default function ProductListScreen() {
             ListHeaderComponent={
               <View style={{ paddingBottom: 8 }}>
                 <ProductListHeaderInfo
-                  trail="Trang chủ > Danh mục"
-                  keyword={searchKeyword || "Tất cả sản phẩm"}
-                  totalText={`${filteredProducts.length} sản phẩm được tìm thấy`}
+                  trail="Home > Category"
+                  keyword={searchKeyword || "All products"}
+                  totalText={`${filteredProducts.length} products found`}
                 />
 
                 <FilterChipGroup chips={chips} openChipId={openChipId} onPressChip={handleOpenChip} />
 
                 {openChipId ? <FilterChipDropdown options={dropdownOptions} onSelect={applyDropdownOption} /> : null}
 
-                <SortTabGroup tabs={["Phổ biến", "Bán chạy", "Giá thấp > cao"]} />
+                <SortTabGroup tabs={["Popular", "Best sellers", "Price: low to high"]} />
               </View>
             }
             ListEmptyComponent={
               <View className="mt-4 rounded-[12px] bg-white px-4 py-5">
                 <Text className="text-center text-[13px] font-semibold text-[#6b7682]">
-                  Không tìm thấy sản phẩm phù hợp với từ khóa này.
+                  No products matched this keyword.
                 </Text>
               </View>
             }
@@ -87,12 +88,12 @@ export default function ProductListScreen() {
 
                 {hasMore ? (
                   <Pressable
-                    className="mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5] mb-2"
+                    className="mb-2 mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5]"
                     onPress={handleLoadMore}
                     disabled={loadingMore}
                   >
                     <Text className="text-[14px] font-bold text-[#3077d8]">
-                      {loadingMore ? "Đang tải thêm..." : "Xem thêm sản phẩm"}
+                      {loadingMore ? "Loading more..." : "See more products"}
                     </Text>
                   </Pressable>
                 ) : null}

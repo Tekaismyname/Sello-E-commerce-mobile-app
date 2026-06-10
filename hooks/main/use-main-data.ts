@@ -16,7 +16,7 @@ function useMainDataLoader<T>(loader: () => Promise<T>, refreshOnFocus?: () => P
       const response = await resolver();
       setData(response);
     } catch {
-      setErrorMessage("Khong the tai du lieu.");
+      setErrorMessage("Unable to load data.");
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ function useMainDataLoader<T>(loader: () => Promise<T>, refreshOnFocus?: () => P
         }
       } catch {
         if (active) {
-          setErrorMessage("Khong the tai du lieu.");
+          setErrorMessage("Unable to load data.");
         }
       } finally {
         if (active) {

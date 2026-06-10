@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
-import { Href, router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/auth-context";
 import { orderService } from "@/services/customer.service";
 import { OrderDetail, OrderStatus, OrderTracking } from "@/types/customer";
+import { Feather } from "@expo/vector-icons";
+import { Href, router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const statusLabels: Record<OrderStatus, string> = {
-  pending: "Chờ xử lý",
-  confirmed: "Đã xác nhận",
-  packed: "Đã đóng gói",
-  shipping: "Đang giao",
-  delivered: "Đã giao",
-  cancelled: "Đã hủy",
-  returned: "Đã trả",
-  return_requested: "Đang yêu cầu trả hàng",
+  pending: "Awaiting processing",
+  confirmed: "Confirmed",
+  packed: "Packed",
+  shipping: "Shipping",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  returned: "Returned",
+  return_requested: "Return requested",
 };
 
 const statusColors: Record<OrderStatus, { bg: string; text: string }> = {
@@ -36,17 +36,17 @@ const getPaymentLabel = (order: OrderDetail) => {
   const methodName = order.payment?.methodName;
 
   if (methodCode === "COD") {
-    return `Thanh toan bang COD - ${order.paymentStatus ?? "unpaid"}`;
+    return `Cash on delivery - ${order.paymentStatus ?? "unpaid"}`;
   }
   if (methodCode === "MOMO") {
-    return `${order.paymentStatus === "paid" ? "Đã thanh toán" : "Trạng thái"} qua MoMo`;
+    return `${order.paymentStatus === "paid" ? "Paid" : "Status"} via MoMo`;
   }
   if (methodCode === "CARD") {
-    return `${order.paymentStatus === "paid" ? "Đã thanh toán" : "Trạng thái"} qua ngan hang`;
+    return `${order.paymentStatus === "paid" ? "Paid" : "Status"} via card`;
   }
 
   return methodName
-    ? `${order.paymentStatus === "paid" ? "Đã thanh toán" : "Trạng thái"} qua ${methodName}`
+    ? `${order.paymentStatus === "paid" ? "Paid" : "Status"} via ${methodName}`
     : order.payment?.paymentStatus ?? order.paymentStatus ?? "pending";
 };
 
@@ -63,13 +63,13 @@ export default function OrderDetailScreen() {
 
   const fetchOrder = useCallback(async () => {
     if (!token) {
-      setError("Vui long dang nhap de xem chi tiet don hang.");
+      setError("Please sign in to view order details.");
       setLoading(false);
       return;
     }
 
     if (!orderId || Number.isNaN(orderId)) {
-      setError("ID don hang khong hop le.");
+      setError("Invalid order ID.");
       setLoading(false);
       return;
     }
@@ -101,10 +101,10 @@ export default function OrderDetailScreen() {
       return;
     }
 
-    Alert.alert("Hủy đơn hàng", `Bạn có chắc muốn hủy đơn #${order.orderCode}?`, [
-      { text: "Khong", style: "cancel" },
+    Alert.alert("Cancel order", `Are you sure you want to cancel order #${order.orderCode}?`, [
+      { text: "No", style: "cancel" },
       {
-        text: "Huy don",
+        text: "Cancel order",
         style: "destructive",
         onPress: async () => {
           setCancelLoading(true);
@@ -115,7 +115,7 @@ export default function OrderDetailScreen() {
             const trackingResponse = await orderService.getOrderTracking(token, order.id);
             setTracking(trackingResponse.data);
           } catch (nextError: any) {
-            Alert.alert("Loi", nextError.message ?? "Khong the huy don.");
+            Alert.alert("Error", nextError.message ?? "Unable to cancel the order.");
           } finally {
             setCancelLoading(false);
           }
@@ -128,7 +128,7 @@ export default function OrderDetailScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-[#F6F8FC]" edges={["top"]}>
         <ActivityIndicator size="large" color="#006397" />
-        <Text className="mt-3 text-[13px] text-[#607080]">Dang tai chi tiet don hang...</Text>
+        <Text className="mt-3 text-[13px] text-[#607080]">Loading order details...</Text>
       </SafeAreaView>
     );
   }
@@ -143,12 +143,12 @@ export default function OrderDetailScreen() {
           >
             <Feather name="arrow-left" size={18} color="#1F2934" />
           </Pressable>
-          <Text className="text-[18px] font-bold text-[#1F2934]">Chi tiet don hang</Text>
+          <Text className="text-[18px] font-bold text-[#1F2934]">Order details</Text>
         </View>
 
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-center text-[15px] font-semibold text-[#465362]">
-            {error || "Khong tim thay don hang"}
+            {error || "Order not found"}
           </Text>
         </View>
       </SafeAreaView>
@@ -170,7 +170,7 @@ export default function OrderDetailScreen() {
             <Feather name="arrow-left" size={18} color="#1F2934" />
           </Pressable>
           <View>
-            <Text className="text-[18px] font-bold text-[#1F2934]">Chi tiet don hang</Text>
+            <Text className="text-[18px] font-bold text-[#1F2934]">Order details</Text>
             <Text className="text-[12px] text-[#607080]">#{order.orderCode}</Text>
           </View>
         </View>
@@ -184,21 +184,21 @@ export default function OrderDetailScreen() {
 
       <ScrollView className="flex-1" contentContainerClassName="px-4 pb-10">
         <View className="rounded-[16px] bg-white p-4">
-          <Text className="text-[13px] font-semibold text-[#607080]">Ngay dat</Text>
+          <Text className="text-[13px] font-semibold text-[#607080]">Order date</Text>
           <Text className="mt-1 text-[16px] font-bold text-[#102033]">
-            {new Date(order.createdAt).toLocaleString("vi-VN")}
+            {new Date(order.createdAt).toLocaleString("en-US")}
           </Text>
 
           <View className="mt-4 flex-row items-start justify-between">
             <View>
-              <Text className="text-[13px] font-semibold text-[#607080]">Thanh toan</Text>
+              <Text className="text-[13px] font-semibold text-[#607080]">Payment</Text>
               <Text className="mt-1 text-[15px] font-bold text-[#102033]">
                 {getPaymentLabel(order)}
               </Text>
             </View>
 
             <View className="items-end">
-              <Text className="text-[13px] font-semibold text-[#607080]">Tong tien</Text>
+              <Text className="text-[13px] font-semibold text-[#607080]">Total amount</Text>
               <Text className="mt-1 text-[18px] font-extrabold text-[#0F6CBD]">
                 {formatPrice(order.totalAmount)}
               </Text>
@@ -207,16 +207,16 @@ export default function OrderDetailScreen() {
 
           {order.note ? (
             <View className="mt-4 rounded-[12px] bg-[#F7FAFD] p-3">
-              <Text className="text-[12px] font-semibold text-[#607080]">Ghi chu</Text>
+              <Text className="text-[12px] font-semibold text-[#607080]">Note</Text>
               <Text className="mt-1 text-[13px] text-[#334A5C]">{order.note}</Text>
             </View>
           ) : null}
 
           {order.status === "cancelled" && (
-            <View className="mt-4 rounded-[12px] bg-[#FFEBEE] p-3 border border-[#FFCDD2]">
-              <Text className="text-[12px] font-bold text-[#C62828]">Lý do hủy đơn</Text>
-              <Text className="mt-1 text-[13px] text-[#C62828] font-medium">
-                {timeline.find((h) => h.status === "cancelled")?.description || "Hủy tự động do hết hạn thanh toán"}
+            <View className="mt-4 rounded-[12px] border border-[#FFCDD2] bg-[#FFEBEE] p-3">
+              <Text className="text-[12px] font-bold text-[#C62828]">Cancellation reason</Text>
+              <Text className="mt-1 text-[13px] font-medium text-[#C62828]">
+                {timeline.find((item) => item.status === "cancelled")?.description || "Automatically cancelled due to payment timeout"}
               </Text>
             </View>
           )}
@@ -230,14 +230,14 @@ export default function OrderDetailScreen() {
               {cancelLoading ? (
                 <ActivityIndicator color="#BA1A1A" />
               ) : (
-                <Text className="text-[13px] font-bold text-[#BA1A1A]">Huy don hang</Text>
+                <Text className="text-[13px] font-bold text-[#BA1A1A]">Cancel order</Text>
               )}
             </Pressable>
           ) : null}
         </View>
 
         <View className="mt-4 rounded-[16px] bg-white p-4">
-          <Text className="text-[16px] font-bold text-[#102033]">Sản phẩm</Text>
+          <Text className="text-[16px] font-bold text-[#102033]">Products</Text>
 
           <View className="mt-3 gap-3">
             {order.items.map((item) => (
@@ -254,7 +254,7 @@ export default function OrderDetailScreen() {
                 </View>
 
                 <View className="mt-3 flex-row items-center justify-between">
-                  <Text className="text-[13px] text-[#607080]">{formatPrice(item.price)} / san pham</Text>
+                  <Text className="text-[13px] text-[#607080]">{formatPrice(item.price)} / item</Text>
                   <Text className="text-[15px] font-bold text-[#0F6CBD]">
                     {formatPrice(item.lineTotal ?? item.price * item.quantity)}
                   </Text>
@@ -265,26 +265,26 @@ export default function OrderDetailScreen() {
         </View>
 
         <View className="mt-4 rounded-[16px] bg-white p-4">
-          <Text className="text-[16px] font-bold text-[#102033]">Chi tiet thanh toan</Text>
+          <Text className="text-[16px] font-bold text-[#102033]">Payment details</Text>
 
           <View className="mt-3 gap-2">
             <View className="flex-row items-center justify-between">
-              <Text className="text-[13px] text-[#607080]">Tam tinh</Text>
+              <Text className="text-[13px] text-[#607080]">Subtotal</Text>
               <Text className="text-[13px] font-semibold text-[#102033]">{formatPrice(order.subtotal ?? 0)}</Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-[13px] text-[#607080]">Phi giao hang</Text>
+              <Text className="text-[13px] text-[#607080]">Shipping fee</Text>
               <Text className="text-[13px] font-semibold text-[#102033]">
                 {formatPrice(order.shippingFee ?? 0)}
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-[13px] text-[#607080]">Giam gia</Text>
+              <Text className="text-[13px] text-[#607080]">Discount</Text>
               <Text className="text-[13px] font-semibold text-[#102033]">-{formatPrice(order.discount ?? 0)}</Text>
             </View>
             <View className="mt-2 h-px bg-[#EEF3F7]" />
             <View className="flex-row items-center justify-between">
-              <Text className="text-[14px] font-bold text-[#102033]">Tong cong</Text>
+              <Text className="text-[14px] font-bold text-[#102033]">Total</Text>
               <Text className="text-[18px] font-extrabold text-[#0F6CBD]">{formatPrice(order.totalAmount)}</Text>
             </View>
           </View>
@@ -292,24 +292,24 @@ export default function OrderDetailScreen() {
 
         {tracking?.shipment || order.shipment ? (
           <View className="mt-4 rounded-[16px] bg-white p-4">
-            <Text className="text-[16px] font-bold text-[#102033]">Van chuyen</Text>
+            <Text className="text-[16px] font-bold text-[#102033]">Shipping</Text>
 
             <View className="mt-3 gap-2">
               <Text className="text-[13px] text-[#334A5C]">
-                Don vi: {tracking?.shipment?.carrierName ?? order.shipment?.carrierName ?? "Dang cap nhat"}
+                Carrier: {tracking?.shipment?.carrierName ?? order.shipment?.carrierName ?? "Updating"}
               </Text>
               <Text className="text-[13px] text-[#334A5C]">
-                Ma van don: {tracking?.shipment?.trackingCode ?? order.shipment?.trackingCode ?? "Chua co"}
+                Tracking number: {tracking?.shipment?.trackingCode ?? order.shipment?.trackingCode ?? "Not available yet"}
               </Text>
               <Text className="text-[13px] text-[#334A5C]">
-                Trạng thái: {tracking?.shipment?.shipmentStatus ?? order.shipment?.shipmentStatus ?? "pending"}
+                Status: {tracking?.shipment?.shipmentStatus ?? order.shipment?.shipmentStatus ?? "pending"}
               </Text>
             </View>
           </View>
         ) : null}
 
         <View className="mt-4 rounded-[16px] bg-white p-4">
-          <Text className="text-[16px] font-bold text-[#102033]">Lich su trang thai</Text>
+          <Text className="text-[16px] font-bold text-[#102033]">Status history</Text>
 
           <View className="mt-4 gap-4">
             {timeline.map((event, index) => (
@@ -325,7 +325,7 @@ export default function OrderDetailScreen() {
                   </Text>
                   <Text className="mt-1 text-[13px] text-[#334A5C]">{event.description}</Text>
                   <Text className="mt-1 text-[12px] text-[#607080]">
-                    {new Date(event.timestamp).toLocaleString("vi-VN")}
+                    {new Date(event.timestamp).toLocaleString("en-US")}
                   </Text>
                 </View>
               </View>

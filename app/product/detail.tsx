@@ -1,3 +1,5 @@
+import { productService } from "@/services/customer.service";
+import { ProductDetail } from "@/types/customer";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
@@ -15,8 +17,6 @@ import {
   ProductSizeSelector,
   ProductSpecs,
 } from "@/components/product";
-import { productService } from "@/services/customer.service";
-import { ProductDetail } from "@/types/customer";
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -30,8 +30,8 @@ export default function ProductDetailScreen() {
     const rawId = Array.isArray(id) ? id[0] : id;
     const productId = Number(rawId);
 
-    if (!productId || isNaN(productId)) {
-      setError("ID sản phẩm không hợp lệ");
+    if (!productId || Number.isNaN(productId)) {
+      setError("Invalid product ID.");
       setLoading(false);
       return;
     }
@@ -42,8 +42,8 @@ export default function ProductDetailScreen() {
         setProduct(res.data);
 
         const variants = res.data.variants ?? [];
-        const sizes = [...new Set(variants.map((v) => v.size).filter(Boolean))];
-        const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))];
+        const sizes = [...new Set(variants.map((variant) => variant.size).filter(Boolean))];
+        const colors = [...new Set(variants.map((variant) => variant.color).filter(Boolean))];
 
         if (sizes.length > 0) setSelectedSize(sizes[0]!);
         if (colors.length > 0) setSelectedColor(colors[0]!);
@@ -56,7 +56,7 @@ export default function ProductDetailScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white" edges={["top", "bottom"]}>
         <ActivityIndicator size="large" color="#006397" />
-        <Text className="mt-3 text-[14px] text-[#7d8896]">Đang tải sản phẩm...</Text>
+        <Text className="mt-3 text-[14px] text-[#7d8896]">Loading product...</Text>
       </SafeAreaView>
     );
   }
@@ -67,14 +67,14 @@ export default function ProductDetailScreen() {
         <ProductDetailHeader />
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-center text-[16px] font-semibold text-[#BA1A1A]">
-            {error || "Không tìm thấy sản phẩm"}
+            {error || "Product not found"}
           </Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+  const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
   const variants = product.variants ?? [];
   const selectedVariant =
@@ -83,9 +83,9 @@ export default function ProductDetailScreen() {
         (!selectedColor || variant.color === selectedColor) &&
         (!selectedSize || variant.size === selectedSize),
     ) ?? variants[0];
-  const sizes = [...new Set(variants.map((v) => v.size).filter(Boolean))] as string[];
-  const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))].map((colorName) => {
-    const variant = variants.find((v) => v.color === colorName);
+  const sizes = [...new Set(variants.map((variant) => variant.size).filter(Boolean))] as string[];
+  const colors = [...new Set(variants.map((variant) => variant.color).filter(Boolean))].map((colorName) => {
+    const variant = variants.find((item) => item.color === colorName);
     return {
       name: colorName!,
       imageUrl:
@@ -115,7 +115,7 @@ export default function ProductDetailScreen() {
         <ProductImageGallery images={images} />
 
         <ProductBasicInfo
-          category={product.categoryName ?? "Sản phẩm"}
+          category={product.categoryName ?? "Product"}
           title={product.name}
           price={formatPrice(product.basePrice)}
           oldPrice={product.comparePrice ? formatPrice(product.comparePrice) : undefined}

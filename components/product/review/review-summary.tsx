@@ -16,24 +16,24 @@ export function ReviewSummary({ rating, reviewsCount }: ReviewSummaryProps) {
   ];
 
   return (
-    <View className="bg-white px-4 pt-5 pb-2">
-      <View className="items-center mb-6 border border-[#F2F3F7] rounded-[16px] py-6 shadow-sm">
-        <Text className="text-[48px] font-extrabold text-[#006397] mb-1">{rating}</Text>
-        <View className="flex-row gap-1 mb-2">
+    <View className="bg-white px-4 pb-2 pt-5">
+      <View className="mb-6 items-center rounded-[16px] border border-[#F2F3F7] py-6 shadow-sm">
+        <Text className="mb-1 text-[48px] font-extrabold text-[#006397]">{rating}</Text>
+        <View className="mb-2 flex-row gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <Feather key={star} name="star" size={18} color="#873DA6" />
           ))}
         </View>
-        <Text className="text-[13px] text-[#6b7682] mb-6">Dựa trên {reviewsCount.toLocaleString()} đánh giá</Text>
+        <Text className="mb-6 text-[13px] text-[#6b7682]">Based on {reviewsCount.toLocaleString()} reviews</Text>
 
-        <View className="w-full px-6 gap-3">
+        <View className="w-full gap-3 px-6">
           {bars.map((bar) => (
             <View key={bar.star} className="flex-row items-center">
-              <Text className="text-[12px] font-bold text-[#191C1F] w-4">{bar.star}</Text>
-              <View className="flex-1 mx-3 h-2 rounded-full bg-[#E7E8EC] overflow-hidden">
-                <View className="h-full bg-[#006397] rounded-full" style={{ width: `${bar.percent}%` }} />
+              <Text className="w-4 text-[12px] font-bold text-[#191C1F]">{bar.star}</Text>
+              <View className="mx-3 h-2 flex-1 overflow-hidden rounded-full bg-[#E7E8EC]">
+                <View className="h-full rounded-full bg-[#006397]" style={{ width: `${bar.percent}%` }} />
               </View>
-              <Text className="text-[12px] text-[#6b7682] w-8 text-right">{bar.percent}%</Text>
+              <Text className="w-8 text-right text-[12px] text-[#6b7682]">{bar.percent}%</Text>
             </View>
           ))}
         </View>

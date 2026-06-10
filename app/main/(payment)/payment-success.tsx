@@ -25,29 +25,29 @@ export default function PaymentSuccessScreen() {
             <Feather name="check" size={48} color="white" />
           </View>
           <Text className="mt-8 text-center text-[30px] font-extrabold leading-[36px] text-[#1F2934]">
-            Thanh toán thành công!
+            Payment successful!
           </Text>
           <Text className="mt-3 text-center text-[16px] leading-[24px] text-[#4B5563]">
-            Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
+            Your order has been received and is now being processed.
           </Text>
         </View>
 
         <View className="mt-8 rounded-[16px] bg-white p-5">
           <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] text-[#4B5563]">Mã đơn hàng</Text>
+            <Text className="text-[15px] text-[#4B5563]">Order number</Text>
             <Text className="text-[16px] font-extrabold text-[#1F2934]">#EC-{normalizedOrderId || "20240985"}</Text>
           </View>
           <View className="my-4 h-px bg-[#EEF2F6]" />
           <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] text-[#4B5563]">Tổng thanh toán</Text>
+            <Text className="text-[15px] text-[#4B5563]">Total payment</Text>
             <Text className="text-[22px] font-extrabold text-[#0F6CBD]">{formatPrice(total)}</Text>
           </View>
           <View className="my-4 h-px bg-[#EEF2F6]" />
           <View className="flex-row items-start justify-between gap-4">
-            <Text className="text-[15px] text-[#4B5563]">Dự kiến giao hàng</Text>
+            <Text className="text-[15px] text-[#4B5563]">Estimated delivery</Text>
             <View className="items-end">
-              <Text className="text-[15px] font-extrabold text-[#12805C]">Thứ Năm, 24 Thg 5</Text>
-              <Text className="mt-1 text-[13px] text-[#4B5563]">Giao hàng tiêu chuẩn</Text>
+              <Text className="text-[15px] font-extrabold text-[#12805C]">Thursday, May 24</Text>
+              <Text className="mt-1 text-[13px] text-[#4B5563]">Standard delivery</Text>
             </View>
           </View>
         </View>
@@ -58,8 +58,8 @@ export default function PaymentSuccessScreen() {
           className="mt-8 overflow-hidden rounded-[12px]"
         >
           <View className="bg-black/45 px-6 py-7">
-            <Text className="text-[12px] font-bold uppercase text-[#BCE7F8]">Ưu đãi độc quyền</Text>
-            <Text className="mt-2 text-[18px] font-extrabold text-white">Giảm 15% cho đơn hàng kế tiếp</Text>
+            <Text className="text-[12px] font-bold uppercase text-[#BCE7F8]">Exclusive offer</Text>
+            <Text className="mt-2 text-[18px] font-extrabold text-white">15% off your next order</Text>
           </View>
         </ImageBackground>
 
@@ -69,14 +69,14 @@ export default function PaymentSuccessScreen() {
             onPress={() => router.replace((`/main/order-tracking?orderId=${normalizedOrderId}` as unknown) as Href)}
           >
             <Feather name="truck" size={18} color="white" />
-            <Text className="ml-3 text-[16px] font-extrabold text-white">Theo dõi đơn hàng</Text>
+            <Text className="ml-3 text-[16px] font-extrabold text-white">Track order</Text>
           </Pressable>
           <Pressable
             className="h-[56px] flex-row items-center justify-center rounded-[12px] bg-[#E9EEF5]"
             onPress={() => router.replace("/main/home" as Href)}
           >
             <Feather name="shopping-bag" size={18} color="#0F4C6B" />
-            <Text className="ml-3 text-[16px] font-extrabold text-[#0F4C6B]">Tiếp tục mua sắm</Text>
+            <Text className="ml-3 text-[16px] font-extrabold text-[#0F4C6B]">Continue shopping</Text>
           </Pressable>
         </View>
       </View>

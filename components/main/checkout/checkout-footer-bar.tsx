@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
 
 type CheckoutFooterBarProps = {
   totalAmount: number;
@@ -19,7 +19,7 @@ export function CheckoutFooterBar({
     <View className="border-t border-[#E1E7EF] bg-white px-4 py-3">
       <View className="flex-row items-center justify-between">
         <View>
-          <Text className="text-[12px] font-bold text-[#64748B]">TỔNG CỘNG</Text>
+          <Text className="text-[12px] font-bold text-[#64748B]">TOTAL</Text>
           <Text className="mt-1 text-[33px] font-extrabold text-[#0369A1]">{formatPrice(totalAmount)}</Text>
         </View>
 
@@ -31,7 +31,7 @@ export function CheckoutFooterBar({
           }`}
         >
           <Text className="text-[17px] font-extrabold text-white">
-            {submitting ? "Đang đặt..." : "Đặt hàng"}
+            {submitting ? "Placing..." : "Place order"}
           </Text>
         </Pressable>
       </View>

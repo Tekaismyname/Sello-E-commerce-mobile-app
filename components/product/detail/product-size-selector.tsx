@@ -10,9 +10,9 @@ export function ProductSizeSelector({ sizes, selectedSize, onSelectSize }: Produ
   return (
     <View className="bg-white px-4 py-5">
       <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-[14px] font-bold uppercase tracking-wider text-[#191C1F]">Kích cỡ (EU)</Text>
+        <Text className="text-[14px] font-bold uppercase tracking-wider text-[#191C1F]">Size (EU)</Text>
         <Pressable>
-          <Text className="text-[12px] font-semibold text-[#006397] underline">Bảng size</Text>
+          <Text className="text-[12px] font-semibold text-[#006397] underline">Size chart</Text>
         </Pressable>
       </View>
       <View className="flex-row flex-wrap gap-3">

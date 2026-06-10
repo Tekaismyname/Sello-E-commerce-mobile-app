@@ -15,7 +15,7 @@ export function ProductColorSelector({ colors, selectedColor, onSelectColor }: P
   return (
     <View className="bg-white px-4 py-5">
       <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-[14px] font-bold uppercase tracking-wider text-[#191C1F]">Màu sắc</Text>
+        <Text className="text-[14px] font-bold uppercase tracking-wider text-[#191C1F]">Color</Text>
         <Text className="text-[14px] text-[#3F4850]">{selectedColor}</Text>
       </View>
       <View className="flex-row gap-3">
@@ -25,9 +25,9 @@ export function ProductColorSelector({ colors, selectedColor, onSelectColor }: P
             <Pressable
               key={color.name}
               onPress={() => onSelectColor(color.name)}
-              className={`h-[68px] w-[68px] items-center justify-center rounded-[12px] border-[2px] ${
+              className={`h-[68px] w-[68px] items-center justify-center overflow-hidden rounded-[12px] border-[2px] ${
                 isSelected ? "border-black" : "border-transparent"
-              } bg-[#F2F3F7] overflow-hidden`}
+              } bg-[#F2F3F7]`}
             >
               <Image source={{ uri: color.imageUrl }} className="h-[80%] w-[80%]" resizeMode="contain" />
             </Pressable>

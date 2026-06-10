@@ -11,11 +11,11 @@ export function ReviewSubmitBar({ onSubmit, disabled }: ReviewSubmitBarProps) {
       <Pressable
         onPress={onSubmit}
         disabled={disabled}
-        className={`mt-1 mb-2 h-14 items-center justify-center rounded-[12px] shadow-sm ${
+        className={`mb-2 mt-1 h-14 items-center justify-center rounded-[12px] shadow-sm ${
           disabled ? "bg-[#3498DB]/50" : "bg-[#3498DB]"
         }`}
       >
-        <Text className="text-[16px] font-bold text-white">Gửi Đánh Giá</Text>
+        <Text className="text-[16px] font-bold text-white">Submit review</Text>
       </Pressable>
     </View>
   );
