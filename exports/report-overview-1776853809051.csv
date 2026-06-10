@@ -1,0 +1,12 @@
+section,key,value
+summary,users,9
+summary,orders,3
+revenue,2026-04,1531250
+top_selling,giày đỏ,5
+top_selling,Áo thun Nike 1,4
+top_selling,Quần Nike 1,2
+top_selling,Giày Nike 1,2
+top_selling,Áo thun Nike 2,0
+order_status,delivered,1
+order_status,shipping,1
+order_status,pending,1
