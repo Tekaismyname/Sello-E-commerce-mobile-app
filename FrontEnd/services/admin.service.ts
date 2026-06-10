@@ -377,22 +377,36 @@ export const adminService = {
     );
     const data = asRecord(response?.data);
 
+    const orderStatusSummary = ensureArray<Record<string, unknown>>(data.orderStatusSummary);
+    const ordersByStatus: Record<string, number> = {};
+    for (const item of orderStatusSummary) {
+      const status = String(item.status ?? "");
+      if (status) {
+        ordersByStatus[status] = toNumber(item.total);
+      }
+    }
+
+    const configSummary = asRecord(data.configSummary);
+    const vouchersTotal = toNumber(asRecord(configSummary.vouchers).total);
+    const paymentMethodsTotal = toNumber(asRecord(configSummary.paymentMethods).total);
+    const notificationsTotal = toNumber(asRecord(configSummary.notifications).total);
+
     return {
       stats: {
-        totalRevenue: `${new Intl.NumberFormat("vi-VN").format(toNumber(data.totalRevenue))} d`,
+        totalRevenue: `₫ ${new Intl.NumberFormat("vi-VN").format(toNumber(data.revenue))}`,
         revenueIncrease: String(data.revenueIncrease ?? "+0%"),
-        newOrders: `${toNumber(data.orders)} Don`,
-        outOfStockProducts: `${toNumber(data.outOfStock)} Ma`,
+        newOrders: String(toNumber(data.orders)),
+        outOfStockProducts: String(toNumber(data.outOfStock)),
       },
       recentOrders: ensureArray<Record<string, unknown>>(data.recentOrders).map(mapRecentOrder),
       systemSummary: {
         users: toNumber(data.users),
         products: toNumber(data.products),
-        ordersByStatus: asRecord(data.ordersByStatus) as Record<string, number>,
-        revenue: toNumber(data.totalRevenue),
-        vouchers: toNumber(data.vouchers),
-        paymentMethods: toNumber(data.paymentMethods),
-        notifications: toNumber(data.notifications),
+        ordersByStatus,
+        revenue: toNumber(data.revenue),
+        vouchers: vouchersTotal,
+        paymentMethods: paymentMethodsTotal,
+        notifications: notificationsTotal,
       },
     };
   },

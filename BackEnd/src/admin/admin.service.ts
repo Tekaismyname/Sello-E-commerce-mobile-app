@@ -225,11 +225,13 @@ export class AdminService {
   }
 
   async deleteVoucher(voucherId: number) {
-    const voucher = await this.database.updateAdminVoucherStatus(voucherId, false);
+    const voucher = await this.database.getAdminVoucher(voucherId);
 
     if (!voucher) {
       throw new NotFoundException('Voucher not found');
     }
+
+    await this.database.updateAdminVoucher(voucherId, { isDeleted: true });
 
     return {
       message: 'Voucher deleted successfully',

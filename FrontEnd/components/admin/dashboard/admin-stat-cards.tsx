@@ -1,6 +1,7 @@
-﻿import { Feather } from "@expo/vector-icons";
-import { Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { Pressable, Text, View } from "react-native";
 import { AdminStatOverview } from "@/types/admin";
+import { router } from "expo-router";
 
 export function AdminStatCards({ data }: { data: AdminStatOverview }) {
   return (
@@ -40,7 +41,12 @@ export function AdminStatCards({ data }: { data: AdminStatOverview }) {
           <View className="h-10 w-10 items-center justify-center rounded-[10px] bg-[#FFEAEA]">
             <Feather name="box" size={20} color="#DC2626" />
           </View>
-          <Text className="text-[13px] font-bold text-[#006397]">Details</Text>
+          <Pressable 
+            onPress={() => router.push("/admin/products?status=out_of_stock")} 
+            className="active:opacity-60"
+          >
+            <Text className="text-[13px] font-bold text-[#006397]">Details</Text>
+          </Pressable>
         </View>
         <Text className="text-[14px] text-[#3F4850] mb-1">Out of Stock</Text>
         <Text className="text-[28px] font-extrabold text-[#191C1F]">{data.outOfStockProducts}</Text>

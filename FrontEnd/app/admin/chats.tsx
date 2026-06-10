@@ -65,7 +65,7 @@ export default function AdminChatsScreen() {
         setRooms(res.data);
       })
       .catch((err) => {
-        console.error("Lỗi tải danh sách phòng chat:", err);
+        console.error("Error loading chat rooms list:", err);
       })
       .finally(() => {
         setLoadingRooms(false);
@@ -87,7 +87,7 @@ export default function AdminChatsScreen() {
         setMessages(res.data);
       })
       .catch((err) => {
-        console.error("Lỗi tải lịch sử chat:", err);
+        console.error("Error loading chat history:", err);
       })
       .finally(() => {
         setLoadingHistory(false);
@@ -159,7 +159,7 @@ export default function AdminChatsScreen() {
     });
 
     if (!res.ok) {
-      throw new Error("Tải file lên máy chủ thất bại.");
+      throw new Error("File upload failed.");
     }
 
     const json = await res.json();
@@ -193,7 +193,7 @@ export default function AdminChatsScreen() {
           content: formattedContent,
         });
       } catch (err: any) {
-        alert(err.message || "Lỗi tải ảnh/video lên.");
+        alert(err.message || "Error uploading image/video.");
       } finally {
         setMediaUploading(false);
       }
@@ -204,7 +204,7 @@ export default function AdminChatsScreen() {
     if (!dateStr) return "";
     try {
       const date = new Date(dateStr);
-      return date.toLocaleTimeString("vi-VN", {
+      return date.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -293,7 +293,7 @@ export default function AdminChatsScreen() {
         <View className="ml-3 flex-1">
           <View className="flex-row items-center justify-between">
             <Text className="text-[15px] font-extrabold text-[#191C1F]" numberOfLines={1}>
-              {item.full_name || "Khách hàng"}
+              {item.full_name || "Customer"}
             </Text>
             <Text className="text-[11px] text-[#97A0AB]">
               {formatTime(item.last_message_at || item.updated_at)}
@@ -303,7 +303,7 @@ export default function AdminChatsScreen() {
             {item.email}
           </Text>
           <Text className="mt-1 text-[13px] text-[#607080]" numberOfLines={1}>
-            {item.last_message || "Chưa có tin nhắn"}
+            {item.last_message || "No messages yet"}
           </Text>
         </View>
         {!isSelectionMode && (item.unread_count ?? 0) > 0 && (
@@ -358,7 +358,7 @@ export default function AdminChatsScreen() {
                 >
                   <Feather name="video" size={18} color="#0F6CBD" />
                   <Text className="text-[12px] text-[#0F6CBD] font-semibold underline">
-                    Xem Video (Mở trong trình duyệt)
+                    Watch Video (Open in browser)
                   </Text>
                 </Pressable>
               )
@@ -385,10 +385,10 @@ export default function AdminChatsScreen() {
       <SafeAreaView className="flex-1 bg-[#F6F8FC] items-center justify-center p-6">
         <Feather name="lock" size={48} color="#BA1A1A" />
         <Text className="mt-4 text-center text-[16px] font-bold text-[#191C1F]">
-          Không có quyền truy cập
+          Access Denied
         </Text>
         <Text className="mt-2 text-center text-[14px] leading-5 text-[#607080]">
-          Tài khoản của bạn không được phân quyền để truy cập tính năng Chat hỗ trợ.
+          Your account is not authorized to access the support chat feature.
         </Text>
       </SafeAreaView>
     );
@@ -413,14 +413,14 @@ export default function AdminChatsScreen() {
                   <Feather name="x" size={20} color="#191C1F" />
                 </Pressable>
                 <Text className="text-[16px] font-extrabold text-[#191C1F]">
-                  Đã chọn {selectedRoomIds.size}
+                  Selected {selectedRoomIds.size}
                 </Text>
               </View>
 
               <View className="flex-row items-center gap-3">
                 <Pressable onPress={selectAllRooms} className="px-2 py-1 bg-[#F6F8FC] rounded-lg">
                   <Text className="text-[12px] font-bold text-[#607080]">
-                    {selectedRoomIds.size === rooms.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                    {selectedRoomIds.size === rooms.length ? "Deselect all" : "Select all"}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -440,7 +440,7 @@ export default function AdminChatsScreen() {
                       selectedRoomIds.size > 0 ? "text-[#0F6CBD]" : "text-[#97A0AB]"
                     }`}
                   >
-                    Đã đọc
+                    Mark as Read
                   </Text>
                 </Pressable>
               </View>
@@ -451,7 +451,7 @@ export default function AdminChatsScreen() {
                 <View className="h-8 w-8 items-center justify-center rounded-full bg-[#EAF4FF]">
                   <Feather name="message-circle" size={18} color="#0F6CBD" />
                 </View>
-                <Text className="text-[18px] font-extrabold text-[#191C1F]">Hộp thư hỗ trợ</Text>
+                <Text className="text-[18px] font-extrabold text-[#191C1F]">Support Inbox</Text>
               </View>
               <View className="flex-row items-center gap-2">
                 <Pressable
@@ -475,7 +475,7 @@ export default function AdminChatsScreen() {
         {loadingRooms ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#0F6CBD" />
-            <Text className="mt-2 text-[#607080] font-medium">Đang tải hộp thư...</Text>
+            <Text className="mt-2 text-[#607080] font-medium">Loading inbox...</Text>
           </View>
         ) : (
           <FlatList
@@ -488,9 +488,9 @@ export default function AdminChatsScreen() {
                 <View className="h-16 w-16 items-center justify-center rounded-full bg-[#F6F8FC] mb-4">
                   <Feather name="inbox" size={32} color="#97A0AB" />
                 </View>
-                <Text className="text-[16px] font-extrabold text-[#191C1F]">Chưa có hội thoại</Text>
+                <Text className="text-[16px] font-extrabold text-[#191C1F]">No conversations</Text>
                 <Text className="mt-1 text-center text-[13px] text-[#607080] px-8">
-                  Khi khách hàng gửi tin nhắn hỗ trợ, cuộc trò chuyện sẽ xuất hiện ở đây.
+                  When customers send support messages, the conversation will appear here.
                 </Text>
               </View>
             }
@@ -516,14 +516,14 @@ export default function AdminChatsScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="text-[15px] font-extrabold text-[#191C1F]" numberOfLines={1}>
-            {selectedRoom.full_name || "Khách hàng"}
+            {selectedRoom.full_name || "Customer"}
           </Text>
           <Text className="text-[11px] text-[#607080]" numberOfLines={1}>
             {selectedRoom.email}
           </Text>
         </View>
         <View className="h-2 w-2 rounded-full bg-[#107C41] mr-1" />
-        <Text className="text-[11px] font-medium text-[#107C41]">Trực tuyến</Text>
+        <Text className="text-[11px] font-medium text-[#107C41]">Online</Text>
       </View>
 
       {/* Messages list */}
@@ -535,7 +535,7 @@ export default function AdminChatsScreen() {
         {loadingHistory ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" color="#0F6CBD" />
-            <Text className="mt-2 text-[12px] text-[#607080]">Đang tải lịch sử trò chuyện...</Text>
+            <Text className="mt-2 text-[12px] text-[#607080]">Loading chat history...</Text>
           </View>
         ) : (
           <FlatList
@@ -552,7 +552,7 @@ export default function AdminChatsScreen() {
         {mediaUploading && (
           <View className="flex-row items-center justify-center bg-white py-2 border-t border-[#E7EEF5] gap-2">
             <ActivityIndicator size="small" color="#0F6CBD" />
-            <Text className="text-[12px] text-[#607080] font-semibold">Đang tải tệp đính kèm...</Text>
+            <Text className="text-[12px] text-[#607080] font-semibold">Uploading attachment...</Text>
           </View>
         )}
 
@@ -580,7 +580,7 @@ export default function AdminChatsScreen() {
             <TextInput
               value={text}
               onChangeText={setText}
-              placeholder="Trả lời khách hàng..."
+              placeholder="Reply to customer..."
               placeholderTextColor="#97A0AB"
               multiline
               maxLength={500}

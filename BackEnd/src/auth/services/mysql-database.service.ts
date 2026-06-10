@@ -2541,6 +2541,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       vouchersQuery,
       paymentMethodsQuery,
       notificationsQuery,
+      todayOrdersQuery,
+      outOfStockQuery,
+      recentOrdersQuery,
     ] = await Promise.all([
       this.pool.query<CountRow[]>(
         `SELECT COUNT(*) AS total FROM users`,
@@ -2568,6 +2571,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
             COUNT(*) AS total,
             SUM(CASE WHEN is_active = TRUE THEN 1 ELSE 0 END) AS active_total
           FROM vouchers
+          WHERE is_deleted = FALSE
         `,
       ),
       this.pool.query<SimpleStatusRow[]>(
@@ -2586,6 +2590,23 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           FROM notifications
         `,
       ),
+      this.pool.query<CountRow[]>(
+        `SELECT COUNT(*) AS total FROM orders WHERE placed_at >= CURDATE()`,
+      ),
+      this.pool.query<CountRow[]>(
+        `SELECT COUNT(*) AS total FROM products WHERE status = 'out_of_stock'`,
+      ),
+      this.pool.query<RowDataPacket[]>(
+        `
+          SELECT o.order_id AS id, o.order_code AS orderCode, o.placed_at AS placedAt, o.total_amount AS totalAmount, o.order_status AS orderStatus,
+                 (SELECT pi.image_url FROM product_images pi
+                  INNER JOIN order_items oi ON oi.product_id = pi.product_id
+                  WHERE oi.order_id = o.order_id AND pi.is_primary = TRUE LIMIT 1) AS image
+          FROM orders o
+          ORDER BY o.order_id DESC
+          LIMIT 5
+        `,
+      ),
     ]);
 
     const usersResult = usersQuery[0][0];
@@ -2595,6 +2616,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     const vouchersResult = vouchersQuery[0][0];
     const paymentMethodsResult = paymentMethodsQuery[0][0];
     const notificationsResult = notificationsQuery[0][0];
+    const todayOrdersResult = todayOrdersQuery[0][0];
+    const outOfStockResult = outOfStockQuery[0][0];
+    const recentOrdersRows = recentOrdersQuery[0];
 
     return {
       users: Number(usersResult?.total ?? 0),
@@ -2604,6 +2628,16 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         total: Number(row.total ?? 0),
       })),
       revenue: Number(revenueResult?.revenue ?? 0),
+      orders: Number(todayOrdersResult?.total ?? 0),
+      outOfStock: Number(outOfStockResult?.total ?? 0),
+      recentOrders: recentOrdersRows.map((row) => ({
+        id: row.id,
+        orderCode: row.orderCode,
+        placedAt: row.placedAt,
+        totalAmount: Number(row.totalAmount ?? 0),
+        orderStatus: row.orderStatus,
+        image: row.image,
+      })),
       configSummary: {
         vouchers: {
           total: Number(vouchersResult?.total ?? 0),
@@ -2893,6 +2927,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           end_at,
           is_active
         FROM vouchers
+        WHERE is_deleted = FALSE
         ORDER BY voucher_id DESC
       `,
     );
@@ -2919,7 +2954,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           end_at,
           is_active
         FROM vouchers
-        WHERE voucher_id = ?
+        WHERE voucher_id = ? AND is_deleted = FALSE
         LIMIT 1
       `,
       [voucherId],
@@ -2992,6 +3027,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       startAt?: string | null;
       endAt?: string | null;
       isActive?: boolean;
+      isDeleted?: boolean;
     },
   ) {
     this.validateAdminVoucher(input, true);
@@ -3027,6 +3063,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       this.validateAdminVoucherDateRange(startAt, endAt);
     }
     if (input.isActive !== undefined) push('is_active', input.isActive);
+    if (input.isDeleted !== undefined) push('is_deleted', input.isDeleted);
 
     if (!fields.length) {
       return this.getAdminVoucher(voucherId);

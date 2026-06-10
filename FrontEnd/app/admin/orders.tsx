@@ -119,15 +119,15 @@ export default function AdminOrdersScreen() {
     }
   };
 
-  const handleQuickUpdateStatus = async (orderId: number, nextStatus: AdminOrderStatus, note = "Cập nhật trạng thái nhanh bởi Admin") => {
+  const handleQuickUpdateStatus = async (orderId: number, nextStatus: AdminOrderStatus, note = "Quick status update by Admin") => {
     if (!token || !canUpdateOrders) return;
     try {
       setSavingStatus(true);
       await adminService.updateOrderStatus(token, orderId, nextStatus, note);
       await fetchOrders();
-      Alert.alert("Thành công", "Đã cập nhật trạng thái đơn hàng.");
+      Alert.alert("Success", "Order status updated.");
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể cập nhật trạng thái.");
+      Alert.alert("Error", err.message ?? "Cannot update status.");
     } finally {
       setSavingStatus(false);
     }
@@ -136,7 +136,7 @@ export default function AdminOrdersScreen() {
   const handleProcessReturn = async (action: "approve" | "reject") => {
     if (!token || !selectedOrder || !canUpdateOrders) return;
     if (!statusNote.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập ghi chú phản hồi bắt buộc.");
+      Alert.alert("Error", "Feedback note is required.");
       return;
     }
 
@@ -150,9 +150,9 @@ export default function AdminOrdersScreen() {
       );
       setSelectedOrder(response.data);
       await fetchOrders();
-      Alert.alert("Thành công", `Đã ${action === "approve" ? "phê duyệt" : "từ chối"} yêu cầu trả hàng.`);
+      Alert.alert("Success", `${action === "approve" ? "Approved" : "Rejected"} return request.`);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message ?? "Không thể xử lý yêu cầu trả hàng.");
+      Alert.alert("Error", err.message ?? "Cannot process return request.");
     } finally {
       setSavingStatus(false);
     }
@@ -250,7 +250,7 @@ export default function AdminOrdersScreen() {
                 <View className="rounded-[14px] bg-[#F8F9FB] p-4">
                   <View className="flex-row justify-between items-center">
                     <Text className="text-[16px] font-extrabold text-[#0F4C6B]">
-                      Đơn hàng #{selectedOrder.orderCode}
+                      Order #{selectedOrder.orderCode}
                     </Text>
                     <View className="rounded-full bg-[#EAF5FC] px-2.5 py-1">
                       <Text className="text-[11px] font-bold text-[#0F6CBD]">
@@ -259,11 +259,11 @@ export default function AdminOrdersScreen() {
                     </View>
                   </View>
                   <Text className="mt-2 text-[12px] text-[#64748B]">
-                    Ngày tạo: {selectedOrder.placedAt ? new Date(selectedOrder.placedAt).toLocaleString("vi-VN") : "N/A"}
+                    Placed at: {selectedOrder.placedAt ? new Date(selectedOrder.placedAt).toLocaleString("en-US") : "N/A"}
                   </Text>
                   
                   <View className="mt-3 border-t border-[#E2E8F0] pt-3">
-                    <Text className="text-[12px] font-bold text-[#475569] uppercase">Khách hàng</Text>
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase">Customer</Text>
                     <Text className="mt-1 text-[13px] font-bold text-[#1F2937]">
                       {selectedOrder.user.fullName}
                     </Text>
@@ -276,7 +276,7 @@ export default function AdminOrdersScreen() {
                 {/* 2. Shipping Address */}
                 {!!selectedOrder.shippingAddress && (
                   <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                    <Text className="text-[12px] font-bold text-[#475569] uppercase">Địa chỉ giao hàng</Text>
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase">Shipping Address</Text>
                     <Text className="mt-1 text-[13px] leading-[19px] text-[#334155]">
                       {selectedOrder.shippingAddress}
                     </Text>
@@ -285,13 +285,13 @@ export default function AdminOrdersScreen() {
 
                 {/* 3. Payment Details */}
                 <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                  <Text className="text-[12px] font-bold text-[#475569] uppercase">Thông tin thanh toán</Text>
+                  <Text className="text-[12px] font-bold text-[#475569] uppercase">Payment Details</Text>
                   <View className="mt-2 flex-row justify-between items-center">
-                    <Text className="text-[13px] text-[#334155]">Phương thức:</Text>
+                    <Text className="text-[13px] text-[#334155]">Method:</Text>
                     <Text className="text-[13px] font-bold text-[#1F2937]">{selectedOrder.paymentMethodName}</Text>
                   </View>
                   <View className="mt-1.5 flex-row justify-between items-center">
-                    <Text className="text-[13px] text-[#334155]">Trạng thái:</Text>
+                    <Text className="text-[13px] text-[#334155]">Status:</Text>
                     <View className={`rounded-full px-2 py-0.5 ${
                       selectedOrder.paymentStatus === 'paid' ? 'bg-[#DCFCE7]' : 'bg-[#FEF3C7]'
                     }`}>
@@ -303,9 +303,9 @@ export default function AdminOrdersScreen() {
                     </View>
                   </View>
                   <View className="mt-2 border-t border-[#E2E8F0] pt-2 flex-row justify-between items-center">
-                    <Text className="text-[13px] font-bold text-[#475569]">Tổng thanh toán:</Text>
+                    <Text className="text-[13px] font-bold text-[#475569]">Total Amount:</Text>
                     <Text className="text-[16px] font-extrabold text-[#0369A1]">
-                      {new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)}đ
+                      ₫{new Intl.NumberFormat("vi-VN").format(selectedOrder.totalAmount)}
                     </Text>
                   </View>
                 </View>
@@ -313,7 +313,7 @@ export default function AdminOrdersScreen() {
                 {/* 4. Order Items */}
                 {selectedOrder.items && selectedOrder.items.length > 0 && (
                   <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                    <Text className="text-[12px] font-bold text-[#475569] uppercase mb-2">Sản phẩm đã mua</Text>
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase mb-2">Purchased Products</Text>
                     {selectedOrder.items.map((item, index) => (
                       <View key={item.id ?? index} className={`flex-row items-center py-2 ${
                         index > 0 ? "border-t border-[#E2E8F0]/50" : ""
@@ -342,7 +342,7 @@ export default function AdminOrdersScreen() {
                 {/* 5. Status History Timeline */}
                 {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
                   <View className="mt-3 rounded-[14px] bg-[#F8F9FB] p-4">
-                    <Text className="text-[12px] font-bold text-[#475569] uppercase mb-3">Lịch sử giao dịch & Trạng thái</Text>
+                    <Text className="text-[12px] font-bold text-[#475569] uppercase mb-3">Status History</Text>
                     {selectedOrder.statusHistory.map((history, index) => (
                       <View key={index} className="flex-row items-start mb-1">
                         {/* Timeline visual bar */}
@@ -361,7 +361,7 @@ export default function AdminOrdersScreen() {
                               {history.status.toUpperCase()}
                             </Text>
                             <Text className="text-[11px] text-[#94A3B8]">
-                              {history.changedAt ? new Date(history.changedAt).toLocaleString("vi-VN") : "N/A"}
+                              {history.changedAt ? new Date(history.changedAt).toLocaleString("en-US") : "N/A"}
                             </Text>
                           </View>
                           {!!history.description && (
@@ -378,12 +378,12 @@ export default function AdminOrdersScreen() {
                 {canUpdateOrders ? (
                   selectedOrder.orderStatus === "return_requested" ? (
                     <View className="mt-4 rounded-[14px] bg-[#FEF2F2] p-4 border border-[#FEE2E2]">
-                      <Text className="text-[14px] font-extrabold text-[#991B1B]">Yêu cầu trả hàng cần xử lý</Text>
+                      <Text className="text-[14px] font-extrabold text-[#991B1B]">Return request needs processing</Text>
                       {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
                         <View className="mt-2 rounded-[8px] bg-white p-2.5 border border-[#FCA5A5]/30">
-                          <Text className="text-[12px] font-bold text-[#7F1D1D]">Lý do từ khách hàng:</Text>
+                          <Text className="text-[12px] font-bold text-[#7F1D1D]">Customer reason:</Text>
                           <Text className="text-[12px] text-[#B91C1C] mt-1 leading-[18px]">
-                            {selectedOrder.statusHistory.find((h) => h.status === "return_requested")?.description || "Không có lý do chi tiết"}
+                            {selectedOrder.statusHistory.find((h) => h.status === "return_requested")?.description || "No detailed reason"}
                           </Text>
                         </View>
                       )}
@@ -391,7 +391,7 @@ export default function AdminOrdersScreen() {
                       <TextInput
                         className="mt-3 min-h-[80px] rounded-[12px] bg-white border border-[#EF4444]/20 px-3 py-2 text-[13px] text-[#1F2934]"
                         multiline
-                        placeholder="Ghi chú phản hồi duyệt/từ chối (bắt buộc)"
+                        placeholder="Response note (required)"
                         placeholderTextColor="#9CA3AF"
                         value={statusNote}
                         onChangeText={setStatusNote}
@@ -404,14 +404,14 @@ export default function AdminOrdersScreen() {
                           disabled={savingStatus}
                           onPress={() => handleProcessReturn("reject")}
                         >
-                          <Text className="text-[13px] font-bold text-white">Từ chối</Text>
+                          <Text className="text-[13px] font-bold text-white">Reject</Text>
                         </Pressable>
                         <Pressable
                           className="flex-1 h-10 items-center justify-center rounded-[10px] bg-[#10B981] active:opacity-85 disabled:opacity-50"
                           disabled={savingStatus}
                           onPress={() => handleProcessReturn("approve")}
                         >
-                          <Text className="text-[13px] font-bold text-white">Phê duyệt</Text>
+                          <Text className="text-[13px] font-bold text-white">Approve</Text>
                         </Pressable>
                       </View>
                     </View>

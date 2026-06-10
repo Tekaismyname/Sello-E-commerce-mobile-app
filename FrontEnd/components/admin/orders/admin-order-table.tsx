@@ -13,14 +13,14 @@ type AdminOrderTableProps = {
 };
 
 const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: "#FEF3C7", text: "#D97706", label: "Chờ xác nhận" },
-  confirmed: { bg: "#E0F2FE", text: "#0369A1", label: "Đã xác nhận" },
-  packed: { bg: "#F3E8FF", text: "#7E22CE", label: "Đang đóng gói" },
-  shipping: { bg: "#F1F5F9", text: "#475569", label: "Đang giao hàng" },
-  delivered: { bg: "#DCFCE7", text: "#15803D", label: "Đã giao hàng" },
-  cancelled: { bg: "#FEE2E2", text: "#B91C1C", label: "Đã hủy" },
-  returned: { bg: "#F5F5F4", text: "#78716C", label: "Đã trả hàng" },
-  return_requested: { bg: "#FFD8D8", text: "#DC2626", label: "Yêu cầu trả" },
+  pending: { bg: "#FEF3C7", text: "#D97706", label: "Pending" },
+  confirmed: { bg: "#E0F2FE", text: "#0369A1", label: "Confirmed" },
+  packed: { bg: "#F3E8FF", text: "#7E22CE", label: "Packed" },
+  shipping: { bg: "#F1F5F9", text: "#475569", label: "Shipping" },
+  delivered: { bg: "#DCFCE7", text: "#15803D", label: "Delivered" },
+  cancelled: { bg: "#FEE2E2", text: "#B91C1C", label: "Cancelled" },
+  returned: { bg: "#F5F5F4", text: "#78716C", label: "Returned" },
+  return_requested: { bg: "#FFD8D8", text: "#DC2626", label: "Return Requested" },
 };
 
 export function AdminOrderTable({
@@ -42,9 +42,9 @@ export function AdminOrderTable({
       return (
         <Pressable
           className="rounded-[10px] bg-[#0369A1] px-4 py-2 active:opacity-90"
-          onPress={() => onQuickUpdateStatus(order.id, "confirmed", "Admin xác nhận đơn hàng nhanh")}
+          onPress={() => onQuickUpdateStatus(order.id, "confirmed", "Admin quick confirmed order")}
         >
-          <Text className="text-[12px] font-bold text-white">Xác nhận đơn</Text>
+          <Text className="text-[12px] font-bold text-white">Confirm</Text>
         </Pressable>
       );
     }
@@ -52,9 +52,9 @@ export function AdminOrderTable({
       return (
         <Pressable
           className="rounded-[10px] bg-[#7E22CE] px-4 py-2 active:opacity-90"
-          onPress={() => onQuickUpdateStatus(order.id, "packed", "Admin đã đóng gói sản phẩm xong")}
+          onPress={() => onQuickUpdateStatus(order.id, "packed", "Admin packed items")}
         >
-          <Text className="text-[12px] font-bold text-white">Gói hàng xong</Text>
+          <Text className="text-[12px] font-bold text-white">Pack</Text>
         </Pressable>
       );
     }
@@ -62,9 +62,9 @@ export function AdminOrderTable({
       return (
         <Pressable
           className="rounded-[10px] bg-[#D97706] px-4 py-2 active:opacity-90"
-          onPress={() => onQuickUpdateStatus(order.id, "shipping", "Admin bàn giao cho vận chuyển")}
+          onPress={() => onQuickUpdateStatus(order.id, "shipping", "Admin handed over to carrier")}
         >
-          <Text className="text-[12px] font-bold text-white">Giao vận chuyển</Text>
+          <Text className="text-[12px] font-bold text-white">Ship</Text>
         </Pressable>
       );
     }
@@ -72,16 +72,16 @@ export function AdminOrderTable({
       return (
         <Pressable
           className="rounded-[10px] bg-[#15803D] px-4 py-2 active:opacity-90"
-          onPress={() => onQuickUpdateStatus(order.id, "delivered", "Admin xác nhận đơn hàng đã giao thành công")}
+          onPress={() => onQuickUpdateStatus(order.id, "delivered", "Admin marked delivered")}
         >
-          <Text className="text-[12px] font-bold text-white">Đã giao xong</Text>
+          <Text className="text-[12px] font-bold text-white">Mark Delivered</Text>
         </Pressable>
       );
     }
 
     return (
       <View className="flex-row items-center">
-        <Text className="text-[12px] font-bold text-[#64748B] mr-1">Xem chi tiết</Text>
+        <Text className="text-[12px] font-bold text-[#64748B] mr-1">Details</Text>
         <Feather name="chevron-right" size={14} color="#64748B" />
       </View>
     );
@@ -118,12 +118,12 @@ export function AdminOrderTable({
               {/* Customer info */}
               <View className="mt-3 flex-row justify-between">
                 <View className="flex-1">
-                  <Text className="text-[11px] font-semibold text-[#64748B] uppercase tracking-[0.5px]">Khách hàng</Text>
+                  <Text className="text-[11px] font-semibold text-[#64748B] uppercase tracking-[0.5px]">Customer</Text>
                   <Text className="text-[14px] font-extrabold text-[#1E293B] mt-0.5">{order.user.fullName}</Text>
                   <Text className="text-[12px] text-[#64748B] mt-0.5">{order.user.email}</Text>
                 </View>
                 <Text className="text-[11px] text-[#64748B] font-semibold mt-1">
-                  {new Date(order.placedAt).toLocaleDateString("vi-VN")}
+                  {new Date(order.placedAt).toLocaleDateString("en-US")}
                 </Text>
               </View>
 
@@ -139,13 +139,13 @@ export function AdminOrderTable({
                         <Image source={{ uri: img }} className="h-10 w-10 rounded-md bg-gray-200" />
                         <View className="ml-3 flex-1 justify-center">
                           <Text className="text-[13px] font-black text-[#1F2937]" numberOfLines={1}>{item.productName}</Text>
-                          <Text className="text-[11px] text-[#64748B] font-semibold mt-0.5">Số lượng: {item.quantity} | Giá: {new Intl.NumberFormat("vi-VN").format(item.price)}đ</Text>
+                          <Text className="text-[11px] text-[#64748B] font-semibold mt-0.5">Quantity: {item.quantity}</Text>
                         </View>
                       </View>
                     );
                   })}
                   {order.items.length > 2 && (
-                    <Text className="text-[12px] font-bold text-[#64748B] ml-2">+{order.items.length - 2} sản phẩm khác</Text>
+                    <Text className="text-[12px] font-bold text-[#64748B] ml-2">+{order.items.length - 2} other products</Text>
                   )}
                 </View>
               ) : null}
@@ -153,9 +153,9 @@ export function AdminOrderTable({
               {/* Total and actions */}
               <View className="mt-4 flex-row items-center justify-between border-t border-[#F1F5F9] pt-3">
                 <View>
-                  <Text className="text-[11px] text-[#64748B] font-semibold uppercase tracking-[0.5px]">Tổng tiền</Text>
+                  <Text className="text-[11px] text-[#64748B] font-semibold uppercase tracking-[0.5px]">Total</Text>
                   <Text className="text-[17px] font-black text-[#0369A1] mt-0.5">
-                    {new Intl.NumberFormat("vi-VN").format(order.totalAmount)}đ
+                    ₫{new Intl.NumberFormat("vi-VN").format(order.totalAmount)}
                   </Text>
                 </View>
 
@@ -170,13 +170,13 @@ export function AdminOrderTable({
       {!orders.length && (
         <View className="py-8 items-center bg-white rounded-[16px] p-6 border border-[#E2E8F0]">
           <Feather name="package" size={40} color="#CBD5E1" />
-          <Text className="text-[14px] font-bold text-[#64748B] mt-2">Không tìm thấy đơn hàng phù hợp.</Text>
+          <Text className="text-[14px] font-bold text-[#64748B] mt-2">No matching orders found.</Text>
         </View>
       )}
 
       {orders.length > 0 && (
         <View className="mt-3 flex-row items-center justify-between bg-white rounded-[16px] p-4 border border-[#E2E8F0]">
-          <Text className="text-[13px] font-bold text-[#64748B]">Hiển thị {from}-{to} của {Math.max(pageCount * pageSize, to)} đơn</Text>
+          <Text className="text-[13px] font-bold text-[#64748B]">Showing {from}-{to} of {Math.max(pageCount * pageSize, to)} orders</Text>
 
           <View className="flex-row items-center">
             <Pressable
