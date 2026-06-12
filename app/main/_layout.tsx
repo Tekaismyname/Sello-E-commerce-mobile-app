@@ -31,6 +31,7 @@ export default function MainLayout() {
       <Tabs.Screen name="(account)/notifications" options={{ href: null }} />
       <Tabs.Screen name="(account)/wishlist" options={{ href: null }} />
       <Tabs.Screen name="(account)/change-password" options={{ href: null }} />
+      <Tabs.Screen name="(account)/settings" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -45,6 +45,7 @@ export function SelloTabBar({ state, descriptors, navigation }: BottomTabBarProp
           const route = state.routes[routeIndex];
           const isFocused = state.index === routeIndex;
           const descriptor = descriptors[route.key];
+          if (!descriptor) return null;
           const tintColor = isFocused ? "#2d6dff" : "#8c96a2";
 
           const onPress = () => {
@@ -71,8 +72,8 @@ export function SelloTabBar({ state, descriptors, navigation }: BottomTabBarProp
               key={tab.key}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={descriptor.options.tabBarAccessibilityLabel}
-              testID={descriptor.options.tabBarButtonTestID}
+              accessibilityLabel={descriptor.options?.tabBarAccessibilityLabel}
+              testID={descriptor.options?.tabBarButtonTestID}
               onPress={onPress}
               onLongPress={onLongPress}
               className="h-[56px] flex-1 items-center justify-center"

@@ -14,7 +14,10 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { API_BASE_URL } from "@/constants/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 
@@ -56,8 +59,78 @@ export default function AdminBrandsScreen() {
 
   const [editing, setEditing] = useState<AdminBrand | null>(null);
   const [showForm, setShowForm] = useState(false);
-
   const [form, setForm] = useState(emptyForm);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== "web") {
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      }
+    })();
+  }, []);
+
+  const uploadImageFile = async (fileUri: string): Promise<string> => {
+    const formData = new FormData();
+    const filename = fileUri.split("/").pop() || "upload.jpg";
+    const match = /\.(\w+)$/.exec(filename);
+    const fileType = match ? `image/${match[1]}` : `image/jpeg`;
+
+    formData.append("file", {
+      uri: fileUri,
+      name: filename,
+      type: fileType,
+    } as any);
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/admin/upload`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        ...headers,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Upload failed: ${errorText || res.statusText}`);
+    }
+
+    const json = await res.json();
+    return `${API_BASE_URL}${json.url}`;
+  };
+
+  const pickImage = async () => {
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      quality: 0.8,
+    };
+
+    const result = await ImagePicker.launchImageLibraryAsync(options);
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setUploading(true);
+
+      try {
+        const publicUrl = await uploadImageFile(asset.uri);
+        setForm((current) => ({
+          ...current,
+          logoUrl: publicUrl,
+        }));
+      } catch (err: any) {
+        alert(err.message || "Cannot upload logo.");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!editing) return;
@@ -237,29 +310,39 @@ export default function AdminBrandsScreen() {
             />
 
             <Text className="mt-4 text-[13px] font-bold text-[#374151]">
-              URL logo
+              Brand Logo
             </Text>
-
-            <TextInput
-              value={form.logoUrl}
-              onChangeText={(logoUrl) =>
-                setForm((current) => ({
-                  ...current,
-                  logoUrl,
-                }))
-              }
-              placeholder="https://..."
-              placeholderTextColor="#9CA3AF"
-              autoCapitalize="none"
-              className="mt-2 rounded-[12px] bg-[#F1F3F6] px-4 py-3 text-[15px] text-[#191C1F]"
-            />
-
+ 
+            {uploading ? (
+              <View className="mt-2 h-12 items-center justify-center rounded-[12px] bg-[#F1F3F6] border border-dashed border-[#0F7BB8]">
+                <ActivityIndicator size="small" color="#0F7BB8" />
+              </View>
+            ) : (
+              <Pressable
+                onPress={pickImage}
+                className="mt-2 h-12 flex-row items-center justify-center gap-2 rounded-[12px] bg-[#F1F3F6] active:bg-[#E5E7EB] border border-dashed border-gray-300"
+              >
+                <Feather name="image" size={16} color="#4B5563" />
+                <Text className="text-[13px] font-bold text-[#4B5563]">
+                  {form.logoUrl ? "Change logo from device" : "Choose logo from device"}
+                </Text>
+              </Pressable>
+            )}
+ 
             {form.logoUrl.trim() ? (
-              <Image
-                source={{ uri: form.logoUrl.trim() }}
-                className="mt-3 h-24 w-full rounded-[12px] bg-[#EEF2F7]"
-                resizeMode="contain"
-              />
+              <View className="relative mt-3 h-24 w-full rounded-[12px] border border-[#E7EEF5] bg-[#EEF2F7] overflow-hidden items-center justify-center">
+                <Image
+                  source={{ uri: form.logoUrl.trim() }}
+                  className="h-20 w-20"
+                  resizeMode="contain"
+                />
+                <Pressable
+                  onPress={() => setForm((current) => ({ ...current, logoUrl: "" }))}
+                  className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1.5"
+                >
+                  <Feather name="trash-2" size={12} color="white" />
+                </Pressable>
+              </View>
             ) : null}
 
             <View className="mt-4 flex-row items-center justify-between rounded-[12px] bg-[#F8FAFC] px-4 py-3">
@@ -313,7 +396,7 @@ export default function AdminBrandsScreen() {
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">You don't have permission to view brands.</Text>
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">You do not have permission to view brands.</Text>
           </View>
         ) : loading ? (
           <View className="mt-8 items-center">

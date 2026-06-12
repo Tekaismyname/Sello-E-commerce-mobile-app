@@ -12,6 +12,7 @@ import {
 import { SelloHeader } from "@/components/main/sello-header";
 import { GuestPlaceholder } from "@/components/ui";
 import { useAuth } from "@/contexts/auth-context";
+import { useSettings } from "@/contexts/settings-context";
 import { cartService } from "@/services/customer.service";
 import { Cart, CartItem } from "@/types/customer";
 
@@ -19,6 +20,7 @@ const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(
 
 export default function CartScreen() {
   const { token } = useAuth();
+  const { t, showToast } = useSettings();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export default function CartScreen() {
     setError(null);
 
     if (!token) {
-      setError("Please sign in to view your cart.");
+      setError(t("profile_guest_desc", "Đăng nhập để quản lý địa chỉ giao hàng, danh sách yêu thích và cài đặt tài khoản."));
       setLoading(false);
       return;
     }
@@ -41,7 +43,7 @@ export default function CartScreen() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,7 +56,7 @@ export default function CartScreen() {
     if (newQty < 1) return;
 
     if (!token) {
-      Alert.alert("Error", "Your session has expired.");
+      showToast(t("error", "Lỗi"), "Phiên đăng nhập đã hết hạn.", "error");
       return;
     }
 
@@ -62,13 +64,13 @@ export default function CartScreen() {
       await cartService.updateCartItem(token, item.id, { quantity: newQty });
       fetchCart();
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      showToast(t("error", "Lỗi"), err.message, "error");
     }
   };
 
   const handleToggleSelect = async (item: CartItem) => {
     if (!token) {
-      Alert.alert("Error", "Your session has expired.");
+      showToast(t("error", "Lỗi"), "Phiên đăng nhập đã hết hạn.", "error");
       return;
     }
 
@@ -76,31 +78,35 @@ export default function CartScreen() {
       await cartService.selectCartItem(token, item.id, { selected: !item.selected });
       fetchCart();
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      showToast(t("error", "Lỗi"), err.message, "error");
     }
   };
 
   const handleDelete = async (item: CartItem) => {
-    Alert.alert("Remove product", `Are you sure you want to remove "${item.productName}"?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          if (!token) {
-            Alert.alert("Error", "Your session has expired.");
-            return;
-          }
+    Alert.alert(
+      t("remove_product", "Xóa sản phẩm"),
+      t("remove_product_confirm", "Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?"),
+      [
+        { text: t("cancel", "Hủy"), style: "cancel" },
+        {
+          text: t("remove_product", "Xóa"),
+          style: "destructive",
+          onPress: async () => {
+            if (!token) {
+              showToast(t("error", "Lỗi"), "Phiên đăng nhập đã hết hạn.", "error");
+              return;
+            }
 
-          try {
-            await cartService.deleteCartItem(token, item.id);
-            fetchCart();
-          } catch (err: any) {
-            Alert.alert("Error", err.message);
-          }
+            try {
+              await cartService.deleteCartItem(token, item.id);
+              fetchCart();
+            } catch (err: any) {
+              showToast(t("error", "Lỗi"), err.message, "error");
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const selectedItems = cart?.items.filter((item) => item.selected) ?? [];
@@ -110,14 +116,14 @@ export default function CartScreen() {
     <SafeAreaView className="flex-1 bg-[#f6f8fc]" edges={["top"]}>
       <SelloHeader />
       <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
-        <Text className="text-[30px] font-extrabold text-[#1f2934]">Cart</Text>
+        <Text className="text-[30px] font-extrabold text-[#1f2934]">{t("cart_title", "Giỏ hàng")}</Text>
 
         {loading ? <CartLoadingState /> : null}
         {!loading && !token ? (
           <GuestPlaceholder
             icon="shopping-cart"
-            title="Your cart is empty"
-            description="Sign in to your Sello account to view the products saved in your cart."
+            title={t("empty_cart", "Giỏ hàng trống")}
+            description={t("empty_cart_desc", "Hãy thêm sản phẩm vào giỏ hàng của bạn.")}
           />
         ) : !loading && error ? (
           <CartErrorState message={error} />
@@ -149,3 +155,4 @@ export default function CartScreen() {
     </SafeAreaView>
   );
 }
+

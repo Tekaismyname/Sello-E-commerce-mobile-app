@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { DeviceEventEmitter } from "react-native";
 import { useAuth } from "@/contexts/auth-context";
 import { adminService } from "@/services/admin.service";
+import { chatService } from "@/services/chat.service";
 
 export default function AdminLayout() {
   const { token } = useAuth();
@@ -23,11 +24,28 @@ export default function AdminLayout() {
       }
     };
 
+    const fetchPendingChats = async () => {
+      try {
+        const response = await chatService.getAdminRooms(token);
+        const unreadChatsCount = (response.data ?? []).reduce(
+          (sum: number, room: any) => sum + (room.unread_count ?? 0),
+          0
+        );
+        DeviceEventEmitter.emit("pendingChatsCount", unreadChatsCount);
+      } catch (err) {
+        console.error("Error polling pending chats count:", err);
+      }
+    };
+
     // Run immediately
     fetchPendingOrders();
+    fetchPendingChats();
 
-    // Poll every 30 seconds
-    const interval = setInterval(fetchPendingOrders, 30000);
+    // Poll every 15 seconds for snappier updates
+    const interval = setInterval(() => {
+      fetchPendingOrders();
+      fetchPendingChats();
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [token]);

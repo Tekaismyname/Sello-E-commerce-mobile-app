@@ -1,7 +1,10 @@
 import { AdminCategory } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import { Image, Pressable, ScrollView, Switch, Text, TextInput, View, ActivityIndicator, Platform } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useAuth } from "@/contexts/auth-context";
+import { API_BASE_URL } from "@/constants/api";
 
 type Props = {
   initialValue?: AdminCategory | null;
@@ -20,7 +23,21 @@ type Props = {
 const fallbackImage =
   "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=400&q=80";
 
+const PRESET_ICONS = [
+  { label: "Fashion", url: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=80" },
+  { label: "Clothing", url: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&q=80" },
+  { label: "Shoes", url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80" },
+  { label: "Accessories", url: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&q=80" },
+  { label: "Phones", url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80" },
+  { label: "Laptops", url: "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=600&q=80" },
+  { label: "Watches", url: "https://images.unsplash.com/photo-1434493907317-a46b5bbe7834?auto=format&fit=crop&w=600&q=80" },
+  { label: "Books", url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=600&q=80" },
+  { label: "Home", url: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&w=600&q=80" },
+  { label: "Headphones", url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=600&q=80" },
+];
+
 export function AdminCategoryForm({ initialValue, categories, loading, onSubmit }: Props) {
+  const { token } = useAuth();
   const [name, setName] = useState(initialValue?.name ?? "");
   const [slug, setSlug] = useState(initialValue?.slug ?? "");
   const [imageUrl, setImageUrl] = useState(initialValue?.imageUrl ?? "");
@@ -29,6 +46,15 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
   const [parentSearch, setParentSearch] = useState(initialValue?.parentName ?? "");
   const [showParentOptions, setShowParentOptions] = useState(false);
   const [active, setActive] = useState((initialValue?.status ?? "active") === "active");
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== "web") {
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     setName(initialValue?.name ?? "");
@@ -48,6 +74,65 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
       .slice(0, 8);
   }, [categories, initialValue?.id, parentSearch]);
 
+  const uploadImageFile = async (fileUri: string): Promise<string> => {
+    const formData = new FormData();
+    const filename = fileUri.split("/").pop() || "upload.jpg";
+    const match = /\.(\w+)$/.exec(filename);
+    const fileType = match ? `image/${match[1]}` : `image/jpeg`;
+
+    formData.append("file", {
+      uri: fileUri,
+      name: filename,
+      type: fileType,
+    } as any);
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/admin/upload`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        ...headers,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Upload failed: ${errorText || res.statusText}`);
+    }
+
+    const json = await res.json();
+    return `${API_BASE_URL}${json.url}`;
+  };
+
+  const pickImage = async () => {
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      quality: 0.8,
+    };
+
+    const result = await ImagePicker.launchImageLibraryAsync(options);
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setUploading(true);
+
+      try {
+        const publicUrl = await uploadImageFile(asset.uri);
+        setImageUrl(publicUrl);
+      } catch (err: any) {
+        alert(err.message || "Cannot upload image.");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
   const previewImage = imageUrl.trim() || fallbackImage;
 
   return (
@@ -58,11 +143,29 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
           <Image source={{ uri: previewImage }} className="h-[150px] w-full" resizeMode="cover" />
         </View>
 
+        <Text className="mt-4 text-[13px] font-semibold text-[#4B5563]">Quickly select preset cover image:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 py-1 mt-2">
+          {PRESET_ICONS.map((preset, index) => (
+            <Pressable
+              key={index}
+              onPress={() => setImageUrl(preset.url)}
+              className="items-center mr-2"
+            >
+              <Image 
+                source={{ uri: preset.url }} 
+                className="h-12 w-12 rounded-full border border-gray-200"
+                style={{ borderWidth: imageUrl === preset.url ? 2.5 : 1, borderColor: imageUrl === preset.url ? "#2F95D2" : "#E5E7EB" }}
+              />
+              <Text className="mt-1 text-[10px] text-gray-500">{preset.label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Category Name</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={name} onChangeText={setName} placeholder="VD: Thoi trang" />
+        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={name} onChangeText={setName} placeholder="E.g: Fashion" />
 
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Slug</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={slug} onChangeText={setSlug} placeholder="thoi-trang" />
+        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={slug} onChangeText={setSlug} placeholder="fashion" />
 
         <Text className="mt-4 text-[14px] font-bold text-[#111827]">Parent Category</Text>
         <View className="mt-2 rounded-[12px] bg-[#F3F5FA]">
@@ -77,7 +180,7 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
                 setShowParentOptions(true);
               }}
               onFocus={() => setShowParentOptions(true)}
-              placeholder="Tim danh muc cha..."
+              placeholder="Search parent category..."
               placeholderTextColor="#9CA3AF"
             />
             {parentId ? (
@@ -104,7 +207,7 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
                 setShowParentOptions(false);
               }}
             >
-              <Text className="text-[14px] font-semibold text-[#111827]">Khong co danh muc cha</Text>
+              <Text className="text-[14px] font-semibold text-[#111827]">No parent category</Text>
               {!parentId ? <Feather name="check" size={16} color="#0369A1" /> : null}
             </Pressable>
             {parentOptions.map((item) => (
@@ -127,16 +230,30 @@ export function AdminCategoryForm({ initialValue, categories, loading, onSubmit 
           </View>
         ) : null}
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Cover Image URL</Text>
-        <TextInput className="mt-2 h-12 rounded-[12px] bg-[#F3F5FA] px-3 text-[14px]" value={imageUrl} onChangeText={setImageUrl} placeholder="https://..." />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Cover Image</Text>
+        {uploading ? (
+          <View className="mt-2 h-12 items-center justify-center rounded-[12px] bg-[#F3F5FA] border border-dashed border-[#2F95D2]">
+            <ActivityIndicator size="small" color="#2F95D2" />
+          </View>
+        ) : (
+          <Pressable
+            onPress={pickImage}
+            className="mt-2 h-12 flex-row items-center justify-center gap-2 rounded-[12px] bg-[#F3F5FA] active:bg-[#E5E7EB] border border-dashed border-gray-300"
+          >
+            <Feather name="image" size={16} color="#4B5563" />
+            <Text className="text-[13px] font-bold text-[#4B5563]">
+              {imageUrl ? "Change image from device" : "Upload image from device"}
+            </Text>
+          </Pressable>
+        )}
 
-        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Mo ta</Text>
-        <TextInput className="mt-2 min-h-[96px] rounded-[12px] bg-[#F3F5FA] px-3 py-3 text-[14px]" multiline value={description} onChangeText={setDescription} placeholder="Mo ta phong cach danh muc..." />
+        <Text className="mt-4 text-[14px] font-bold text-[#111827]">Description</Text>
+        <TextInput className="mt-2 min-h-[96px] rounded-[12px] bg-[#F3F5FA] px-3 py-3 text-[14px]" multiline value={description} onChangeText={setDescription} placeholder="Category style description..." />
 
         <View className="mt-4 flex-row items-center justify-between rounded-[12px] bg-[#F8FAFC] px-3 py-3">
           <View className="flex-1 pr-4">
             <Text className="text-[14px] font-semibold text-[#111827]">Active Status</Text>
-            <Text className="mt-1 text-[12px] text-[#6B7280]">Hidden categories won't appear in the store.</Text>
+            <Text className="mt-1 text-[12px] text-[#6B7280]">Hidden categories won{"'"}t appear in the store.</Text>
           </View>
           <Switch value={active} onValueChange={setActive} />
         </View>

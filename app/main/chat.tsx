@@ -1,6 +1,7 @@
 import { GuestPlaceholder } from "@/components/ui";
 import { API_BASE_URL } from "@/constants/api";
 import { useAuth } from "@/contexts/auth-context";
+import { useSettings } from "@/contexts/settings-context";
 import { chatService } from "@/services/chat.service";
 import { ChatMessage, ChatRoom } from "@/types/chat";
 import { Feather } from "@expo/vector-icons";
@@ -32,6 +33,7 @@ try {
 
 export default function CustomerChatScreen() {
   const { token, user } = useAuth();
+  const { t, showToast } = useSettings();
   const [room, setRoom] = useState<ChatRoom | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +87,7 @@ export default function CustomerChatScreen() {
     });
 
     socket.on("newMessage", (msg: ChatMessage) => {
+      if (!msg || !msg.message_id) return;
       setMessages((prev) => {
         if (prev.some((item) => item.message_id === msg.message_id)) return prev;
         return [...prev, msg];
@@ -135,7 +138,7 @@ export default function CustomerChatScreen() {
     });
 
     if (!res.ok) {
-      throw new Error("Failed to upload the file.");
+      throw new Error(t("error_upload_failed", "Không thể tải tệp lên."));
     }
 
     const json = await res.json();
@@ -147,7 +150,7 @@ export default function CustomerChatScreen() {
     if (!room || !user || !socketRef.current) return;
 
     const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: type === "image" ? ImagePicker.MediaTypeOptions.Images : ImagePicker.MediaTypeOptions.Videos,
+      mediaTypes: type === "image" ? ["images"] : ["videos"],
       allowsEditing: true,
       quality: 0.8,
     };
@@ -169,7 +172,7 @@ export default function CustomerChatScreen() {
           content: formattedContent,
         });
       } catch (err: any) {
-        alert(err.message || "Failed to upload the image/video.");
+        showToast(t("error", "Lỗi"), err.message || t("error_upload_failed", "Không thể tải tệp lên."), "error");
       } finally {
         setMediaUploading(false);
       }
@@ -179,7 +182,7 @@ export default function CustomerChatScreen() {
   const formatTime = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleTimeString("en-US", {
+      return date.toLocaleTimeString(language === "vi" ? "vi-VN" : "en-US", {
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -190,32 +193,35 @@ export default function CustomerChatScreen() {
 
   const renderMessageItem = ({ item }: { item: ChatMessage }) => {
     const isMe = item.sender_type === "customer";
-    const isImage = item.content.startsWith("[image]");
-    const isVideo = item.content.startsWith("[video]");
+    const content = item.content || "";
+    const isImage = typeof content === "string" && content.startsWith("[image]");
+    const isVideo = typeof content === "string" && content.startsWith("[video]");
 
     return (
-      <View className={`mb-3 flex-row ${isMe ? "justify-end" : "justify-start"}`}>
+      <View className={`mb-4 flex-row items-end ${isMe ? "justify-end" : "justify-start"}`}>
         {!isMe && (
-          <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#EAF4FF]">
-            <Feather name="shield" size={13} color="#0F6CBD" />
+          <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#EAF4FF] border border-[#D0E2FF] shadow-sm shadow-blue-500/10">
+            <Feather name="shield" size={13} color="#2d6dff" />
           </View>
         )}
         <View className="max-w-[75%]">
           <View
-            className={`rounded-2xl px-4 py-2.5 ${
-              isMe ? "rounded-tr-none bg-[#2d6dff]" : "rounded-tl-none border border-[#E7EEF5] bg-white"
+            className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+              isMe
+                ? "rounded-tr-none bg-[#2d6dff] shadow-blue-500/15"
+                : "rounded-tl-none border border-[#E5E7EB] bg-white shadow-black/5"
             } ${isImage || isVideo ? "overflow-hidden rounded-2xl p-1" : ""}`}
           >
             {isImage ? (
               <Image
-                source={{ uri: item.content.replace("[image]", "") }}
+                source={{ uri: content.replace("[image]", "") }}
                 style={{ width: 220, height: 160, borderRadius: 12 }}
                 resizeMode="cover"
               />
             ) : isVideo ? (
               NativeVideo ? (
                 <NativeVideo
-                  source={{ uri: item.content.replace("[video]", "") }}
+                  source={{ uri: content.replace("[video]", "") }}
                   style={{ width: 220, height: 160, borderRadius: 12 }}
                   useNativeControls
                   resizeMode="contain"
@@ -224,24 +230,24 @@ export default function CustomerChatScreen() {
               ) : (
                 <Pressable
                   onPress={() => {
-                    const videoUrl = item.content.replace("[video]", "");
+                    const videoUrl = content.replace("[video]", "");
                     WebBrowser.openBrowserAsync(videoUrl);
                   }}
                   className="flex-row items-center gap-2 rounded-xl bg-black/5 p-3"
                 >
                   <Feather name="video" size={18} color="#2d6dff" />
                   <Text className="text-[12px] font-semibold text-[#2d6dff] underline">
-                    Watch video in browser
+                    {t("watch_video", "Xem video trên trình duyệt")}
                   </Text>
                 </Pressable>
               )
             ) : (
-              <Text className={`text-[14px] leading-5 ${isMe ? "text-white" : "text-[#191C1F]"}`}>
-                {item.content}
+              <Text className={`text-[14px] leading-5 font-medium ${isMe ? "text-white" : "text-[#1F2937]"}`}>
+                {content}
               </Text>
             )}
           </View>
-          <Text className={`mt-1 text-[10px] text-[#97A0AB] ${isMe ? "text-right" : "text-left"}`}>
+          <Text className={`mt-1 text-[9px] font-semibold text-[#9CA3AF] ${isMe ? "text-right" : "text-left"}`}>
             {formatTime(item.created_at)}
           </Text>
         </View>
@@ -249,18 +255,21 @@ export default function CustomerChatScreen() {
     );
   };
 
+  const { language } = useSettings();
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-[#F6F8FC]">
         <ActivityIndicator size="large" color="#2d6dff" />
-        <Text className="mt-2 font-medium text-[#607080]">Loading conversation...</Text>
+        <Text className="mt-3 text-[14px] font-bold text-[#6B7280]">{t("loading", "Đang tải...")}</Text>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
-      <View className="flex-row items-center border-b border-[#E7EEF5] bg-white px-4 py-3">
+      {/* Header */}
+      <View className="flex-row items-center border-b border-[#E5E7EB] bg-white px-4 py-3 shadow-sm shadow-black/5">
         <Pressable
           onPress={() => {
             if (router.canGoBack()) {
@@ -273,13 +282,19 @@ export default function CustomerChatScreen() {
         >
           <Feather name="arrow-left" size={20} color="#191C1F" />
         </Pressable>
+        
         <View className="flex-1">
-          <Text className="text-[16px] font-extrabold text-[#191C1F]">Live support</Text>
+          <Text className="text-[16px] font-extrabold text-[#111827]">
+            {t("live_support", "Hỗ trợ trực tuyến")}
+          </Text>
           <View className="mt-0.5 flex-row items-center">
-            <View className="mr-1.5 h-2 w-2 rounded-full bg-[#107C41]" />
-            <Text className="text-[11px] font-medium text-[#607080]">Ready to reply</Text>
+            <View className="mr-1.5 h-2.5 w-2.5 rounded-full bg-[#10B981] border border-[#D1FAE5]" />
+            <Text className="text-[11px] font-semibold text-[#6B7280]">
+              {t("ready_to_reply", "Sẵn sàng hỗ trợ")}
+            </Text>
           </View>
         </View>
+
         <View className="h-8 w-8 items-center justify-center rounded-full bg-[#EAF4FF]">
           <Feather name="message-square" size={16} color="#2d6dff" />
         </View>
@@ -288,8 +303,8 @@ export default function CustomerChatScreen() {
       {!token ? (
         <GuestPlaceholder
           icon="message-circle"
-          title="Support chat"
-          description="Sign in to your Sello account to start chatting live with our customer care team."
+          title={t("live_support", "Hỗ trợ trực tuyến")}
+          description={t("profile_guest_desc", "Đăng nhập để quản lý địa chỉ giao hàng, danh sách yêu thích và cài đặt tài khoản.")}
         />
       ) : (
         <KeyboardAvoidingView
@@ -307,30 +322,35 @@ export default function CustomerChatScreen() {
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center py-20">
-                <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-[#EAF4FF]">
+                <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-[#EAF4FF] border border-[#D0E2FF] shadow-sm shadow-blue-500/10">
                   <Feather name="message-circle" size={32} color="#2d6dff" />
                 </View>
-                <Text className="text-[16px] font-extrabold text-[#191C1F]">Hello!</Text>
-                <Text className="mt-1 px-8 text-center text-[13px] leading-5 text-[#607080]">
-                  Send a message below to get direct support from the Sello team.
+                <Text className="text-[17px] font-extrabold text-[#111827]">
+                  {t("chat_welcome_title", "Xin chào!")}
+                </Text>
+                <Text className="mt-1.5 px-8 text-center text-[13px] font-medium leading-5 text-[#6B7280]">
+                  {t("chat_welcome_desc", "Hãy gửi tin nhắn bên dưới để nhận hỗ trợ trực tiếp từ đội ngũ Sello.")}
                 </Text>
               </View>
             }
           />
 
           {mediaUploading && (
-            <View className="flex-row items-center justify-center gap-2 border-t border-[#E7EEF5] bg-white py-2">
+            <View className="flex-row items-center justify-center gap-2 border-t border-[#E5E7EB] bg-white py-2.5">
               <ActivityIndicator size="small" color="#2d6dff" />
-              <Text className="text-[12px] font-semibold text-[#607080]">Uploading attachment...</Text>
+              <Text className="text-[12px] font-bold text-[#6B7280]">
+                {t("uploading_attachment", "Đang tải tệp đính kèm lên...")}
+              </Text>
             </View>
           )}
 
-          <View className="border-t border-[#E7EEF5] bg-white px-4 py-3">
+          {/* Input Bar */}
+          <View className="border-t border-[#E5E7EB] bg-white px-4 py-3 shadow-lg shadow-black/5">
             <View className="flex-row items-center gap-2">
               <Pressable
                 onPress={() => handlePickMedia("image")}
                 disabled={mediaUploading}
-                className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF]"
+                className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF]"
               >
                 <Feather name="image" size={17} color="#2d6dff" />
               </Pressable>
@@ -338,7 +358,7 @@ export default function CustomerChatScreen() {
               <Pressable
                 onPress={() => handlePickMedia("video")}
                 disabled={mediaUploading}
-                className="mr-1 h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF]"
+                className="mr-1 h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF]"
               >
                 <Feather name="video" size={17} color="#2d6dff" />
               </Pressable>
@@ -346,20 +366,26 @@ export default function CustomerChatScreen() {
               <TextInput
                 value={text}
                 onChangeText={setText}
-                placeholder="Type a message..."
-                placeholderTextColor="#97A0AB"
+                placeholder={t("chat_placeholder", "Nhập tin nhắn...")}
+                placeholderTextColor="#9CA3AF"
                 multiline
                 maxLength={500}
-                className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F6F8FC] px-4 py-2 text-[14px] text-[#191C1F]"
+                className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F3F4F6] px-4 py-2 text-[14px] text-[#111827] border border-[#E5E7EB]"
               />
               <Pressable
                 onPress={handleSend}
                 disabled={!text.trim() || mediaUploading}
                 className={`h-10 w-10 items-center justify-center rounded-full ${
-                  text.trim() && !mediaUploading ? "bg-[#2d6dff]" : "bg-[#E7EEF5]"
+                  text.trim() && !mediaUploading
+                    ? "bg-[#2d6dff] shadow-md shadow-blue-500/10"
+                    : "bg-[#F3F4F6]"
                 }`}
               >
-                <Feather name="send" size={16} color={text.trim() && !mediaUploading ? "white" : "#97A0AB"} />
+                <Feather
+                  name="send"
+                  size={16}
+                  color={text.trim() && !mediaUploading ? "white" : "#9CA3AF"}
+                />
               </Pressable>
             </View>
           </View>

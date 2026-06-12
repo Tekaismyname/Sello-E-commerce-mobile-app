@@ -5,7 +5,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, router, Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { Alert } from "react-native";
@@ -13,6 +13,8 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { SettingsProvider, useSettings } from "@/contexts/settings-context";
+import { SelloToast } from "@/components/ui";
 import { notificationStore } from "@/utils/notification-store";
 import { notificationService } from "@/services/customer.service";
 import { adminService } from "@/services/admin.service";
@@ -56,10 +58,29 @@ if (!isExpoGo && Notifications) {
 function RootLayoutInner() {
   const colorScheme = useColorScheme();
   const { token, user } = useAuth();
+  const { showToast } = useSettings();
   
   const seenIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
   const activeToken = useRef<string | null>(null);
+
+  // Lắng nghe sự kiện click vào thông báo để chuyển trang
+  useEffect(() => {
+    if (isExpoGo || !Notifications) return;
+
+    const subscription = Notifications.addNotificationResponseReceivedListener((response: any) => {
+      const data = response.notification.request.content.data;
+      if (data && data.url) {
+        setTimeout(() => {
+          router.push(data.url as Href);
+        }, 500);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Request notifications permissions on mount (skip in Expo Go)
   useEffect(() => {
@@ -118,26 +139,34 @@ function RootLayoutInner() {
               if (!item.isRead) {
                 if (isExpoGo) {
                   // Direct in-app alert fallback for Expo Go to completely bypass native notifications module
-                  Alert.alert(
+                  showToast(
                     item.title,
-                    item.content || "You have a new notification from Sello!"
+                    item.content || "Bạn có thông báo mới từ Sello!",
+                    "info"
                   );
                 } else {
                   try {
+                    let url = "/main/home";
+                    if (item.notificationType === "order") {
+                      url = "/main/orders";
+                    }
+
                     await Notifications.scheduleNotificationAsync({
                       content: {
                         title: item.title,
                         body: item.content || "You have a new notification from Sello!",
                         sound: true,
                         badge: unreadCount,
+                        data: { url },
                       },
                       trigger: null,
                     });
                   } catch (e) {
                     console.warn("expo-notifications fallback activated:", e);
-                    Alert.alert(
+                    showToast(
                       item.title,
-                      item.content || "You have a new notification from Sello!"
+                      item.content || "Bạn có thông báo mới từ Sello!",
+                      "info"
                     );
                   }
                 }
@@ -161,26 +190,31 @@ function RootLayoutInner() {
               if (!item.isRead) {
                 if (isExpoGo) {
                   // Direct in-app alert fallback for Admin in Expo Go
-                  Alert.alert(
+                  showToast(
                     item.title,
-                    item.content || "You have a new notification!"
+                    item.content || "Bạn có thông báo mới!",
+                    "info"
                   );
                 } else {
                   try {
+                    let url = "/admin/orders";
+
                     await Notifications.scheduleNotificationAsync({
                       content: {
                         title: item.title,
                         body: item.content || "You have a new notification!",
                         sound: true,
                         badge: unreadCount,
+                        data: { url },
                       },
                       trigger: null,
                     });
                   } catch (e) {
                     console.warn("expo-notifications fallback activated for Admin:", e);
-                    Alert.alert(
+                    showToast(
                       item.title,
-                      item.content || "You have a new notification!"
+                      item.content || "Bạn có thông báo mới!",
+                      "info"
                     );
                   }
                 }
@@ -207,6 +241,7 @@ function RootLayoutInner() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }} />
+      <SelloToast />
       <StatusBar style="auto" />
     </ThemeProvider>
   );
@@ -215,7 +250,9 @@ function RootLayoutInner() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutInner />
+      <SettingsProvider>
+        <RootLayoutInner />
+      </SettingsProvider>
     </AuthProvider>
   );
 }

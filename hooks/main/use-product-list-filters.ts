@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FilterChipItem } from "@/components/product/list/filter-chip-group";
 import { ProductCard } from "@/types/main";
 import { mainService } from "@/services/main.service";
+import { useSettings } from "@/contexts/settings-context";
 
 export type PriceFilterValue = "all" | "lt500" | "500to1000" | "1000to2000" | "gt2000";
 export type RatingFilterValue = "all" | "4up" | "45up";
@@ -23,21 +24,22 @@ const syntheticRating = (product: ProductCard) => {
   return 3.5 + (seed % 16) / 10;
 };
 
-const getPriceLabel = (value: PriceFilterValue) => {
-  if (value === "lt500") return "Price: < 500k";
-  if (value === "500to1000") return "Price: 500k-1M";
-  if (value === "1000to2000") return "Price: 1M-2M";
-  if (value === "gt2000") return "Price: > 2M";
-  return "Price";
+const getPriceLabel = (value: PriceFilterValue, t: (key: string, def?: string) => string) => {
+  if (value === "lt500") return t("price_lt500", "Price: < 500k");
+  if (value === "500to1000") return t("price_500to1000", "Price: 500k-1M");
+  if (value === "1000to2000") return t("price_1000to2000", "Price: 1M-2M");
+  if (value === "gt2000") return t("price_gt2000", "Price: > 2M");
+  return t("price_filter", "Price");
 };
 
-const getRatingLabel = (value: RatingFilterValue) => {
-  if (value === "4up") return "Rating: 4★+";
-  if (value === "45up") return "Rating: 4.5★+";
-  return "Rating";
+const getRatingLabel = (value: RatingFilterValue, t: (key: string, def?: string) => string) => {
+  if (value === "4up") return t("rating_4up", "Rating: from 4★");
+  if (value === "45up") return t("rating_45up", "Rating: from 4.5★");
+  return t("rating_filter", "Rating");
 };
 
-export function useProductListFilters(searchKeyword: string, initialCategoryId?: number) {
+export function useProductListFilters(searchKeyword: string, categoryIdString?: string) {
+  const { t } = useSettings();
   const [openChipId, setOpenChipId] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<PriceFilterValue>("all");
   const [ratingFilter, setRatingFilter] = useState<RatingFilterValue>("all");
@@ -68,10 +70,13 @@ export function useProductListFilters(searchKeyword: string, initialCategoryId?:
       }
       setError(null);
 
-      let queryCategoryId: number | undefined = initialCategoryId;
+      let queryCategoryId: number | undefined;
       let querySearch: string | undefined = searchKeyword;
 
-      if (!queryCategoryId && metadata && searchKeyword) {
+      if (categoryIdString) {
+        queryCategoryId = Number(categoryIdString);
+        querySearch = undefined;
+      } else if (metadata && searchKeyword) {
         const matchedCat = metadata.categories.find(
           (c) => c.name.trim().toLowerCase() === searchKeyword.toLowerCase()
         );
@@ -140,7 +145,7 @@ export function useProductListFilters(searchKeyword: string, initialCategoryId?:
 
       setHasMore(currentPage < totalPages);
     } catch (err: any) {
-      setError(err.message ?? "Unable to load the product list.");
+      setError(err.message ?? t("error_loading_products", "Cannot load products list."));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -151,47 +156,47 @@ export function useProductListFilters(searchKeyword: string, initialCategoryId?:
   useEffect(() => {
     setPage(1);
     fetchProducts(1, false);
-  }, [initialCategoryId, searchKeyword, priceFilter, ratingFilter, brandFilter, metadata]);
+  }, [searchKeyword, categoryIdString, priceFilter, ratingFilter, brandFilter, metadata]);
 
   const brandOptions = useMemo(() => {
-    if (!metadata) return [{ label: "All", value: "all" }];
+    if (!metadata) return [{ label: t("all", "All"), value: "all" }];
     return [
-      { label: "All", value: "all" },
+      { label: t("all", "All"), value: "all" },
       ...metadata.brands.map((b) => ({ label: b.name, value: String(b.id) })),
     ];
-  }, [metadata]);
+  }, [metadata, t]);
 
   const chips = useMemo<FilterChipItem[]>(() => {
-    let brandName = "Brand";
+    let brandName = t("brand_filter", "Brand");
     if (brandFilter !== "all" && metadata) {
       const found = metadata.brands.find((b) => String(b.id) === brandFilter);
       if (found) {
-        brandName = `Brand: ${found.name}`;
+        brandName = `${t("brand_filter", "Brand")}: ${found.name}`;
       }
     }
     return [
-      { id: "price", label: getPriceLabel(priceFilter), active: priceFilter !== "all" },
-      { id: "rating", label: getRatingLabel(ratingFilter), active: ratingFilter !== "all" },
+      { id: "price", label: getPriceLabel(priceFilter, t), active: priceFilter !== "all" },
+      { id: "rating", label: getRatingLabel(ratingFilter, t), active: ratingFilter !== "all" },
       { id: "brand", label: brandName, active: brandFilter !== "all" },
     ];
-  }, [brandFilter, priceFilter, ratingFilter, metadata]);
+  }, [brandFilter, priceFilter, ratingFilter, metadata, t]);
 
   const dropdownOptions = useMemo<DropdownOption[]>(() => {
     if (openChipId === "price") {
       return [
-        { label: "All", value: "all" },
-        { label: "Under 500,000d", value: "lt500" },
-        { label: "500,000d - 1,000,000d", value: "500to1000" },
-        { label: "1,000,000d - 2,000,000d", value: "1000to2000" },
-        { label: "Over 2,000,000d", value: "gt2000" },
+        { label: t("all", "All"), value: "all" },
+        { label: t("price_option_lt500", "Under 500k"), value: "lt500" },
+        { label: t("price_option_500to1000", "500k - 1M"), value: "500to1000" },
+        { label: t("price_option_1000to2000", "1M - 2M"), value: "1000to2000" },
+        { label: t("price_option_gt2000", "Over 2M"), value: "gt2000" },
       ];
     }
 
     if (openChipId === "rating") {
       return [
-        { label: "All", value: "all" },
-        { label: "4★ and up", value: "4up" },
-        { label: "4.5★ and up", value: "45up" },
+        { label: t("all", "All"), value: "all" },
+        { label: t("rating_option_4up", "From 4★"), value: "4up" },
+        { label: t("rating_option_45up", "From 4.5★"), value: "45up" },
       ];
     }
 
@@ -200,7 +205,7 @@ export function useProductListFilters(searchKeyword: string, initialCategoryId?:
     }
 
     return [];
-  }, [brandOptions, openChipId]);
+  }, [brandOptions, openChipId, t]);
 
   const applyDropdownOption = (value: string) => {
     if (openChipId === "price") setPriceFilter(value as PriceFilterValue);
@@ -235,3 +240,4 @@ export function useProductListFilters(searchKeyword: string, initialCategoryId?:
     error,
   };
 }
+

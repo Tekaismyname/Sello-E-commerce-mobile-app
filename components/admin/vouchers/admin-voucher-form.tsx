@@ -1,6 +1,6 @@
 import { AdminVoucher } from "@/types/admin";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Switch, Text, TextInput, View, Platform, ActivityIndicator } from "react-native";
+import { Pressable, ScrollView, Switch, Text, TextInput, View, ActivityIndicator } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 
@@ -25,17 +25,37 @@ type Props = {
 
 const onlyDigits = (value: string) => value.replace(/[^0-9]/g, "");
 
-const parseSafeDate = (dateStr: string | null | undefined): Date | null => {
+const parseSafeDate = (dateStr: any): Date | null => {
   if (!dateStr) return null;
+  
+  if (dateStr instanceof Date) {
+    return Number.isNaN(dateStr.getTime()) ? null : dateStr;
+  }
+  
+  if (typeof dateStr !== "string") {
+    if (typeof dateStr === "number") {
+      const d = new Date(dateStr);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    try {
+      dateStr = String(dateStr);
+    } catch {
+      return null;
+    }
+  }
+
   const clean = dateStr.trim();
   if (!clean) return null;
+
   // Try standard parsing
   const d = new Date(clean);
   if (!Number.isNaN(d.getTime())) return d;
+
   // Try T separator replacement
   const tStr = clean.replace(" ", "T");
   const dT = new Date(tStr);
   if (!Number.isNaN(dT.getTime())) return dT;
+
   // Manual match for Hermes/strict JSE engines
   const match = clean.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2}))?/);
   if (match) {
@@ -103,22 +123,27 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
     }
   };
 
-  const formatDateLabel = (isoString?: string | null, isEnd = false) => {
+  const formatDateLabel = (isoString?: any, isEnd = false) => {
     if (!isoString) return isEnd ? "Unlimited" : "Start immediately";
     const d = parseSafeDate(isoString);
     if (!d) return isEnd ? "Unlimited" : "Start immediately";
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
   };
 
   const onStartChange = (event: any, selectedDate?: Date) => {
     setShowStartPicker(false);
-    if (selectedDate) {
+    if (selectedDate && selectedDate instanceof Date && !Number.isNaN(selectedDate.getTime())) {
       setStartAt(selectedDate.toISOString());
       if (errors.startAt) {
         setErrors((prev) => {
@@ -132,7 +157,7 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
 
   const onEndChange = (event: any, selectedDate?: Date) => {
     setShowEndPicker(false);
-    if (selectedDate) {
+    if (selectedDate && selectedDate instanceof Date && !Number.isNaN(selectedDate.getTime())) {
       setEndAt(selectedDate.toISOString());
       if (errors.endAt) {
         setErrors((prev) => {
@@ -302,7 +327,6 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
         <View className="mt-2 flex-row gap-1 mb-4 bg-[#F2F4F7] p-1 rounded-[12px]">
           {(["fixed", "percent"] as const).map((item) => {
             const isSelected = discountType === item;
-            const iconName = item === "fixed" ? "dollar-sign" : "percent";
             return (
               <Pressable
                 key={item}
@@ -314,8 +338,20 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
                   isSelected ? "bg-white shadow-sm" : "bg-transparent"
                 }`}
               >
-                <Feather name={iconName} size={13} color={isSelected ? "#006397" : "#6B7280"} />
-                <Text className={`text-[12px] font-bold ${isSelected ? "text-[#006397]" : "text-[#6B7280]"}`}>
+                {item === "fixed" ? (
+                  <Feather name="dollar-sign" size={13} color={isSelected ? "#006397" : "#6B7280"} />
+                ) : (
+                  <Text 
+                    className="text-[13px] font-extrabold mr-0.5"
+                    style={{ color: isSelected ? "#006397" : "#6B7280" }}
+                  >
+                    %
+                  </Text>
+                )}
+                <Text 
+                  className="text-[12px] font-bold"
+                  style={{ color: isSelected ? "#006397" : "#6B7280" }}
+                >
                   {discountTypeLabel[item]}
                 </Text>
               </Pressable>
@@ -329,11 +365,26 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
             <View className={`mt-2 flex-row items-center h-12 rounded-[12px] border bg-white px-3 ${
               errors.discountValue ? "border-red-500 bg-red-50/10" : focusedField === "discountValue" ? "border-[#006397]" : "border-[#E7E8EC]"
             }`}>
-              <Feather 
-                name={discountType === "fixed" ? "dollar-sign" : "percent"} 
-                size={16} 
-                color={errors.discountValue ? "#EF4444" : focusedField === "discountValue" ? "#006397" : "#9CA3AF"} 
-              />
+              {discountType === "fixed" ? (
+                <Feather 
+                  name="dollar-sign" 
+                  size={16} 
+                  color={errors.discountValue ? "#EF4444" : focusedField === "discountValue" ? "#006397" : "#9CA3AF"} 
+                />
+              ) : (
+                <Text 
+                  className="text-[16px] font-extrabold w-4 text-center"
+                  style={{
+                    color: errors.discountValue 
+                      ? "#EF4444" 
+                      : focusedField === "discountValue" 
+                        ? "#006397" 
+                        : "#9CA3AF"
+                  }}
+                >
+                  %
+                </Text>
+              )}
               <TextInput
                 className="flex-1 ml-2 text-[14px] text-[#191C1F] h-full font-semibold"
                 keyboardType="numeric"

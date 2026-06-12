@@ -110,7 +110,7 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
 
   const pickImage = async (index: number) => {
     const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       quality: 0.8,
     };

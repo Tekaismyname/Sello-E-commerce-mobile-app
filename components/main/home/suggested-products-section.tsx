@@ -1,6 +1,7 @@
 import { SuggestedProductCard } from "@/components/product";
 import { ProductCard } from "@/types/main";
 import { Pressable, Text, View } from "react-native";
+import { useSettings } from "@/contexts/settings-context";
 
 type SuggestedProductsSectionProps = {
   products: ProductCard[];
@@ -15,13 +16,17 @@ export function SuggestedProductsSection({
   loadingMore = false,
   onViewMore,
 }: SuggestedProductsSectionProps) {
+  const { t } = useSettings();
+
   if (!products.length) {
     return null;
   }
 
   return (
     <>
-      <Text className="mb-3 text-[32px] font-extrabold leading-[36px] text-[#1d2630]">Suggested for you</Text>
+      <Text className="mb-3 text-[32px] font-extrabold leading-[36px] text-[#1d2630]">
+        {t("suggested_products", "Suggested Products")}
+      </Text>
 
       <View className="flex-row flex-wrap justify-between gap-y-3">
         {products.map((product, index) => (
@@ -36,10 +41,11 @@ export function SuggestedProductsSection({
           disabled={loadingMore}
         >
           <Text className="text-[14px] font-bold text-[#3077d8]">
-            {loadingMore ? "Loading more..." : "See more suggested products"}
+            {loadingMore ? t("loading", "Loading...") : t("view_more", "View More")}
           </Text>
         </Pressable>
       ) : null}
     </>
   );
 }
+

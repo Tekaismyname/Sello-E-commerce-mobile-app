@@ -24,12 +24,19 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
   const insets = useSafeAreaInsets();
   const { hasPermission } = usePermissions();
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingChatsCount, setPendingChatsCount] = useState(0);
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener("pendingOrdersCount", (count: number) => {
+    const subOrders = DeviceEventEmitter.addListener("pendingOrdersCount", (count: number) => {
       setPendingCount(count);
     });
-    return () => sub.remove();
+    const subChats = DeviceEventEmitter.addListener("pendingChatsCount", (count: number) => {
+      setPendingChatsCount(count);
+    });
+    return () => {
+      subOrders.remove();
+      subChats.remove();
+    };
   }, []);
 
   // Filter tabs based on active admin's permissions
@@ -53,6 +60,7 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
           const route = state.routes[routeIndex];
           const isFocused = state.index === routeIndex;
           const descriptor = descriptors[route.key];
+          if (!descriptor) return null;
           const tintColor = isFocused ? "#006397" : "#97A0AB";
 
           const onPress = () => {
@@ -72,7 +80,7 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
               key={tab.key}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={descriptor.options.tabBarAccessibilityLabel}
+              accessibilityLabel={descriptor.options?.tabBarAccessibilityLabel}
               onPress={onPress}
               className="h-[56px] flex-1 items-center justify-center"
             >
@@ -82,6 +90,13 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
                   <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
                     <Text className="text-[8px] font-bold text-white leading-none">
                       {pendingCount}
+                    </Text>
+                  </View>
+                )}
+                {tab.key === "chats" && pendingChatsCount > 0 && (
+                  <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
+                    <Text className="text-[8px] font-bold text-white leading-none">
+                      {pendingChatsCount}
                     </Text>
                   </View>
                 )}

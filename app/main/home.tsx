@@ -10,11 +10,13 @@ import { MainErrorState, MainLoadingState } from "@/components/main/screen-state
 import { SearchTriggerBar } from "@/components/main/search-trigger-bar";
 import { SelloHeader } from "@/components/main/sello-header";
 import { useHomeData } from "@/hooks/main/use-main-data";
+import { useSettings } from "@/contexts/settings-context";
 
 const HOME_PAGE_SIZE = 4;
 
 export default function HomeScreen() {
   const { data, loading, errorMessage } = useHomeData();
+  const { t } = useSettings();
   const [visibleSuggestedCount, setVisibleSuggestedCount] = useState(HOME_PAGE_SIZE);
   const [loadingMoreSuggested, setLoadingMoreSuggested] = useState(false);
 
@@ -45,7 +47,7 @@ export default function HomeScreen() {
       {!loading && data ? (
         <ScrollView className="flex-1" contentContainerClassName="px-4 pb-7" showsVerticalScrollIndicator={false}>
           <SearchTriggerBar
-            placeholder="Search for products..."
+            placeholder={t("search_placeholder", "Tìm kiếm sản phẩm...")}
             onPress={() => router.push("/main/search" as Href)}
           />
           <HomePromoBanner />

@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { Href, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { useSettings } from "@/contexts/settings-context";
 
 type FlashSalesSectionProps = {
   countdownValues: string[];
@@ -26,6 +27,7 @@ const getCountdown = (flashSaleEndsAt?: string) => {
 };
 
 export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }: FlashSalesSectionProps) {
+  const { t } = useSettings();
   const [liveCountdown, setLiveCountdown] = useState<string[] | null>(() => getCountdown(flashSaleEndsAt));
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
                   className="absolute left-0 top-0 h-full rounded-full bg-[#EE4D2D]"
                 />
                 <Text className="absolute z-10 w-full text-center text-[7.5px] font-black uppercase text-white">
-                  {percent > 80 ? "Almost sold out" : "Best seller"}
+                  {percent > 80 ? t("almost_sold_out", "Almost Sold Out") : t("best_seller", "Best Seller")}
                 </Text>
               </View>
             </Pressable>
@@ -102,3 +104,4 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
     </View>
   );
 }
+

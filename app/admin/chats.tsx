@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  DeviceEventEmitter,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -33,6 +34,18 @@ export default function AdminChatsScreen() {
   const { token, user } = useAuth();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+
+  const handleSelectRoom = (room: ChatRoom) => {
+    setSelectedRoom(room);
+    const nextRooms = rooms.map((r) =>
+      r.room_id === room.room_id ? { ...r, unread_count: 0 } : r
+    );
+    const newTotal = nextRooms.reduce((sum, r) => sum + (r.unread_count ?? 0), 0);
+    setRooms(nextRooms);
+    setTimeout(() => {
+      DeviceEventEmitter.emit("pendingChatsCount", newTotal);
+    }, 0);
+  };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -56,7 +69,7 @@ export default function AdminChatsScreen() {
   }, []);
 
   // Load chat rooms for admin
-  const loadRooms = () => {
+  const loadRooms = React.useCallback(() => {
     if (!token) return;
     setLoadingRooms(true);
     chatService
@@ -70,11 +83,11 @@ export default function AdminChatsScreen() {
       .finally(() => {
         setLoadingRooms(false);
       });
-  };
+  }, [token]);
 
   useEffect(() => {
     loadRooms();
-  }, [token]);
+  }, [token, loadRooms]);
 
   // Load history when a room is selected
   useEffect(() => {
@@ -109,6 +122,7 @@ export default function AdminChatsScreen() {
     });
 
     socket.on("newMessage", (msg: ChatMessage) => {
+      if (!msg || !msg.message_id) return;
       setMessages((prev) => {
         if (prev.some((m) => m.message_id === msg.message_id)) return prev;
         return [...prev, msg];
@@ -171,7 +185,7 @@ export default function AdminChatsScreen() {
     if (!selectedRoom || !user || !socketRef.current) return;
 
     const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: type === "image" ? ImagePicker.MediaTypeOptions.Images : ImagePicker.MediaTypeOptions.Videos,
+      mediaTypes: type === "image" ? ["images"] : ["videos"],
       allowsEditing: true,
       quality: 0.8,
     };
@@ -204,7 +218,7 @@ export default function AdminChatsScreen() {
     if (!dateStr) return "";
     try {
       const date = new Date(dateStr);
-      return date.toLocaleTimeString("en-US", {
+      return date.toLocaleTimeString("vi-VN", {
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -266,7 +280,7 @@ export default function AdminChatsScreen() {
           if (isSelectionMode) {
             toggleRoomSelection(item.room_id);
           } else {
-            setSelectedRoom(item);
+            handleSelectRoom(item);
           }
         }}
         onLongPress={() => {
@@ -275,40 +289,40 @@ export default function AdminChatsScreen() {
             toggleRoomSelection(item.room_id);
           }
         }}
-        className="flex-row items-center border-b border-[#E7EEF5] bg-white p-4 active:bg-[#F6F8FC]"
+        className="flex-row items-center border-b border-[#F3F4F6] bg-white p-4 active:bg-[#F9FAFB]"
       >
         {isSelectionMode && (
           <View className="mr-3">
             <Feather
               name={isSelected ? "check-square" : "square"}
               size={20}
-              color={isSelected ? "#0F6CBD" : "#97A0AB"}
+              color={isSelected ? "#0F6CBD" : "#9CA3AF"}
             />
           </View>
         )}
 
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-[#EAF4FF]">
-          <Text className="text-[20px] font-extrabold text-[#0F6CBD]">{initials}</Text>
+        <View className="h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FF] border border-[#CDE5FF]">
+          <Text className="text-[20px] font-black text-[#0F6CBD]">{initials}</Text>
         </View>
         <View className="ml-3 flex-1">
           <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] font-extrabold text-[#191C1F]" numberOfLines={1}>
+            <Text className="text-[15px] font-extrabold text-[#111827]" numberOfLines={1}>
               {item.full_name || "Customer"}
             </Text>
-            <Text className="text-[11px] text-[#97A0AB]">
+            <Text className="text-[11px] font-medium text-[#9CA3AF]">
               {formatTime(item.last_message_at || item.updated_at)}
             </Text>
           </View>
-          <Text className="mt-0.5 text-[12px] text-[#607080]" numberOfLines={1}>
+          <Text className="mt-0.5 text-[11px] font-semibold text-[#6B7280]" numberOfLines={1}>
             {item.email}
           </Text>
-          <Text className="mt-1 text-[13px] text-[#607080]" numberOfLines={1}>
-            {item.last_message || "No messages yet"}
+          <Text className="mt-1 text-[13px] font-medium text-[#374151]" numberOfLines={1}>
+            {item.last_message || "No messages"}
           </Text>
         </View>
         {!isSelectionMode && (item.unread_count ?? 0) > 0 && (
-          <View className="ml-2 h-5 min-w-[20px] items-center justify-center rounded-full bg-[#BA1A1A] px-1">
-            <Text className="text-[10px] font-bold text-white">{item.unread_count}</Text>
+          <View className="ml-2 h-5.5 min-w-[22px] items-center justify-center rounded-full bg-[#EF4444] px-1.5 shadow-sm shadow-red-500/20">
+            <Text className="text-[10px] font-black text-white">{item.unread_count}</Text>
           </View>
         )}
       </Pressable>
@@ -317,32 +331,35 @@ export default function AdminChatsScreen() {
 
   const renderMessageItem = ({ item }: { item: ChatMessage }) => {
     const isMe = item.sender_type === "admin";
-    const isImage = item.content.startsWith("[image]");
-    const isVideo = item.content.startsWith("[video]");
+    const content = item.content || "";
+    const isImage = typeof content === "string" && content.startsWith("[image]");
+    const isVideo = typeof content === "string" && content.startsWith("[video]");
 
     return (
-      <View className={`mb-3 flex-row ${isMe ? "justify-end" : "justify-start"}`}>
+      <View className={`mb-4 flex-row items-end ${isMe ? "justify-end" : "justify-start"}`}>
         {!isMe && (
-          <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#EAF4FF]">
-            <Feather name="user" size={13} color="#0F6CBD" />
+          <View className="mr-2 h-7 w-7 items-center justify-center rounded-full bg-[#F3F4F6] border border-[#E5E7EB]">
+            <Feather name="user" size={13} color="#4B5563" />
           </View>
         )}
         <View className="max-w-[75%]">
           <View
-            className={`rounded-2xl px-4 py-2.5 ${
-              isMe ? "bg-[#0F6CBD] rounded-tr-none" : "bg-[#F2F3F7] rounded-tl-none"
+            className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+              isMe
+                ? "bg-[#0F6CBD] rounded-tr-none shadow-blue-500/15"
+                : "bg-white border border-[#E5E7EB] rounded-tl-none shadow-black/5"
             } ${isImage || isVideo ? "p-1 rounded-2xl overflow-hidden" : ""}`}
           >
             {isImage ? (
               <Image
-                source={{ uri: item.content.replace("[image]", "") }}
+                source={{ uri: content.replace("[image]", "") }}
                 style={{ width: 220, height: 160, borderRadius: 12 }}
                 resizeMode="cover"
               />
             ) : isVideo ? (
               NativeVideo ? (
                 <NativeVideo
-                  source={{ uri: item.content.replace("[video]", "") }}
+                  source={{ uri: content.replace("[video]", "") }}
                   style={{ width: 220, height: 160, borderRadius: 12 }}
                   useNativeControls
                   resizeMode="contain"
@@ -351,24 +368,24 @@ export default function AdminChatsScreen() {
               ) : (
                 <Pressable
                   onPress={() => {
-                    const videoUrl = item.content.replace("[video]", "");
+                    const videoUrl = content.replace("[video]", "");
                     WebBrowser.openBrowserAsync(videoUrl);
                   }}
                   className="p-3 bg-black/5 rounded-xl flex-row items-center gap-2"
                 >
                   <Feather name="video" size={18} color="#0F6CBD" />
                   <Text className="text-[12px] text-[#0F6CBD] font-semibold underline">
-                    Watch Video (Open in browser)
+                    View video in browser
                   </Text>
                 </Pressable>
               )
             ) : (
-              <Text className={`text-[14px] leading-5 ${isMe ? "text-white" : "text-[#191C1F]"}`}>
-                {item.content}
+              <Text className={`text-[14px] leading-5 font-medium ${isMe ? "text-white" : "text-[#1F2937]"}`}>
+                {content}
               </Text>
             )}
           </View>
-          <Text className={`mt-1 text-[10px] text-[#97A0AB] ${isMe ? "text-right" : "text-left"}`}>
+          <Text className={`mt-1 text-[9px] font-semibold text-[#9CA3AF] ${isMe ? "text-right" : "text-left"}`}>
             {formatTime(item.created_at)}
           </Text>
         </View>
@@ -383,12 +400,12 @@ export default function AdminChatsScreen() {
   if (!hasPermission) {
     return (
       <SafeAreaView className="flex-1 bg-[#F6F8FC] items-center justify-center p-6">
-        <Feather name="lock" size={48} color="#BA1A1A" />
-        <Text className="mt-4 text-center text-[16px] font-bold text-[#191C1F]">
+        <Feather name="lock" size={48} color="#EF4444" />
+        <Text className="mt-4 text-center text-[16px] font-bold text-[#111827]">
           Access Denied
         </Text>
-        <Text className="mt-2 text-center text-[14px] leading-5 text-[#607080]">
-          Your account is not authorized to access the support chat feature.
+        <Text className="mt-2 text-center text-[14px] leading-5 text-[#6B7280]">
+          Your account does not have permission to access support chat.
         </Text>
       </SafeAreaView>
     );
@@ -399,7 +416,7 @@ export default function AdminChatsScreen() {
     return (
       <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
         {/* Header */}
-        <View className="flex-row items-center justify-between border-b border-[#E7EEF5] bg-white px-4 py-3">
+        <View className="flex-row items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3 shadow-sm shadow-black/5">
           {isSelectionMode ? (
             <>
               <View className="flex-row items-center gap-3">
@@ -410,34 +427,34 @@ export default function AdminChatsScreen() {
                   }}
                   className="h-8 w-8 items-center justify-center rounded-full active:bg-[#f0f2f5]"
                 >
-                  <Feather name="x" size={20} color="#191C1F" />
+                  <Feather name="x" size={20} color="#111827" />
                 </Pressable>
-                <Text className="text-[16px] font-extrabold text-[#191C1F]">
+                <Text className="text-[16px] font-extrabold text-[#111827]">
                   Selected {selectedRoomIds.size}
                 </Text>
               </View>
 
               <View className="flex-row items-center gap-3">
-                <Pressable onPress={selectAllRooms} className="px-2 py-1 bg-[#F6F8FC] rounded-lg">
-                  <Text className="text-[12px] font-bold text-[#607080]">
-                    {selectedRoomIds.size === rooms.length ? "Deselect all" : "Select all"}
+                <Pressable onPress={selectAllRooms} className="px-2.5 py-1.5 bg-[#F3F4F6] rounded-lg">
+                  <Text className="text-[12px] font-bold text-[#4B5563]">
+                    {selectedRoomIds.size === rooms.length ? "Deselect All" : "Select All"}
                   </Text>
                 </Pressable>
                 <Pressable
                   onPress={handleBulkMarkAsRead}
                   disabled={selectedRoomIds.size === 0}
                   className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg ${
-                    selectedRoomIds.size > 0 ? "bg-[#EAF4FF]" : "bg-[#F2F3F7]"
+                    selectedRoomIds.size > 0 ? "bg-[#EBF5FF]" : "bg-[#F3F4F6]"
                   }`}
                 >
                   <Feather
                     name="check-circle"
                     size={14}
-                    color={selectedRoomIds.size > 0 ? "#0F6CBD" : "#97A0AB"}
+                    color={selectedRoomIds.size > 0 ? "#0F6CBD" : "#9CA3AF"}
                   />
                   <Text
                     className={`text-[12px] font-extrabold ${
-                      selectedRoomIds.size > 0 ? "text-[#0F6CBD]" : "text-[#97A0AB]"
+                      selectedRoomIds.size > 0 ? "text-[#0F6CBD]" : "text-[#9CA3AF]"
                     }`}
                   >
                     Mark as Read
@@ -448,10 +465,10 @@ export default function AdminChatsScreen() {
           ) : (
             <>
               <View className="flex-row items-center gap-2">
-                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#EAF4FF]">
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#EBF5FF]">
                   <Feather name="message-circle" size={18} color="#0F6CBD" />
                 </View>
-                <Text className="text-[18px] font-extrabold text-[#191C1F]">Support Inbox</Text>
+                <Text className="text-[18px] font-black text-[#111827]">Support Inbox</Text>
               </View>
               <View className="flex-row items-center gap-2">
                 <Pressable
@@ -475,7 +492,7 @@ export default function AdminChatsScreen() {
         {loadingRooms ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#0F6CBD" />
-            <Text className="mt-2 text-[#607080] font-medium">Loading inbox...</Text>
+            <Text className="mt-3 text-[#6B7280] font-bold">Loading inbox...</Text>
           </View>
         ) : (
           <FlatList
@@ -485,11 +502,11 @@ export default function AdminChatsScreen() {
             contentContainerStyle={{ paddingBottom: 80 }}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center py-20">
-                <View className="h-16 w-16 items-center justify-center rounded-full bg-[#F6F8FC] mb-4">
-                  <Feather name="inbox" size={32} color="#97A0AB" />
+                <View className="h-16 w-16 items-center justify-center rounded-full bg-[#F3F4F6] mb-4 border border-[#E5E7EB]">
+                  <Feather name="inbox" size={32} color="#9CA3AF" />
                 </View>
-                <Text className="text-[16px] font-extrabold text-[#191C1F]">No conversations</Text>
-                <Text className="mt-1 text-center text-[13px] text-[#607080] px-8">
+                <Text className="text-[16px] font-extrabold text-[#111827]">No conversations</Text>
+                <Text className="mt-1.5 text-center text-[13px] font-medium text-[#6B7280] px-8">
                   When customers send support messages, the conversation will appear here.
                 </Text>
               </View>
@@ -504,7 +521,7 @@ export default function AdminChatsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
       {/* Header */}
-      <View className="flex-row items-center border-b border-[#E7EEF5] bg-white px-4 py-3">
+      <View className="flex-row items-center border-b border-[#E5E7EB] bg-white px-4 py-3 shadow-sm shadow-black/5">
         <Pressable
           onPress={() => {
             setSelectedRoom(null);
@@ -512,18 +529,24 @@ export default function AdminChatsScreen() {
           }}
           className="mr-3 h-8 w-8 items-center justify-center rounded-full active:bg-[#f0f2f5]"
         >
-          <Feather name="arrow-left" size={20} color="#191C1F" />
+          <Feather name="arrow-left" size={20} color="#111827" />
         </Pressable>
+        <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-full bg-[#EBF5FF] border border-[#CDE5FF]">
+          <Text className="text-[14px] font-black text-[#0F6CBD]">
+            {(selectedRoom.full_name || "C").charAt(0).toUpperCase()}
+          </Text>
+        </View>
         <View className="flex-1">
-          <Text className="text-[15px] font-extrabold text-[#191C1F]" numberOfLines={1}>
+          <Text className="text-[15px] font-extrabold text-[#111827]" numberOfLines={1}>
             {selectedRoom.full_name || "Customer"}
           </Text>
-          <Text className="text-[11px] text-[#607080]" numberOfLines={1}>
+          <Text className="text-[11px] font-semibold text-[#6B7280]" numberOfLines={1}>
             {selectedRoom.email}
           </Text>
         </View>
-        <View className="h-2 w-2 rounded-full bg-[#107C41] mr-1" />
-        <Text className="text-[11px] font-medium text-[#107C41]">Online</Text>
+        
+        <View className="h-2.5 w-2.5 rounded-full bg-[#10B981] mr-1.5 border border-[#D1FAE5]" />
+        <Text className="text-[11px] font-bold text-[#10B981]">Active</Text>
       </View>
 
       {/* Messages list */}
@@ -535,7 +558,7 @@ export default function AdminChatsScreen() {
         {loadingHistory ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" color="#0F6CBD" />
-            <Text className="mt-2 text-[12px] text-[#607080]">Loading chat history...</Text>
+            <Text className="mt-3 text-[12px] font-semibold text-[#6B7280]">Loading chat history...</Text>
           </View>
         ) : (
           <FlatList
@@ -550,20 +573,20 @@ export default function AdminChatsScreen() {
         )}
 
         {mediaUploading && (
-          <View className="flex-row items-center justify-center bg-white py-2 border-t border-[#E7EEF5] gap-2">
+          <View className="flex-row items-center justify-center bg-white py-2.5 border-t border-[#E5E7EB] gap-2">
             <ActivityIndicator size="small" color="#0F6CBD" />
-            <Text className="text-[12px] text-[#607080] font-semibold">Uploading attachment...</Text>
+            <Text className="text-[12px] text-[#6B7280] font-bold">Uploading attachment...</Text>
           </View>
         )}
 
         {/* Input Bar */}
-        <View className="border-t border-[#E7EEF5] bg-white px-4 py-3">
+        <View className="border-t border-[#E5E7EB] bg-white px-4 py-3 shadow-lg shadow-black/5">
           <View className="flex-row items-center gap-2">
             {/* Image Attach Button */}
             <Pressable
               onPress={() => handlePickMedia("image")}
               disabled={mediaUploading}
-              className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF]"
+              className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF]"
             >
               <Feather name="image" size={17} color="#0F6CBD" />
             </Pressable>
@@ -572,7 +595,7 @@ export default function AdminChatsScreen() {
             <Pressable
               onPress={() => handlePickMedia("video")}
               disabled={mediaUploading}
-              className="h-9 w-9 items-center justify-center rounded-full bg-[#F6F8FC] active:bg-[#EAF4FF] mr-1"
+              className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF] mr-1"
             >
               <Feather name="video" size={17} color="#0F6CBD" />
             </Pressable>
@@ -581,19 +604,21 @@ export default function AdminChatsScreen() {
               value={text}
               onChangeText={setText}
               placeholder="Reply to customer..."
-              placeholderTextColor="#97A0AB"
+              placeholderTextColor="#9CA3AF"
               multiline
               maxLength={500}
-              className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F6F8FC] px-4 py-2 text-[14px] text-[#191C1F]"
+              className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F3F4F6] px-4 py-2 text-[14px] text-[#111827] border border-[#E5E7EB]"
             />
             <Pressable
               onPress={handleSend}
               disabled={!text.trim() || mediaUploading}
               className={`h-10 w-10 items-center justify-center rounded-full ${
-                text.trim() && !mediaUploading ? "bg-[#0F6CBD]" : "bg-[#E7EEF5]"
+                text.trim() && !mediaUploading
+                  ? "bg-[#0F6CBD] shadow-md shadow-blue-500/10"
+                  : "bg-[#F3F4F6]"
               }`}
             >
-              <Feather name="send" size={16} color={text.trim() && !mediaUploading ? "white" : "#97A0AB"} />
+              <Feather name="send" size={16} color={text.trim() && !mediaUploading ? "white" : "#9CA3AF"} />
             </Pressable>
           </View>
         </View>

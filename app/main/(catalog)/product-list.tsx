@@ -1,5 +1,7 @@
-import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
-import { SelloHeader } from "@/components/main/sello-header";
+import { Href, router, useLocalSearchParams } from "expo-router";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { FlashList } from "@shopify/flash-list";
 import {
   FilterChipDropdown,
   FilterChipGroup,
@@ -9,16 +11,16 @@ import {
   ProductListHeaderInfo,
   SortTabGroup,
 } from "@/components/product";
+import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
+import { SelloHeader } from "@/components/main/sello-header";
 import { useProductListFilters } from "@/hooks/main/use-product-list-filters";
-import { FlashList } from "@shopify/flash-list";
-import { Href, router, useLocalSearchParams } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSettings } from "@/contexts/settings-context";
 
 export default function ProductListScreen() {
   const params = useLocalSearchParams<{ keyword?: string; categoryId?: string }>();
   const searchKeyword = params.keyword?.toString().trim() ?? "";
-  const categoryId = Number(params.categoryId);
+  const categoryId = params.categoryId?.toString().trim() ?? "";
+  const { t } = useSettings();
 
   const {
     chips,
@@ -33,7 +35,7 @@ export default function ProductListScreen() {
     handleLoadMore,
     loading,
     error,
-  } = useProductListFilters(searchKeyword, Number.isFinite(categoryId) ? categoryId : undefined);
+  } = useProductListFilters(searchKeyword, categoryId);
 
   return (
     <SafeAreaView className="flex-1 bg-[#f3f5f8]" edges={["top"]}>
@@ -63,22 +65,22 @@ export default function ProductListScreen() {
             ListHeaderComponent={
               <View style={{ paddingBottom: 8 }}>
                 <ProductListHeaderInfo
-                  trail="Home > Category"
-                  keyword={searchKeyword || "All products"}
-                  totalText={`${filteredProducts.length} products found`}
+                  trail={t("home_categories_trail", "Home > Categories")}
+                  keyword={searchKeyword || t("all_products", "All Products")}
+                  totalText={t("products_found", "{count} products found").replace("{count}", String(filteredProducts.length))}
                 />
 
                 <FilterChipGroup chips={chips} openChipId={openChipId} onPressChip={handleOpenChip} />
 
                 {openChipId ? <FilterChipDropdown options={dropdownOptions} onSelect={applyDropdownOption} /> : null}
 
-                <SortTabGroup tabs={["Popular", "Best sellers", "Price: low to high"]} />
+                <SortTabGroup tabs={[t("popular", "Popular"), t("best_sellers", "Best Sellers"), t("price_low_high", "Price: Low > High")]} />
               </View>
             }
             ListEmptyComponent={
               <View className="mt-4 rounded-[12px] bg-white px-4 py-5">
                 <Text className="text-center text-[13px] font-semibold text-[#6b7682]">
-                  No products matched this keyword.
+                  {t("no_products_found", "No products matching your search were found.")}
                 </Text>
               </View>
             }
@@ -88,12 +90,12 @@ export default function ProductListScreen() {
 
                 {hasMore ? (
                   <Pressable
-                    className="mb-2 mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5]"
+                    className="mt-4 h-[44px] items-center justify-center rounded-[12px] bg-[#ebeff5] mb-2"
                     onPress={handleLoadMore}
                     disabled={loadingMore}
                   >
                     <Text className="text-[14px] font-bold text-[#3077d8]">
-                      {loadingMore ? "Loading more..." : "See more products"}
+                      {loadingMore ? t("loading_more", "Loading more...") : t("view_more_products", "View More Products")}
                     </Text>
                   </Pressable>
                 ) : null}
