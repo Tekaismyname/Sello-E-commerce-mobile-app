@@ -125,6 +125,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.server.to(`room_${normalized.roomId}`).emit('newMessage', savedMessage);
 
+    if (normalized.senderType === 'customer') {
+      setTimeout(async () => {
+        try {
+          const aiReply = await this.chatService.generateAiResponse(normalized.content);
+          if (aiReply) {
+            const adminId = await this.chatService.findFirstAdminId();
+            const aiSavedMessage = await this.chatService.saveMessage(
+              normalized.roomId,
+              adminId,
+              'admin',
+              `🤖 [Sello AI]: ${aiReply}`,
+            );
+            this.server.to(`room_${normalized.roomId}`).emit('newMessage', aiSavedMessage);
+          }
+        } catch (err) {
+          console.error('AI Auto-Responder Error:', err);
+        }
+      }, 1200);
+    }
+
     return savedMessage;
   }
 

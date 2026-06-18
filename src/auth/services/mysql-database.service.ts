@@ -4440,6 +4440,32 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     } as ChatRoomRow;
   }
 
+  async findFirstAdminId(): Promise<number> {
+    const [rows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT user_id
+        FROM users
+        WHERE role = 'admin' AND status = 'active'
+        LIMIT 1
+      `
+    );
+    if (rows && rows[0]) {
+      return Number(rows[0].user_id);
+    }
+    const [anyRows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT user_id
+        FROM users
+        WHERE role = 'admin'
+        LIMIT 1
+      `
+    );
+    if (anyRows && anyRows[0]) {
+      return Number(anyRows[0].user_id);
+    }
+    return 4;
+  }
+
   async getAdminChatRooms() {
     const [rows] = await this.pool.query<ChatRoomRow[]>(
       `
