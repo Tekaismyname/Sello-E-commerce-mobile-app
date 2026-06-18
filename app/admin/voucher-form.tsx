@@ -3,11 +3,12 @@ import { useAuth } from "@/contexts/auth-context";
 import { usePermissions } from "@/hooks/auth/use-permissions";
 import { useAdminVouchersView } from "@/hooks/admin/use-admin-vouchers-view";
 import { Feather } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { Href, useRouter, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminVoucherFormScreen() {
+  const router = useRouter();
   const { token } = useAuth();
   const { hasPermission } = usePermissions();
   const { voucherId } = useLocalSearchParams<{ voucherId?: string }>();
@@ -19,10 +20,14 @@ export default function AdminVoucherFormScreen() {
   const canUpdate = hasPermission("vouchers:update");
   const canSubmit = initialValue ? canUpdate : canCreate;
 
+  const handleBack = () => {
+    router.replace("/admin/vouchers" as Href);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
       <View className="h-[56px] flex-row items-center bg-white px-4">
-        <Pressable className="h-10 w-10 items-center justify-center" onPress={() => router.back()}>
+        <Pressable className="h-10 w-10 items-center justify-center" onPress={handleBack}>
           <Feather name="arrow-left" size={20} color="#0369A1" />
         </Pressable>
         <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">
@@ -50,7 +55,7 @@ export default function AdminVoucherFormScreen() {
               await createVoucher(payload);
             }
             Alert.alert("Success", "Voucher saved.");
-            router.back();
+            router.replace("/admin/vouchers" as Href);
           } catch (error: any) {
             Alert.alert("Error", error?.message ?? "Cannot save voucher.");
           }

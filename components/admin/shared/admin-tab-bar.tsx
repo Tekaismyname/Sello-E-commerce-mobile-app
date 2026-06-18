@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { DeviceEventEmitter, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePermissions } from "@/hooks/auth/use-permissions";
+import { useRouter } from "expo-router";
 
 type TabMeta = {
   key: string;
@@ -23,6 +24,7 @@ const tabs: TabMeta[] = [
 export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { hasPermission } = usePermissions();
+  const router = useRouter();
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingChatsCount, setPendingChatsCount] = useState(0);
 
@@ -64,6 +66,14 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
           const tintColor = isFocused ? "#006397" : "#97A0AB";
 
           const onPress = () => {
+            const currentRouteName = state.routes[state.index]?.name;
+            const isFromHiddenScreen = !currentRouteName || !tabs.some((t) => t.key === currentRouteName);
+
+            if (isFromHiddenScreen) {
+              router.navigate(`/admin/${tab.key}` as any);
+              return;
+            }
+
             const event = navigation.emit({
               type: "tabPress",
               target: route.key,
@@ -71,7 +81,7 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
             });
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+              router.navigate(`/admin/${tab.key}` as any);
             }
           };
 

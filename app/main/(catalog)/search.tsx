@@ -1,7 +1,11 @@
 import { Href, router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, LayoutAnimation, Platform, UIManager } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { MainErrorState, MainLoadingState } from "@/components/main/screen-states";
 import {
   SearchHeaderBar,
@@ -59,6 +63,7 @@ export default function SearchScreen() {
   };
 
   const removeHistoryItem = (item: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setHistory((prev) => {
       const source = prev.length ? prev : data?.searchHistory ?? [];
       return source.filter((entry) => normalizeSearchText(entry) !== normalizeSearchText(item));
@@ -84,7 +89,10 @@ export default function SearchScreen() {
             items={effectiveHistory}
             onPressItem={runSearch}
             onRemoveItem={removeHistoryItem}
-            onClearAll={() => setHistory([])}
+            onClearAll={() => {
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              setHistory([]);
+            }}
           />
 
           <SearchKeywordListSection

@@ -1,7 +1,11 @@
 import { Href, router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, LayoutAnimation, Platform, UIManager } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { FeaturedCategoriesSection } from "@/components/main/home/featured-categories-section";
 import { FlashSalesSection } from "@/components/main/home/flash-sales-section";
 import { HomePromoBanner } from "@/components/main/home/home-promo-banner";
@@ -32,6 +36,7 @@ export default function HomeScreen() {
 
     setLoadingMoreSuggested(true);
     setTimeout(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setVisibleSuggestedCount((prev) => prev + HOME_PAGE_SIZE);
       setLoadingMoreSuggested(false);
     }, 450);

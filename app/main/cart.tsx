@@ -1,7 +1,11 @@
 import { Href, router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View, LayoutAnimation, Platform, UIManager } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import {
   CartEmptyState,
   CartErrorState,
@@ -25,8 +29,10 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCart = useCallback(async () => {
-    setLoading(true);
+  const fetchCart = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
 
     if (!token) {
@@ -37,11 +43,14 @@ export default function CartScreen() {
 
     try {
       const res = await cartService.getCart(token);
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setCart(res.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [token, t]);
 
@@ -62,7 +71,7 @@ export default function CartScreen() {
 
     try {
       await cartService.updateCartItem(token, item.id, { quantity: newQty });
-      fetchCart();
+      fetchCart(true);
     } catch (err: any) {
       showToast(t("error", "Lỗi"), err.message, "error");
     }
@@ -76,7 +85,7 @@ export default function CartScreen() {
 
     try {
       await cartService.selectCartItem(token, item.id, { selected: !item.selected });
-      fetchCart();
+      fetchCart(true);
     } catch (err: any) {
       showToast(t("error", "Lỗi"), err.message, "error");
     }
@@ -99,7 +108,7 @@ export default function CartScreen() {
 
             try {
               await cartService.deleteCartItem(token, item.id);
-              fetchCart();
+              fetchCart(true);
             } catch (err: any) {
               showToast(t("error", "Lỗi"), err.message, "error");
             }

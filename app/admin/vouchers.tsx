@@ -5,11 +5,12 @@ import { useAuth } from "@/contexts/auth-context";
 import { usePermissions } from "@/hooks/auth/use-permissions";
 import { useAdminVouchersView } from "@/hooks/admin/use-admin-vouchers-view";
 import { AdminVoucher } from "@/types/admin";
-import { Href, router } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminVouchersScreen() {
+  const router = useRouter();
   const { token } = useAuth();
   const { hasPermission } = usePermissions();
   const canRead = hasPermission("vouchers:read");

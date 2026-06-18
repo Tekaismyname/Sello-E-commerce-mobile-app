@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminService } from "@/services/admin.service";
 import { AdminVoucher, CreateAdminVoucherPayload, UpdateAdminVoucherPayload } from "@/types/admin";
+import { useIsFocused } from "@react-navigation/native";
 
 export function useAdminVouchersView(token: string) {
   const [vouchers, setVouchers] = useState<AdminVoucher[]>([]);
@@ -8,6 +9,7 @@ export function useAdminVouchersView(token: string) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const isFocused = useIsFocused();
 
   const fetchVouchers = useCallback(async () => {
     if (!token) {
@@ -29,8 +31,10 @@ export function useAdminVouchersView(token: string) {
   }, [token]);
 
   useEffect(() => {
-    fetchVouchers();
-  }, [fetchVouchers]);
+    if (isFocused) {
+      fetchVouchers();
+    }
+  }, [fetchVouchers, isFocused]);
 
   const createVoucher = useCallback(
     async (payload: CreateAdminVoucherPayload) => {

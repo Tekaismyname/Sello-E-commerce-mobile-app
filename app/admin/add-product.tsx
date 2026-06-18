@@ -10,7 +10,7 @@ import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
 import { AdminProductImage, AdminProductVariant } from "@/types/admin";
 import { Feather } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -317,7 +317,7 @@ export default function AddProductScreen() {
         "Thanh cong",
         editingProductId ? "Product updated." : "New product created.",
       );
-      router.back();
+      router.replace("/admin/products" as Href);
     } catch (error: any) {
       Alert.alert("Cannot save", error?.message ?? "An error occurred.");
     } finally {
@@ -330,7 +330,7 @@ export default function AddProductScreen() {
       <View className="flex-row items-center border-b border-[#F2F3F7] bg-white px-4 py-3">
         <Pressable
           className="-ml-2 h-10 w-10 items-center justify-center"
-          onPress={() => router.back()}
+          onPress={() => router.replace("/admin/products" as Href)}
         >
           <Feather name="arrow-left" size={20} color="#006397" />
         </Pressable>

@@ -31,21 +31,29 @@ export function useCheckout(token: string) {
 
         setPreview(response.data);
 
-        if (response.data.addresses.length && !selectedAddressId) {
-          const defaultAddress = response.data.addresses.find((item) => item.isDefault);
-          setSelectedAddressId(defaultAddress?.id ?? response.data.addresses[0]!.id);
-        }
+        setSelectedAddressId((prev) => {
+          if (prev !== null && prev !== undefined) return prev;
+          if (response.data.addresses.length) {
+            const defaultAddress = response.data.addresses.find((item) => item.isDefault);
+            return defaultAddress?.id ?? response.data.addresses[0]!.id;
+          }
+          return null;
+        });
 
-        if (response.data.paymentMethods.length && !selectedPaymentMethodId) {
-          setSelectedPaymentMethodId(response.data.paymentMethods[0]!.id);
-        }
+        setSelectedPaymentMethodId((prev) => {
+          if (prev !== null && prev !== undefined) return prev;
+          if (response.data.paymentMethods.length) {
+            return response.data.paymentMethods[0]!.id;
+          }
+          return null;
+        });
       } catch (err: any) {
         setError(err.message ?? "Unable to load checkout information.");
       } finally {
         setLoading(false);
       }
     },
-    [selectedAddressId, selectedPaymentMethodId, token],
+    [token],
   );
 
   useEffect(() => {

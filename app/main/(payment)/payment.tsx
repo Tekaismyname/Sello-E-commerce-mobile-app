@@ -43,6 +43,7 @@ export default function PaymentScreen() {
   const isOnlinePayment = paymentType !== "cod";
   const isFocused = useIsFocused();
   const redirectedRef = useRef(false);
+  const autoOpenedRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState(
     paymentType === "paypal" ? "Đang chờ thanh toán qua PayPal" : "Dang cho xac nhan tu QR"
   );
@@ -74,7 +75,19 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     redirectedRef.current = false;
+    autoOpenedRef.current = false;
   }, [paymentId]);
+
+  // Tự động mở trình duyệt thanh toán PayPal khi vừa vào màn hình
+  useEffect(() => {
+    if (paymentType === "paypal" && paymentUrl && isFocused && !autoOpenedRef.current) {
+      autoOpenedRef.current = true;
+      const timer = setTimeout(() => {
+        handlePaypalCheckout();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentUrl, paymentType, isFocused]);
 
   // Status polling for both standard online QR and PayPal (as backup/fallback)
   useEffect(() => {
@@ -108,9 +121,15 @@ export default function PaymentScreen() {
 
         if (nextStatus === "success" || nextStatus === "paid") {
           redirectedRef.current = true;
+          try {
+            WebBrowser.dismissBrowser();
+          } catch (e) {}
           router.replace((`/main/payment-success?${nextParams.toString()}` as unknown) as Href);
         } else if (nextStatus === "failed" || nextStatus === "expired") {
           redirectedRef.current = true;
+          try {
+            WebBrowser.dismissBrowser();
+          } catch (e) {}
           router.replace(
             (`/main/payment-failed?${nextParams.toString()}&reason=${encodeURIComponent(
               response.data.failReason ?? nextMessage,
@@ -174,7 +193,15 @@ export default function PaymentScreen() {
   };
 
   const handlePaypalCheckout = async () => {
-    if (!paymentUrl || isProcessingPaypal) return;
+    if (!paymentUrl) {
+      Alert.alert(
+        "Lỗi thanh toán",
+        "Không tìm thấy URL thanh toán PayPal. Vui lòng thoát ra và tạo lại đơn hàng hoặc thử lại sau."
+      );
+      return;
+    }
+
+    if (isProcessingPaypal) return;
 
     if (isWeb) {
       try {
@@ -210,42 +237,13 @@ export default function PaymentScreen() {
       setIsProcessingPaypal(true);
       setStatusMessage("Đang chuyển hướng sang PayPal...");
 
-      const result = await WebBrowser.openAuthSessionAsync(
-        paymentUrl,
-        "selloecommerce://checkout/paypal/success"
-      );
+      // Sử dụng openBrowserAsync để mở in-app browser ổn định nhất trên cả Expo Go & Standalone
+      // Sau khi thanh toán thành công, backend sẽ tự động capture và cập nhật database.
+      // Tiếp theo, vòng lặp checkStatus (polling) ở phía trên sẽ nhận thấy trạng thái success và chuyển màn hình.
+      await WebBrowser.openBrowserAsync(paymentUrl);
 
-      if (result.type === "success" && result.url) {
-        const paypalOrderId = getQueryParam(result.url, "token");
-
-        if (paypalOrderId) {
-          setStatusMessage("Đang xác nhận với PayPal...");
-          
-          const response = await orderService.capturePaypalOrder(
-            userToken || "",
-            paymentId,
-            paypalOrderId
-          );
-
-          if (response.status === "COMPLETED") {
-            redirectedRef.current = true;
-            router.replace((`/main/payment-success?${nextParams.toString()}` as unknown) as Href);
-          } else {
-            redirectedRef.current = true;
-            router.replace(
-              (`/main/payment-failed?${nextParams.toString()}&reason=${encodeURIComponent(
-                response.message || "Thanh toán PayPal không thành công."
-              )}` as unknown) as Href
-            );
-          }
-        } else {
-          setIsProcessingPaypal(false);
-          Alert.alert("Lỗi", "Không tìm thấy mã đơn hàng PayPal.");
-        }
-      } else {
-        setIsProcessingPaypal(false);
-        setStatusMessage("Đang chờ thanh toán qua PayPal");
-      }
+      setIsProcessingPaypal(false);
+      setStatusMessage("Đang chờ thanh toán qua PayPal...");
     } catch (err: any) {
       setIsProcessingPaypal(false);
       setStatusMessage("Thanh toán thất bại");
@@ -369,7 +367,7 @@ export default function PaymentScreen() {
               </Text>
 
               {!!paymentUrl && (
-                <Pressable className="mt-4 h-[44px] flex-row items-center justify-center rounded-[12px] bg-[#EAF5FC] px-4" onPress={() => Linking.openURL(paymentUrl)}>
+                <Pressable className="mt-4 h-[44px] flex-row items-center justify-center rounded-[12px] bg-[#EAF5FC] px-4" onPress={() => WebBrowser.openBrowserAsync(paymentUrl)}>
                   <Feather name="external-link" size={16} color="#0F6CBD" />
                   <Text className="ml-2 text-[13px] font-extrabold text-[#0F6CBD]">Mo trang mock bank</Text>
                 </Pressable>

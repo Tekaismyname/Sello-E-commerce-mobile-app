@@ -23,8 +23,15 @@ import {
   Text,
   TextInput,
   View,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function CheckoutScreen() {
   const { token } = useAuth();
@@ -161,7 +168,10 @@ export default function CheckoutScreen() {
 
             <CheckoutSelectedAddress
               address={selectedAddress}
-              onChangePress={() => setShowAddressOptions((prev) => !prev)}
+              onChangePress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setShowAddressOptions((prev) => !prev);
+              }}
             />
 
             {showAddressOptions && (
@@ -188,6 +198,7 @@ export default function CheckoutScreen() {
                   addresses={preview?.addresses ?? []}
                   selectedAddressId={selectedAddressId}
                   onSelectAddress={(addressId) => {
+                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                     setSelectedAddressId(addressId);
                     setShowAddressOptions(false);
                   }}
@@ -206,7 +217,10 @@ export default function CheckoutScreen() {
             <View className="mt-3">
               <CheckoutVoucherRow
                 appliedCode={preview?.voucher?.code}
-                onPress={() => setShowVoucherInput((prev) => !prev)}
+                onPress={() => {
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                  setShowVoucherInput((prev) => !prev);
+                }}
               />
             </View>
 
@@ -236,7 +250,10 @@ export default function CheckoutScreen() {
                 <CheckoutPaymentSelector
                   paymentMethods={preview?.paymentMethods ?? []}
                   selectedPaymentMethodId={selectedPaymentMethodId}
-                  onSelectPaymentMethod={setSelectedPaymentMethodId}
+                  onSelectPaymentMethod={(id) => {
+                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                    setSelectedPaymentMethodId(id);
+                  }}
                 />
               </View>
             </View>

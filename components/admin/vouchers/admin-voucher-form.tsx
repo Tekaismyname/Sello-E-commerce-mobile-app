@@ -310,12 +310,32 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
               <Pressable
                 key={item}
                 onPress={() => setVoucherType(item)}
-                className={`flex-1 flex-row h-9 items-center justify-center rounded-[10px] gap-1 ${
-                  isSelected ? "bg-white shadow-sm" : "bg-transparent"
-                }`}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  height: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 10,
+                  gap: 4,
+                  backgroundColor: isSelected ? "#ffffff" : "transparent",
+                  ...(isSelected ? {
+                    shadowColor: "#000000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  } : {}),
+                }}
               >
                 <Feather name={iconName} size={13} color={isSelected ? "#006397" : "#6B7280"} />
-                <Text className={`text-[12px] font-bold ${isSelected ? "text-[#006397]" : "text-[#6B7280]"}`}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: isSelected ? "#006397" : "#6B7280",
+                  }}
+                >
                   {voucherTypeLabel[item]}
                 </Text>
               </Pressable>
@@ -334,23 +354,44 @@ export function AdminVoucherForm({ initialValue, loading, onSubmit }: Props) {
                   setDiscountType(item);
                   setDiscountValue("0");
                 }}
-                className={`flex-1 flex-row h-9 items-center justify-center rounded-[10px] gap-1 ${
-                  isSelected ? "bg-white shadow-sm" : "bg-transparent"
-                }`}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  height: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 10,
+                  gap: 4,
+                  backgroundColor: isSelected ? "#ffffff" : "transparent",
+                  ...(isSelected ? {
+                    shadowColor: "#000000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  } : {}),
+                }}
               >
                 {item === "fixed" ? (
                   <Feather name="dollar-sign" size={13} color={isSelected ? "#006397" : "#6B7280"} />
                 ) : (
                   <Text 
-                    className="text-[13px] font-extrabold mr-0.5"
-                    style={{ color: isSelected ? "#006397" : "#6B7280" }}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "800",
+                      marginRight: 2,
+                      color: isSelected ? "#006397" : "#6B7280",
+                    }}
                   >
                     %
                   </Text>
                 )}
                 <Text 
-                  className="text-[12px] font-bold"
-                  style={{ color: isSelected ? "#006397" : "#6B7280" }}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: isSelected ? "#006397" : "#6B7280",
+                  }}
                 >
                   {discountTypeLabel[item]}
                 </Text>

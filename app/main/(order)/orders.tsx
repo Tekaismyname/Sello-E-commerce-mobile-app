@@ -9,8 +9,12 @@ import { orderService, cartService } from "@/services/customer.service";
 import { Order } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
-import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, View, LayoutAnimation, Platform, UIManager } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { GuestPlaceholder } from "@/components/ui";
 import { useSettings } from "@/contexts/settings-context";
 
@@ -19,6 +23,11 @@ export default function OrdersScreen() {
   const { data: homeData } = useHomeData();
   const { filteredOrders, filter, loading, error, setFilter, fetchOrders } = useOrdersView(token);
   const { t } = useSettings();
+
+  const handleSetFilter = (newFilter: any) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setFilter(newFilter);
+  };
 
   const openOrderDetail = (order: Order) => {
     router.push((`/main/order-detail?orderId=${order.id}` as unknown) as Href);
@@ -45,6 +54,7 @@ export default function OrdersScreen() {
 
             try {
               await orderService.cancelOrder(token, order.id);
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
               await fetchOrders();
             } catch (err: any) {
               Alert.alert(t("error", "Error"), err.message ?? t("cannot_cancel_order", "Cannot cancel order."));
@@ -111,7 +121,7 @@ export default function OrdersScreen() {
           />
         ) : (
           <>
-            <OrderFilterTabs value={filter} onChange={setFilter} />
+            <OrderFilterTabs value={filter} onChange={handleSetFilter} />
 
             {loading && (
               <View className="mt-10 items-center">

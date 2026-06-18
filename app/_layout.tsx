@@ -8,8 +8,13 @@ import {
 import { Stack, router, Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
-import { Alert } from "react-native";
+import { Alert, LogBox } from "react-native";
 import Constants, { ExecutionEnvironment } from "expo-constants";
+
+LogBox.ignoreLogs([
+  "Native Video module not found, fallback enabled.",
+  "setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.",
+]);
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
@@ -222,8 +227,13 @@ function RootLayoutInner() {
             }
           }
         }
-      } catch (err) {
-        console.warn("Error polling notifications:", err);
+      } catch (err: any) {
+        const errMsg = err?.message ?? "";
+        if (errMsg.includes("Access token is invalid")) {
+          console.log("Notification polling: Access token is invalid (session expired).");
+        } else {
+          console.warn("Error polling notifications:", err);
+        }
       }
     }
 
