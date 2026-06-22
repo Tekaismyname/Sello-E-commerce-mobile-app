@@ -73,7 +73,7 @@ export default function AdminSystemScreen() {
     }
 
     if (!canReadSystem) {
-      setError("You don't have permission to view system data.");
+      setError("You do not have permission to view system data.");
       setLoading(false);
       return;
     }
@@ -432,7 +432,7 @@ export default function AdminSystemScreen() {
                 </Text>
               </Pressable>
             ) : (
-              <Text className="mt-5 text-[12px] text-[#9A6400]">You don't have permission to update system config.</Text>
+              <Text className="mt-5 text-[12px] text-[#9A6400]">You do not have permission to update system config.</Text>
             )}
           </>
         )}

@@ -84,12 +84,12 @@ export default function AdminCategoriesScreen() {
         />
 
         {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">You don't have permission to create categories.</Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to create categories.</Text>
         ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
-            <Text className="text-[14px] font-semibold text-[#B91C1C]">You don't have permission to view categories.</Text>
+            <Text className="text-[14px] font-semibold text-[#B91C1C]">You do not have permission to view categories.</Text>
           </View>
         ) : loading ? (
           <View className="mt-8 items-center">

@@ -51,7 +51,7 @@ export default function AdminReviewsScreen() {
     }
 
     if (!canReadReviews) {
-      setError("You don't have permission to view reviews.");
+      setError("You do not have permission to view reviews.");
       setLoading(false);
       return;
     }

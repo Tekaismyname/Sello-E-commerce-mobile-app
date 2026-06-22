@@ -1,15 +1,20 @@
 import { CustomerOrderCard } from "@/components/main/orders/customer-order-card";
 import { OrderFilterTabs } from "@/components/main/orders/order-filter-tabs";
+import { OrderReasonPicker } from "@/components/main/orders/order-reason-picker";
 import { RecommendedProducts } from "@/components/main/orders/recommended-products";
 import { SelloHeader } from "@/components/main/sello-header";
 import { useAuth } from "@/contexts/auth-context";
 import { useOrdersView } from "@/hooks/customer/use-orders-view";
 import { useHomeData } from "@/hooks/main/use-main-data";
-import { orderService, cartService } from "@/services/customer.service";
+import { orderService } from "@/services/customer.service";
 import { Order } from "@/types/customer";
+import { buildOrderPaymentHref } from "@/utils/order-payment";
+import { CANCEL_REASON_OPTIONS } from "@/utils/order-reasons";
+import { prepareOrderItemsForCheckout } from "@/utils/order-reorder";
 import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
-import { ActivityIndicator, Alert, ScrollView, Text, View, LayoutAnimation, Platform, UIManager } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View, LayoutAnimation, Platform, UIManager } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -24,6 +29,11 @@ export default function OrdersScreen() {
   const { filteredOrders, filter, loading, error, setFilter, fetchOrders } = useOrdersView(token);
   const { t } = useSettings();
 
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const [cancelReasonCode, setCancelReasonCode] = useState<string | null>(null);
+  const [cancelNote, setCancelNote] = useState("");
+  const [submittingCancel, setSubmittingCancel] = useState(false);
+
   const handleSetFilter = (newFilter: any) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setFilter(newFilter);
@@ -37,32 +47,59 @@ export default function OrdersScreen() {
     router.push((`/main/order-tracking?orderId=${order.id}` as unknown) as Href);
   };
 
-  const handleCancel = (order: Order) => {
-    Alert.alert(
-      t("order_cancellation", "Cancel Order"),
-      t("cancel_order_confirm_id", "Are you sure you want to cancel order #{id}?").replace("{id}", String(order.id)),
-      [
-        { text: t("no_cancel", "No"), style: "cancel" },
-        {
-          text: t("yes_cancel", "Cancel Order"),
-          style: "destructive",
-          onPress: async () => {
-            if (!token) {
-              Alert.alert(t("error", "Error"), t("session_expired", "Session has expired."));
-              return;
-            }
+  const openContinuePayment = (order: Order) => {
+    router.push(buildOrderPaymentHref(order));
+  };
 
-            try {
-              await orderService.cancelOrder(token, order.id);
-              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-              await fetchOrders();
-            } catch (err: any) {
-              Alert.alert(t("error", "Error"), err.message ?? t("cannot_cancel_order", "Cannot cancel order."));
-            }
-          },
-        },
-      ]
-    );
+  const openWriteReview = (order: Order) => {
+    const item = order.items[0];
+
+    if (!item) {
+      openOrderDetail(order);
+      return;
+    }
+
+    router.push({
+      pathname: "/product/write-review",
+      params: {
+        productId: String(item.productId),
+        productName: item.productName,
+        productImage: item.productImage ?? "",
+      },
+    });
+  };
+
+  const handleCancel = (order: Order) => {
+    setCancelTarget(order);
+    setCancelReasonCode(null);
+    setCancelNote("");
+  };
+
+  const closeCancelModal = () => {
+    setCancelTarget(null);
+    setCancelReasonCode(null);
+    setCancelNote("");
+  };
+
+  const handleSubmitCancel = async () => {
+    if (!cancelTarget) return;
+
+    if (!token) {
+      Alert.alert(t("error", "Error"), t("session_expired", "Session has expired."));
+      return;
+    }
+
+    try {
+      setSubmittingCancel(true);
+      await orderService.cancelOrder(token, cancelTarget.id, cancelReasonCode ?? undefined, cancelNote.trim() || undefined);
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      closeCancelModal();
+      await fetchOrders();
+    } catch (err: any) {
+      Alert.alert(t("error", "Error"), err.message ?? t("cannot_cancel_order", "Cannot cancel order."));
+    } finally {
+      setSubmittingCancel(false);
+    }
   };
 
   const handleBuyAgain = async (order: Order) => {
@@ -71,37 +108,12 @@ export default function OrdersScreen() {
       return;
     }
 
-    Alert.alert(
-      t("reorder_title", "Reorder"),
-      t("reorder_confirm", "Do you want to add all items from this order to your cart?"),
-      [
-        { text: t("cancel", "Cancel"), style: "cancel" },
-        {
-          text: t("agree", "Reorder"),
-          onPress: async () => {
-            try {
-              for (const item of order.items) {
-                await cartService.addCartItem(token, {
-                  productId: item.productId,
-                  variantId: item.variantId ?? null,
-                  quantity: item.quantity || 1,
-                });
-              }
-              Alert.alert(
-                t("success", "Success"),
-                t("added_to_cart_go", "All products added to cart. Go to cart?"),
-                [
-                  { text: t("later", "Later") },
-                  { text: t("cart", "Cart"), onPress: () => router.push("/main/cart" as Href) }
-                ]
-              );
-            } catch (err: any) {
-              Alert.alert(t("error", "Error"), err.message ?? t("cart_add_error", "An error occurred while adding items to the cart."));
-            }
-          }
-        }
-      ]
-    );
+    try {
+      await prepareOrderItemsForCheckout(token, order);
+      router.push("/main/checkout" as Href);
+    } catch (err: any) {
+      Alert.alert(t("error", "Error"), err.message ?? t("cart_add_error", "An error occurred while preparing checkout."));
+    }
   };
 
   return (
@@ -145,6 +157,8 @@ export default function OrdersScreen() {
                     onOpenTracking={openOrderTracking}
                     onCancel={handleCancel}
                     onBuyAgain={handleBuyAgain}
+                    onWriteReview={openWriteReview}
+                    onContinuePayment={openContinuePayment}
                   />
                 ))}
 
@@ -161,6 +175,66 @@ export default function OrdersScreen() {
 
         <RecommendedProducts products={homeData?.suggestedProducts ?? []} />
       </ScrollView>
+
+      <Modal
+        visible={!!cancelTarget}
+        transparent
+        animationType="fade"
+        onRequestClose={closeCancelModal}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50 px-5">
+          <View className="w-full rounded-[24px] bg-white p-5 shadow-lg">
+            <Text className="text-center text-[18px] font-extrabold text-[#1F2934]">
+              {t("order_cancellation", "Cancel Order")}
+            </Text>
+            <Text className="mt-2 text-center text-[13px] text-[#4B5563]">
+              {t("cancel_reason_prompt", "Let us know why so we can improve. Order #{id}").replace(
+                "{id}",
+                String(cancelTarget?.id ?? ""),
+              )}
+            </Text>
+
+            <View className="mt-4">
+              <OrderReasonPicker
+                options={CANCEL_REASON_OPTIONS}
+                selectedCode={cancelReasonCode}
+                onSelect={setCancelReasonCode}
+                translate={t}
+              />
+            </View>
+
+            <TextInput
+              className="mt-4 min-h-[70px] rounded-[14px] bg-[#F3F5FA] p-3 text-[14px] text-[#1F2934]"
+              multiline
+              placeholder={t("cancel_reason_note_placeholder", "Additional details (optional)")}
+              placeholderTextColor="#9CA3AF"
+              value={cancelNote}
+              onChangeText={setCancelNote}
+              textAlignVertical="top"
+            />
+
+            <View className="mt-4 flex-row gap-3">
+              <Pressable
+                className="flex-1 h-11 items-center justify-center rounded-[12px] bg-[#F3F5FA] active:opacity-85"
+                onPress={closeCancelModal}
+                disabled={submittingCancel}
+              >
+                <Text className="text-[14px] font-bold text-[#4B5563]">{t("no_cancel", "No")}</Text>
+              </Pressable>
+
+              <Pressable
+                className="flex-1 h-11 items-center justify-center rounded-[12px] bg-[#DC2626] active:opacity-85 disabled:opacity-50"
+                onPress={handleSubmitCancel}
+                disabled={submittingCancel || !cancelReasonCode}
+              >
+                <Text className="text-[14px] font-bold text-white">
+                  {submittingCancel ? t("submitting", "Submitting...") : t("yes_cancel", "Cancel Order")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

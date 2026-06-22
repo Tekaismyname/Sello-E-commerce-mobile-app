@@ -9,6 +9,7 @@ import { Stack, router, Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { Alert, LogBox } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 
 LogBox.ignoreLogs([
@@ -259,11 +260,13 @@ function RootLayoutInner() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        <RootLayoutInner />
-      </SettingsProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <SettingsProvider>
+          <RootLayoutInner />
+        </SettingsProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
 

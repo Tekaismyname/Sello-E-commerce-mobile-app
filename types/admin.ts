@@ -172,6 +172,7 @@ export interface AdminOrderStatusHistory {
   status: string;
   changedAt?: string;
   description?: string;
+  reasonCode?: string;
 }
 
 export interface AdminOrder {
@@ -210,6 +211,9 @@ export interface AdminReportOverview {
   users: number;
   orders: number;
   revenueByPeriod: { period: string; revenue: number }[];
+  revenueByDay: { period: string; revenue: number }[];
+  todayRevenue: number;
+  yesterdayRevenue: number;
   topSellingProducts: { productId: number; name: string; totalSold: number }[];
   orderStatusDistribution: { status: string; total: number }[];
 }

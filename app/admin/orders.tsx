@@ -8,6 +8,7 @@ import { usePermissions } from "@/hooks/auth/use-permissions";
 import { useAdminOrdersView } from "@/hooks/admin/use-admin-orders-view";
 import { adminService } from "@/services/admin.service";
 import { AdminOrder, AdminOrderStatus } from "@/types/admin";
+import { getReasonLabel } from "@/utils/order-reasons";
 import { Image as ExpoImage } from "expo-image";
 import { useEffect, useState } from "react";
 import {
@@ -177,7 +178,7 @@ export default function AdminOrdersScreen() {
           disableCreate
         />
         {!canExportReport ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">You don't have permission to export reports.</Text>
+          <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to export reports.</Text>
         ) : null}
 
         {loading ? (
@@ -364,6 +365,13 @@ export default function AdminOrdersScreen() {
                               {history.changedAt ? new Date(history.changedAt).toLocaleString("en-US") : "N/A"}
                             </Text>
                           </View>
+                          {!!history.reasonCode && (
+                            <View className="mt-1 self-start rounded-full bg-[#EAF5FC] px-2 py-0.5">
+                              <Text className="text-[10px] font-bold text-[#0369A1]">
+                                {getReasonLabel(history.reasonCode) ?? history.reasonCode}
+                              </Text>
+                            </View>
+                          )}
                           {!!history.description && (
                             <Text className="mt-1 text-[12px] leading-[17px] text-[#64748B]">
                               {history.description}
@@ -382,6 +390,17 @@ export default function AdminOrdersScreen() {
                       {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
                         <View className="mt-2 rounded-[8px] bg-white p-2.5 border border-[#FCA5A5]/30">
                           <Text className="text-[12px] font-bold text-[#7F1D1D]">Customer reason:</Text>
+                          {!!getReasonLabel(
+                            selectedOrder.statusHistory.find((h) => h.status === "return_requested")?.reasonCode,
+                          ) && (
+                            <View className="mt-1 self-start rounded-full bg-[#FEE2E2] px-2 py-0.5">
+                              <Text className="text-[10px] font-bold text-[#991B1B]">
+                                {getReasonLabel(
+                                  selectedOrder.statusHistory.find((h) => h.status === "return_requested")?.reasonCode,
+                                )}
+                              </Text>
+                            </View>
+                          )}
                           <Text className="text-[12px] text-[#B91C1C] mt-1 leading-[18px]">
                             {selectedOrder.statusHistory.find((h) => h.status === "return_requested")?.description || "No detailed reason"}
                           </Text>
@@ -459,7 +478,7 @@ export default function AdminOrdersScreen() {
                     </View>
                   )
                 ) : (
-                  <Text className="mt-4 text-[12px] text-[#9A6400]">You don't have permission to update order status.</Text>
+                  <Text className="mt-4 text-[12px] text-[#9A6400]">You do not have permission to update order status.</Text>
                 )}
               </ScrollView>
             ) : null}

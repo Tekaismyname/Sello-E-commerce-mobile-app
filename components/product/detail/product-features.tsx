@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
 import { Image, Text, View } from "react-native";
 import { ProductDetail } from "@/types/customer";
 import { useSettings } from "@/contexts/settings-context";
@@ -6,6 +7,8 @@ import { useSettings } from "@/contexts/settings-context";
 type ProductFeaturesProps = {
   product: ProductDetail;
 };
+
+type FeatherIconName = ComponentProps<typeof Feather>["name"];
 
 export function ProductFeatures({ product }: ProductFeaturesProps) {
   const { language, t } = useSettings();
@@ -23,21 +26,21 @@ export function ProductFeatures({ product }: ProductFeaturesProps) {
   let bullet1Text = isVi ? "Gia công sắc sảo" : "Meticulous craftsmanship";
   let bullet2Text = isVi ? "Độ bền bỉ tối ưu" : "Optimum durability";
   
-  let feat1Icon = "shield" as const;
+  let feat1Icon: FeatherIconName = "shield";
   let feat1Color = "#006397";
   let feat1Title = isVi ? "Chất Lượng Đạt Chuẩn" : "Certified Quality";
   let feat1Desc = isVi 
     ? "Được kiểm định nghiêm ngặt trước khi xuất xưởng, đảm bảo độ tin cậy tuyệt đối."
     : "Strictly tested before leaving the factory, ensuring absolute reliability.";
 
-  let feat2Icon = "check-circle" as const;
+  let feat2Icon: FeatherIconName = "check-circle";
   let feat2Color = "#006D37";
   let feat2Title = isVi ? "Thiết Thực, Tiện Dụng" : "Practical & Convenient";
   let feat2Desc = isVi 
     ? "Tối ưu hóa công năng và mang lại sự thuận tiện nhất trong đời sống hàng ngày."
     : "Optimizes functions and provides the ultimate convenience in daily life.";
 
-  let feat3Icon = "award" as const;
+  let feat3Icon: FeatherIconName = "award";
   let feat3Color = "#873DA6";
   let feat3Title = isVi ? "Chính Hãng Uy Tín" : "Genuine & Reputable";
   let feat3Desc = isVi 

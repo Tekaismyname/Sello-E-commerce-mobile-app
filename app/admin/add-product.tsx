@@ -90,7 +90,7 @@ export default function AddProductScreen() {
     if (!hasWritePermission) {
       Alert.alert(
         "No Permission",
-        "You don't have permission to modify this product.",
+        "You do not have permission to modify this product.",
       );
       router.back();
     }
@@ -202,7 +202,7 @@ export default function AddProductScreen() {
     }
 
     if (!hasWritePermission) {
-      Alert.alert("No Permission", "You don't have permission to save products.");
+      Alert.alert("No Permission", "You do not have permission to save products.");
       return;
     }
 

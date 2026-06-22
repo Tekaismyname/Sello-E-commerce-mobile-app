@@ -221,9 +221,15 @@ const mapOrder = (order: Record<string, unknown>): AdminOrder => ({
   statusHistory: ensureArray<Record<string, unknown>>(order.statusHistory).map((history) => ({
     status: String(history.status ?? "pending"),
     changedAt:
-      typeof history.changedAt === "string" ? history.changedAt : undefined,
+      typeof history.changedAt === "string"
+        ? history.changedAt
+        : typeof history.createdAt === "string"
+          ? history.createdAt
+          : undefined,
     description:
       typeof history.description === "string" ? history.description : undefined,
+    reasonCode:
+      typeof history.reasonCode === "string" ? history.reasonCode : undefined,
   })),
 });
 
@@ -927,6 +933,12 @@ export const adminService = {
           period: String(item.period ?? "N/A"),
           revenue: toNumber(item.revenue),
         })),
+        revenueByDay: ensureArray<Record<string, unknown>>(data.revenueByDay).map((item) => ({
+          period: String(item.period ?? "N/A"),
+          revenue: toNumber(item.revenue),
+        })),
+        todayRevenue: toNumber(data.todayRevenue),
+        yesterdayRevenue: toNumber(data.yesterdayRevenue),
         topSellingProducts: ensureArray<Record<string, unknown>>(data.topSellingProducts).map(
           (item) => ({
             productId: toNumber(item.productId),

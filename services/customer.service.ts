@@ -304,6 +304,7 @@ const mapOrder = (raw: Record<string, unknown>): Order => ({
     id: toNumber(history.id),
     status: String(history.status ?? "pending"),
     description: typeof history.description === "string" ? history.description : null,
+    reasonCode: typeof history.reasonCode === "string" ? history.reasonCode : null,
     updatedBy: history.updatedBy ? toNumber(history.updatedBy) : null,
     createdAt: toDateString(history.createdAt),
     timestamp: toDateString(history.createdAt),
@@ -715,11 +716,14 @@ export const orderService = {
     };
   },
 
-  async cancelOrder(token: string, orderId: number) {
+  async cancelOrder(token: string, orderId: number, reasonCode?: string, note?: string) {
     const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.orders.cancel(orderId),
       token,
-      { method: "POST" },
+      {
+        method: "POST",
+        body: JSON.stringify({ reasonCode, note }),
+      },
     );
 
     return {
@@ -728,13 +732,13 @@ export const orderService = {
     };
   },
 
-  async requestOrderReturn(token: string, orderId: number, reason: string) {
+  async requestOrderReturn(token: string, orderId: number, reasonCode: string, note?: string) {
     const response = await requestAuth<ApiResponse<unknown>>(
       API_ENDPOINTS.orders.requestReturn(orderId),
       token,
       {
         method: "POST",
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reasonCode, note }),
       },
     );
 

@@ -1,7 +1,9 @@
 import { Order } from "@/types/customer";
+import { canContinueOrderPayment } from "@/utils/order-payment";
 import { Feather } from "@expo/vector-icons";
 import { Image, Pressable, Text, View } from "react-native";
 import { useSettings } from "@/contexts/settings-context";
+import Animated, { FadeInUp, Layout } from "react-native-reanimated";
 
 type CustomerOrderCardProps = {
   order: Order;
@@ -9,6 +11,8 @@ type CustomerOrderCardProps = {
   onOpenTracking: (order: Order) => void;
   onCancel: (order: Order) => void;
   onBuyAgain: (order: Order) => void;
+  onWriteReview?: (order: Order) => void;
+  onContinuePayment?: (order: Order) => void;
 };
 
 const statusConfig = {
@@ -49,6 +53,8 @@ export function CustomerOrderCard({
   onOpenTracking,
   onCancel,
   onBuyAgain,
+  onWriteReview,
+  onContinuePayment,
 }: CustomerOrderCardProps) {
   const { t } = useSettings();
   const statusLabel = getStatusLabel(order.status, t);
@@ -65,8 +71,22 @@ export function CustomerOrderCard({
   const orderLabel = order.orderCode?.trim() ? order.orderCode : `${t("my_orders", "Order")} #${order.id}`;
   const itemCount = normalizedItems.reduce((total, current) => total + current.quantity, 0);
   const hasMultipleItems = normalizedItems.length > 1;
+  const canContinuePayment = canContinueOrderPayment(order);
 
   const renderActions = () => {
+    if (canContinuePayment && onContinuePayment) {
+      return (
+        <View className="flex-row gap-2">
+          <Pressable className="rounded-[12px] bg-[#0F6CBD] px-3.5 py-2.5" onPress={() => onContinuePayment(order)}>
+            <Text className="text-[13px] font-bold text-white">{t("pay_now", "Pay now")}</Text>
+          </Pressable>
+          <Pressable className="rounded-[12px] bg-[#FDECEC] px-3.5 py-2.5" onPress={() => onCancel(order)}>
+            <Text className="text-[13px] font-bold text-[#BA1A1A]">{t("yes_cancel", "Cancel Order")}</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
     if (order.status === "pending" || order.status === "confirmed") {
       return (
         <Pressable className="rounded-[12px] bg-[#FDECEC] px-4 py-2.5" onPress={() => onCancel(order)}>
@@ -94,7 +114,10 @@ export function CustomerOrderCard({
     if (order.status === "delivered") {
       return (
         <View className="flex-row gap-2">
-          <Pressable className="rounded-[12px] bg-[#E8F1FB] px-3.5 py-2.5" onPress={() => onOpenDetail(order)}>
+          <Pressable
+            className="rounded-[12px] bg-[#E8F1FB] px-3.5 py-2.5"
+            onPress={() => (onWriteReview ? onWriteReview(order) : onOpenDetail(order))}
+          >
             <Text className="text-[13px] font-bold text-[#0369A1]">{t("write_review", "Write Review")}</Text>
           </Pressable>
           <Pressable className="rounded-[12px] bg-[#0F6CBD] px-3.5 py-2.5" onPress={() => onBuyAgain(order)}>
@@ -112,7 +135,11 @@ export function CustomerOrderCard({
   };
 
   return (
-    <View className="rounded-[18px] bg-white p-4">
+    <Animated.View
+      entering={FadeInUp.duration(360).springify()}
+      layout={Layout.springify()}
+      className="rounded-[18px] bg-white p-4"
+    >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <Feather name={status.icon} size={14} color={status.color} />
@@ -187,6 +214,6 @@ export function CustomerOrderCard({
         </Pressable>
         {renderActions()}
       </View>
-    </View>
+    </Animated.View>
   );
 }

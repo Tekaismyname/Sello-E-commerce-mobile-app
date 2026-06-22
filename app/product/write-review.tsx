@@ -8,7 +8,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { reviewService } from "@/services/customer.service";
 import { triggerLocalNotification } from "@/utils/local-notification";
-import { router, useLocalSearchParams } from "expo-router";
+import { Href, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,6 +35,15 @@ export default function WriteReviewScreen() {
   const productImage =
     params.productImage ??
     "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=200&q=80";
+
+  const closeReview = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/main/orders" as Href);
+  };
 
   const submitReview = async () => {
     if (!productId) {
@@ -75,7 +84,7 @@ export default function WriteReviewScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
-      <WriteReviewHeader onSubmit={submitReview} />
+      <WriteReviewHeader onClose={closeReview} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}

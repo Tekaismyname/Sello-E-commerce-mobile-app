@@ -2,10 +2,20 @@ import { orderService } from "@/services/customer.service";
 import { Feather } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { Href, router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Text, View, Alert, Platform, useWindowDimensions } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "@/contexts/auth-context";
 import * as WebBrowser from "expo-web-browser";
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(value)}d`;
@@ -13,16 +23,11 @@ const formatPrice = (value: number) => `${new Intl.NumberFormat("vi-VN").format(
 const buildFallbackQr = (payload: string) =>
   `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(payload)}`;
 
-const getQueryParam = (url: string, paramName: string): string | null => {
-  const match = url.match(new RegExp(`[?&]${paramName}=([^&#]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-};
-
 export default function PaymentScreen() {
-  const { token: userToken } = useAuth();
   const { width } = useWindowDimensions();
   const isSmallScreen = width < 480;
   const isWeb = Platform.OS === "web";
+  const isFocused = useIsFocused();
 
   const params = useLocalSearchParams<{
     orderId?: string;
@@ -37,20 +42,19 @@ export default function PaymentScreen() {
   const orderId = Number(params.orderId ?? 0);
   const paymentId = Number(params.paymentId ?? 0);
   const amount = Number(params.amount ?? 0);
-  const method = params.method ?? "Thanh toan";
+  const method = params.method ?? "Payment";
   const paymentType = params.paymentType ?? "online";
   const paymentUrl = params.paymentUrl ?? "";
   const isOnlinePayment = paymentType !== "cod";
-  const isFocused = useIsFocused();
   const redirectedRef = useRef(false);
   const autoOpenedRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState(
-    paymentType === "paypal" ? "Đang chờ thanh toán qua PayPal" : "Dang cho xac nhan tu QR"
+    paymentType === "paypal" ? "Waiting for PayPal payment" : "Waiting for QR confirmation",
   );
   const [isChecking, setIsChecking] = useState(isOnlinePayment && paymentType !== "paypal");
   const [isProcessingPaypal, setIsProcessingPaypal] = useState(false);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
-  const [timeLeft, setTimeLeft] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState("");
 
   const fallbackPayload = JSON.stringify({
     type: "SELLO_MOCK_PAYMENT",
@@ -73,12 +77,62 @@ export default function PaymentScreen() {
     [amount, method, orderId, paymentId, paymentType],
   );
 
+  const goProcessing = () => {
+    router.replace((`/main/payment-processing?${nextParams.toString()}` as unknown) as Href);
+  };
+
+  const handlePaypalCheckout = useCallback(async () => {
+    if (!paymentUrl) {
+      Alert.alert(
+        "Payment error",
+        "PayPal payment URL was not found. Please recreate the order or try again later.",
+      );
+      return;
+    }
+
+    if (isProcessingPaypal) return;
+
+    if (isWeb) {
+      try {
+        setIsProcessingPaypal(true);
+        setStatusMessage("Opening PayPal checkout...");
+        const win = window.open(paymentUrl, "_blank");
+
+        if (win) {
+          setStatusMessage("Waiting for PayPal payment in a new window...");
+        } else {
+          setStatusMessage("Payment popup was blocked. Please allow popups.");
+          Alert.alert("Popup blocked", "Please allow popups or open PayPal checkout directly.", [
+            { text: "Close" },
+            { text: "Open directly", onPress: () => Linking.openURL(paymentUrl) },
+          ]);
+        }
+      } catch (err: any) {
+        Alert.alert("Error", err.message ?? "Unable to open PayPal checkout.");
+      } finally {
+        setIsProcessingPaypal(false);
+      }
+      return;
+    }
+
+    try {
+      setIsProcessingPaypal(true);
+      setStatusMessage("Redirecting to PayPal...");
+      await WebBrowser.openBrowserAsync(paymentUrl);
+      setStatusMessage("Waiting for PayPal payment...");
+    } catch (err: any) {
+      setStatusMessage("Payment failed");
+      Alert.alert("Error", err.message ?? "An error occurred during PayPal payment.");
+    } finally {
+      setIsProcessingPaypal(false);
+    }
+  }, [isProcessingPaypal, isWeb, paymentUrl]);
+
   useEffect(() => {
     redirectedRef.current = false;
     autoOpenedRef.current = false;
   }, [paymentId]);
 
-  // Tự động mở trình duyệt thanh toán PayPal khi vừa vào màn hình
   useEffect(() => {
     if (paymentType === "paypal" && paymentUrl && isFocused && !autoOpenedRef.current) {
       autoOpenedRef.current = true;
@@ -87,9 +141,10 @@ export default function PaymentScreen() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [paymentUrl, paymentType, isFocused]);
 
-  // Status polling for both standard online QR and PayPal (as backup/fallback)
+    return undefined;
+  }, [handlePaypalCheckout, isFocused, paymentType, paymentUrl]);
+
   useEffect(() => {
     if (!isFocused || !isOnlinePayment || !paymentId || redirectedRef.current) return;
 
@@ -101,6 +156,7 @@ export default function PaymentScreen() {
         if (paymentType !== "paypal") {
           setIsChecking(true);
         }
+
         const response = await orderService.getMockPaymentStatus(paymentId);
         if (cancelled) return;
 
@@ -111,25 +167,29 @@ export default function PaymentScreen() {
         const nextStatus = response.data.paymentStatus;
         const nextMessage =
           nextStatus === "success" || nextStatus === "paid"
-            ? (paymentType === "paypal" ? "Đã nhận xác nhận từ PayPal" : "Da nhan xac nhan tu Sello Mock Bank")
+            ? paymentType === "paypal"
+              ? "PayPal confirmation received"
+              : "Sello Mock Bank confirmation received"
             : nextStatus === "failed"
-              ? "Giao dich da bi tu choi"
+              ? "Transaction was declined"
               : nextStatus === "expired"
-                ? "Thanh toán đã hết hạn"
-                : (paymentType === "paypal" ? "Đang chờ thanh toán qua PayPal" : "Dang cho xac nhan tu QR");
+                ? "Payment has expired"
+                : paymentType === "paypal"
+                  ? "Waiting for PayPal payment"
+                  : "Waiting for QR confirmation";
         setStatusMessage(nextMessage);
 
         if (nextStatus === "success" || nextStatus === "paid") {
           redirectedRef.current = true;
           try {
             WebBrowser.dismissBrowser();
-          } catch (e) {}
+          } catch {}
           router.replace((`/main/payment-success?${nextParams.toString()}` as unknown) as Href);
         } else if (nextStatus === "failed" || nextStatus === "expired") {
           redirectedRef.current = true;
           try {
             WebBrowser.dismissBrowser();
-          } catch (e) {}
+          } catch {}
           router.replace(
             (`/main/payment-failed?${nextParams.toString()}&reason=${encodeURIComponent(
               response.data.failReason ?? nextMessage,
@@ -138,7 +198,7 @@ export default function PaymentScreen() {
         }
       } catch {
         if (!cancelled && paymentType !== "paypal") {
-          setStatusMessage("Chua ket noi duoc trang thai thanh toan");
+          setStatusMessage("Unable to connect to payment status");
         }
       } finally {
         if (!cancelled && paymentType !== "paypal") {
@@ -156,7 +216,6 @@ export default function PaymentScreen() {
     };
   }, [isFocused, isOnlinePayment, nextParams, paymentId, paymentType]);
 
-  // Real-time countdown timer update
   useEffect(() => {
     if (!expiresAt || !isOnlinePayment) {
       setTimeLeft("");
@@ -164,8 +223,7 @@ export default function PaymentScreen() {
     }
 
     const updateTimer = () => {
-      const now = Date.now();
-      const diff = expiresAt.getTime() - now;
+      const diff = expiresAt.getTime() - Date.now();
 
       if (diff <= 0) {
         setTimeLeft("00:00");
@@ -175,11 +233,7 @@ export default function PaymentScreen() {
       const totalSeconds = Math.floor(diff / 1000);
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
-      
-      const minutesStr = String(minutes).padStart(2, "0");
-      const secondsStr = String(seconds).padStart(2, "0");
-      
-      setTimeLeft(`${minutesStr}:${secondsStr}`);
+      setTimeLeft(`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
     };
 
     updateTimer();
@@ -187,69 +241,6 @@ export default function PaymentScreen() {
 
     return () => clearInterval(timerId);
   }, [expiresAt, isOnlinePayment]);
-
-  const goProcessing = () => {
-    router.replace((`/main/payment-processing?${nextParams.toString()}` as unknown) as Href);
-  };
-
-  const handlePaypalCheckout = async () => {
-    if (!paymentUrl) {
-      Alert.alert(
-        "Lỗi thanh toán",
-        "Không tìm thấy URL thanh toán PayPal. Vui lòng thoát ra và tạo lại đơn hàng hoặc thử lại sau."
-      );
-      return;
-    }
-
-    if (isProcessingPaypal) return;
-
-    if (isWeb) {
-      try {
-        setIsProcessingPaypal(true);
-        setStatusMessage("Đang mở cổng thanh toán PayPal...");
-        
-        // Mở cổng thanh toán PayPal trong tab/cửa sổ mới trên Web
-        const win = window.open(paymentUrl, "_blank");
-        if (win) {
-          setStatusMessage("Đang chờ thanh toán qua PayPal (cửa sổ mới)...");
-        } else {
-          // Trình duyệt chặn cửa sổ mở thêm
-          setStatusMessage("Cửa sổ thanh toán bị chặn. Vui lòng cấp quyền.");
-          Alert.alert(
-            "Cửa sổ bị chặn",
-            "Trình duyệt của bạn đã chặn cửa sổ thanh toán PayPal. Vui lòng click để mở trực tiếp hoặc cấp quyền mở popup.",
-            [
-              { text: "Đóng" },
-              { text: "Mở trực tiếp", onPress: () => Linking.openURL(paymentUrl) }
-            ]
-          );
-        }
-      } catch (err: any) {
-        Alert.alert("Lỗi", err.message ?? "Không thể mở cổng thanh toán PayPal.");
-      } finally {
-        setIsProcessingPaypal(false);
-      }
-      return;
-    }
-
-    // Native mobile flow
-    try {
-      setIsProcessingPaypal(true);
-      setStatusMessage("Đang chuyển hướng sang PayPal...");
-
-      // Sử dụng openBrowserAsync để mở in-app browser ổn định nhất trên cả Expo Go & Standalone
-      // Sau khi thanh toán thành công, backend sẽ tự động capture và cập nhật database.
-      // Tiếp theo, vòng lặp checkStatus (polling) ở phía trên sẽ nhận thấy trạng thái success và chuyển màn hình.
-      await WebBrowser.openBrowserAsync(paymentUrl);
-
-      setIsProcessingPaypal(false);
-      setStatusMessage("Đang chờ thanh toán qua PayPal...");
-    } catch (err: any) {
-      setIsProcessingPaypal(false);
-      setStatusMessage("Thanh toán thất bại");
-      Alert.alert("Lỗi", err.message ?? "Có lỗi xảy ra trong quá trình thanh toán PayPal.");
-    }
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
@@ -260,14 +251,14 @@ export default function PaymentScreen() {
         >
           <Feather name="arrow-left" size={20} color="#0F4C6B" />
         </Pressable>
-        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Thanh toan</Text>
+        <Text className="text-[20px] font-extrabold text-[#0F4C6B]">Payment</Text>
       </View>
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pb-24 pt-3" showsVerticalScrollIndicator={false}>
         <View className="rounded-[16px] bg-white p-5">
           <View className="flex-row items-center justify-between">
             <View className="flex-1 pr-4">
-              <Text className="text-[13px] font-bold uppercase text-[#64748B]">Ma don hang</Text>
+              <Text className="text-[13px] font-bold uppercase text-[#64748B]">Order ID</Text>
               <Text className="mt-1 text-[20px] font-extrabold text-[#1F2934]">#EC-{orderId || "000000"}</Text>
             </View>
             <View className="rounded-full bg-[#EAF5FC] px-3 py-1">
@@ -276,30 +267,30 @@ export default function PaymentScreen() {
           </View>
 
           <View className="mt-5 rounded-[14px] bg-[#F6F8FC] p-4">
-            <Text className="text-[13px] font-bold text-[#64748B]">Tong thanh toan</Text>
+            <Text className="text-[13px] font-bold text-[#64748B]">Total payment</Text>
             <Text className="mt-1 text-[30px] font-extrabold text-[#0F6CBD]">{formatPrice(amount)}</Text>
-            <Text className="mt-2 text-[14px] text-[#4B5563]">Phuong thuc: {method}</Text>
+            <Text className="mt-2 text-[14px] text-[#4B5563]">Method: {method}</Text>
           </View>
         </View>
 
         <View className="mt-4 rounded-[16px] bg-white p-5">
           {paymentType === "paypal" ? (
             <View className="items-center py-4">
-              <View className="h-12 w-12 items-center justify-center rounded-2xl bg-[#003087]/10 mb-2">
+              <View className="mb-2 h-12 w-12 items-center justify-center rounded-2xl bg-[#003087]/10">
                 <Feather name="credit-card" size={24} color="#003087" />
               </View>
 
               <Text className="text-[20px] font-extrabold text-[#003087]">PayPal Sandbox</Text>
 
               {!!paymentUrl && (
-                <View 
-                  className="mt-4 rounded-[20px] border border-[#E1E7EF] bg-white" 
+                <View
+                  className="mt-4 rounded-[20px] border border-[#E1E7EF] bg-white"
                   style={{ padding: isSmallScreen ? 10 : 16 }}
                 >
-                  <Image 
-                    source={{ uri: buildFallbackQr(paymentUrl) }} 
-                    style={{ height: isSmallScreen ? 160 : 240, width: isSmallScreen ? 160 : 240 }} 
-                    resizeMode="contain" 
+                  <Image
+                    source={{ uri: buildFallbackQr(paymentUrl) }}
+                    style={{ height: isSmallScreen ? 160 : 240, width: isSmallScreen ? 160 : 240 }}
+                    resizeMode="contain"
                   />
                 </View>
               )}
@@ -310,25 +301,26 @@ export default function PaymentScreen() {
               </View>
 
               {timeLeft ? (
-                <View className="mt-3 flex-row items-center bg-[#FEF2F2] border border-[#FEE2E2] px-3 py-1.5 rounded-full">
+                <View className="mt-3 flex-row items-center rounded-full border border-[#FEE2E2] bg-[#FEF2F2] px-3 py-1.5">
                   <Feather name="clock" size={12} color="#EF4444" />
-                  <Text className="ml-1.5 text-[12px] font-bold text-[#EF4444]">Còn lại: {timeLeft}</Text>
+                  <Text className="ml-1.5 text-[12px] font-bold text-[#EF4444]">Time left: {timeLeft}</Text>
                 </View>
               ) : null}
 
-              <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Quét QR để thanh toán</Text>
-              <Text className="mt-2 text-center text-[13px] leading-[19px] text-[#64748B] px-4">
-                Quét mã QR bằng điện thoại khác để thanh toán, hoặc bấm nút dưới đây để thanh toán trực tiếp trên thiết bị này. Giao dịch sẽ tự động xác nhận sau khi hoàn tất.
+              <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Scan QR to pay</Text>
+              <Text className="mt-2 px-4 text-center text-[13px] leading-[19px] text-[#64748B]">
+                Scan the QR code with another device, or use the button below to pay on this device. The transaction
+                will be confirmed automatically after completion.
               </Text>
 
               <Pressable
-                className="mt-6 h-[52px] w-full flex-row items-center justify-center rounded-[12px] bg-[#FFC439] active:bg-[#E5AF30] px-6"
+                className="mt-6 h-[52px] w-full flex-row items-center justify-center rounded-[12px] bg-[#FFC439] px-6 active:bg-[#E5AF30]"
                 onPress={handlePaypalCheckout}
                 disabled={isProcessingPaypal}
               >
                 <Feather name="external-link" size={16} color="#003087" />
                 <Text className="ml-2 text-[15px] font-bold text-[#003087]">
-                  {isProcessingPaypal ? "Đang xử lý..." : "Mở cổng thanh toán PayPal"}
+                  {isProcessingPaypal ? "Processing..." : "Open PayPal checkout"}
                 </Text>
               </Pressable>
             </View>
@@ -338,38 +330,46 @@ export default function PaymentScreen() {
                 <Text className="text-[12px] font-bold text-white">Sello Mock Bank</Text>
               </View>
 
-              <View 
+              <View
                 className="mt-4 rounded-[20px] border border-[#E1E7EF] bg-white"
                 style={{ padding: isSmallScreen ? 10 : 16 }}
               >
-                <Image 
-                  source={{ uri: qrCodeUrl }} 
-                  style={{ height: isSmallScreen ? 160 : 240, width: isSmallScreen ? 160 : 240 }} 
-                  resizeMode="contain" 
+                <Image
+                  source={{ uri: qrCodeUrl }}
+                  style={{ height: isSmallScreen ? 160 : 240, width: isSmallScreen ? 160 : 240 }}
+                  resizeMode="contain"
                 />
               </View>
 
               <View className="mt-4 flex-row items-center rounded-full bg-[#EAF5FC] px-4 py-2">
-                {isChecking ? <ActivityIndicator size="small" color="#0F6CBD" /> : <Feather name="clock" size={14} color="#0F6CBD" />}
+                {isChecking ? (
+                  <ActivityIndicator size="small" color="#0F6CBD" />
+                ) : (
+                  <Feather name="clock" size={14} color="#0F6CBD" />
+                )}
                 <Text className="ml-2 text-[12px] font-bold text-[#0F6CBD]">{statusMessage}</Text>
               </View>
 
               {timeLeft ? (
-                <View className="mt-3 flex-row items-center bg-[#FEF2F2] border border-[#FEE2E2] px-3 py-1.5 rounded-full">
+                <View className="mt-3 flex-row items-center rounded-full border border-[#FEE2E2] bg-[#FEF2F2] px-3 py-1.5">
                   <Feather name="clock" size={12} color="#EF4444" />
-                  <Text className="ml-1.5 text-[12px] font-bold text-[#EF4444]">Còn lại: {timeLeft}</Text>
+                  <Text className="ml-1.5 text-[12px] font-bold text-[#EF4444]">Time left: {timeLeft}</Text>
                 </View>
               ) : null}
 
-              <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Quet QR de xac nhan</Text>
+              <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Scan QR to confirm</Text>
               <Text className="mt-2 text-center text-[14px] leading-[21px] text-[#64748B]">
-                Quet QR bang dien thoai khac, mo trang Sello Mock Bank va bam xac nhan. Don hang chi duoc xac nhan sau khi backend nhan ket qua.
+                Scan the QR code with another device, open Sello Mock Bank, and confirm the payment. The order is
+                confirmed only after the backend receives the result.
               </Text>
 
               {!!paymentUrl && (
-                <Pressable className="mt-4 h-[44px] flex-row items-center justify-center rounded-[12px] bg-[#EAF5FC] px-4" onPress={() => WebBrowser.openBrowserAsync(paymentUrl)}>
+                <Pressable
+                  className="mt-4 h-[44px] flex-row items-center justify-center rounded-[12px] bg-[#EAF5FC] px-4"
+                  onPress={() => WebBrowser.openBrowserAsync(paymentUrl)}
+                >
                   <Feather name="external-link" size={16} color="#0F6CBD" />
-                  <Text className="ml-2 text-[13px] font-extrabold text-[#0F6CBD]">Mo trang mock bank</Text>
+                  <Text className="ml-2 text-[13px] font-extrabold text-[#0F6CBD]">Open mock bank</Text>
                 </Pressable>
               )}
             </View>
@@ -378,9 +378,9 @@ export default function PaymentScreen() {
               <View className="h-[120px] w-[120px] items-center justify-center rounded-full bg-[#EAF5FC]">
                 <Feather name="package" size={48} color="#0F6CBD" />
               </View>
-              <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Thanh toan khi nhan hang</Text>
+              <Text className="mt-4 text-center text-[18px] font-extrabold text-[#1F2934]">Cash on delivery</Text>
               <Text className="mt-2 text-center text-[14px] leading-[21px] text-[#64748B]">
-                Don hang da duoc tao. Xac nhan de chuyen sang buoc xu ly don hang.
+                Your order has been created. Confirm to move to order processing.
               </Text>
             </View>
           )}
@@ -392,12 +392,12 @@ export default function PaymentScreen() {
               <Feather name="shield" size={18} color="#12805C" />
               <View className="ml-3 flex-1">
                 <Text className="text-[14px] font-extrabold text-[#1F2934]">
-                  {paymentType === "paypal" ? "Thanh toán an toàn với PayPal" : "Trang thai duoc xac minh boi QR"}
+                  {paymentType === "paypal" ? "Secure PayPal payment" : "Status verified by QR"}
                 </Text>
                 <Text className="mt-1 text-[13px] leading-[19px] text-[#64748B]">
                   {paymentType === "paypal"
-                    ? "Giao dịch được bảo mật và xử lý thông qua hệ thống PayPal Sandbox thử nghiệm."
-                    : "Nut ben duoi chi dua ban den man hinh cho. He thong khong tu xac nhan thanh toan neu QR chua duoc chap nhan."}
+                    ? "The transaction is secured and processed through the PayPal Sandbox environment."
+                    : "The button below only moves you to the waiting screen. The system will not confirm payment until the QR payment is accepted."}
                 </Text>
               </View>
             </View>
@@ -413,7 +413,7 @@ export default function PaymentScreen() {
         >
           <Feather name={paymentType === "paypal" ? "credit-card" : isOnlinePayment ? "clock" : "truck"} size={18} color="white" />
           <Text className="ml-3 text-[16px] font-extrabold text-white">
-            {paymentType === "paypal" ? "Thanh toán bằng PayPal" : isOnlinePayment ? "Cho xac nhan QR" : "Xac nhan don hang"}
+            {paymentType === "paypal" ? "Pay with PayPal" : isOnlinePayment ? "Wait for QR confirmation" : "Confirm order"}
           </Text>
         </Pressable>
       </View>

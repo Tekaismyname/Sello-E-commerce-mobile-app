@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { checkoutService } from "@/services/customer.service";
 import { CheckoutPreview, CreateOrderPayload } from "@/types/customer";
+
+type FetchPreviewOptions = {
+  silent?: boolean;
+};
 
 export function useCheckout(token: string) {
   const [preview, setPreview] = useState<CheckoutPreview | null>(null);
@@ -13,14 +17,20 @@ export function useCheckout(token: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPreview = useCallback(
-    async (voucher?: string) => {
+    async (voucher?: string, options?: FetchPreviewOptions) => {
+      const silent = options?.silent ?? false;
+
       if (!token) {
         setError("Please sign in to continue to checkout.");
-        setLoading(false);
-        return;
+        if (!silent) {
+          setLoading(false);
+        }
+        return null;
       }
 
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -47,18 +57,22 @@ export function useCheckout(token: string) {
           }
           return null;
         });
+
+        return response.data;
       } catch (err: any) {
+        setPreview(null);
+        setSelectedAddressId(null);
+        setSelectedPaymentMethodId(null);
         setError(err.message ?? "Unable to load checkout information.");
+        return null;
       } finally {
-        setLoading(false);
+        if (!silent) {
+          setLoading(false);
+        }
       }
     },
     [token],
   );
-
-  useEffect(() => {
-    fetchPreview();
-  }, [fetchPreview]);
 
   const applyVoucher = useCallback(async () => {
     if (!token) return;

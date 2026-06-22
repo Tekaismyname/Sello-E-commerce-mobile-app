@@ -12,8 +12,8 @@ import { addressService, cartService } from "@/services/customer.service";
 import { Address, CartItem, CreateAddressPayload, UpdateAddressPayload } from "@/types/customer";
 import { triggerLocalNotification } from "@/utils/local-notification";
 import { Feather } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
-import { useMemo, useState } from "react";
+import { Href, router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -57,14 +57,42 @@ export default function CheckoutScreen() {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [savingAddress, setSavingAddress] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
+  const hasLoadedCheckoutRef = useRef(false);
 
   const selectedAddress = useMemo(
     () => preview?.addresses.find((item) => item.id === selectedAddressId) ?? null,
     [preview?.addresses, selectedAddressId],
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      fetchPreview(voucherCode, { silent: hasLoadedCheckoutRef.current }).then((nextPreview) => {
+        if (nextPreview) {
+          hasLoadedCheckoutRef.current = true;
+        }
+
+        if (isActive && nextPreview && !nextPreview.items.length) {
+          router.replace("/main/cart" as Href);
+        }
+      });
+
+      return () => {
+        isActive = false;
+      };
+    }, [fetchPreview, voucherCode]),
+  );
+
+  useEffect(() => {
+    if (error?.toLowerCase().includes("no selected cart items")) {
+      router.replace("/main/cart" as Href);
+    }
+  }, [error]);
+
   const refreshCheckout = async () => {
-    await fetchPreview(voucherCode);
+    return fetchPreview(voucherCode, { silent: true });
   };
 
   const handlePlaceOrder = async () => {
@@ -144,6 +172,32 @@ export default function CheckoutScreen() {
     }
   };
 
+  const handleRemoveFromCheckout = (item: CartItem) => {
+    if (!token) return;
+
+    Alert.alert("Remove from checkout", "This product will stay in your cart but will not be included in this checkout.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          setDeletingItemId(item.id);
+          try {
+            await cartService.selectCartItem(token, item.id, { selected: false });
+            const nextPreview = await refreshCheckout();
+            if (!nextPreview || !nextPreview.items.length) {
+              router.replace("/main/cart" as Href);
+            }
+          } catch (err: any) {
+            Alert.alert("Error", err.message ?? "Unable to remove the product from checkout.");
+          } finally {
+            setDeletingItemId(null);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F2F4F8]" edges={["top"]}>
       <View className="h-[56px] flex-row items-center justify-center px-4">
@@ -210,7 +264,9 @@ export default function CheckoutScreen() {
               <CheckoutOrderSummary
                 items={preview?.items ?? []}
                 updatingItemId={updatingItemId}
+                deletingItemId={deletingItemId}
                 onChangeQuantity={handleChangeQuantity}
+                onRemoveFromCheckout={handleRemoveFromCheckout}
               />
             </View>
 

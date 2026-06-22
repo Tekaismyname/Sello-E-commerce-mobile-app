@@ -182,6 +182,18 @@ const translations: Record<Language, Record<string, string>> = {
     "yes_cancel": "Hủy đơn",
     "session_expired": "Phiên đăng nhập đã hết hạn.",
     "cannot_cancel_order": "Không thể hủy đơn.",
+    "cancel_reason_prompt": "Cho Sello biết lý do để cải thiện dịch vụ. Đơn #{id}",
+    "cancel_reason_note_placeholder": "Ghi chú thêm (không bắt buộc)",
+    "submitting": "Đang gửi...",
+    "reason_changed_mind": "Đổi ý, không muốn mua nữa",
+    "reason_found_cheaper": "Tìm thấy giá tốt hơn ở nơi khác",
+    "reason_wrong_order": "Đặt nhầm sản phẩm hoặc thông tin",
+    "reason_shipping_slow": "Thời gian giao hàng dự kiến quá lâu",
+    "reason_other": "Lý do khác",
+    "reason_wrong_item": "Nhận sai sản phẩm",
+    "reason_damaged": "Sản phẩm bị hư hỏng hoặc lỗi",
+    "reason_not_as_described": "Sản phẩm không đúng như mô tả",
+    "reason_late_delivery": "Giao hàng quá trễ",
     "reorder_title": "Mua lại đơn hàng",
     "reorder_confirm": "Bạn có muốn thêm tất cả sản phẩm của đơn hàng này vào giỏ hàng?",
     "agree": "Đồng ý",
@@ -364,6 +376,18 @@ const translations: Record<Language, Record<string, string>> = {
     "yes_cancel": "Cancel Order",
     "session_expired": "Session has expired.",
     "cannot_cancel_order": "Cannot cancel order.",
+    "cancel_reason_prompt": "Let us know why so we can improve. Order #{id}",
+    "cancel_reason_note_placeholder": "Additional details (optional)",
+    "submitting": "Submitting...",
+    "reason_changed_mind": "Changed my mind",
+    "reason_found_cheaper": "Found a cheaper price elsewhere",
+    "reason_wrong_order": "Ordered the wrong product/info",
+    "reason_shipping_slow": "Estimated delivery is too slow",
+    "reason_other": "Other reason",
+    "reason_wrong_item": "Received the wrong item",
+    "reason_damaged": "Item is damaged or defective",
+    "reason_not_as_described": "Not as described",
+    "reason_late_delivery": "Delivery took too long",
     "reorder_title": "Reorder",
     "reorder_confirm": "Do you want to add all items from this order to your cart?",
     "agree": "Reorder",
@@ -441,7 +465,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Sync nativewind color scheme whenever the theme changes, or when native scheme changes
   const applyTheme = (mode: ThemeMode) => {
     if (mode === "system") {
-      setColorScheme(nativeColorScheme || "light");
+      setColorScheme(nativeColorScheme === "dark" ? "dark" : "light");
     } else {
       setColorScheme(mode);
     }

@@ -1,0 +1,288 @@
+﻿Sello-E-commerce-mobile-app
++---.vscode
+|   +---extensions.json
+|   \---settings.json
++---app
+|   +---admin
+|   |   +---_layout.tsx
+|   |   +---add-product.tsx
+|   |   +---brands.tsx
+|   |   +---categories.tsx
+|   |   +---category-form.tsx
+|   |   +---chats.tsx
+|   |   +---dashboard.tsx
+|   |   +---menu.tsx
+|   |   +---notifications.tsx
+|   |   +---orders.tsx
+|   |   +---products.tsx
+|   |   +---reports.tsx
+|   |   +---reviews.tsx
+|   |   +---system.tsx
+|   |   +---users.tsx
+|   |   +---voucher-form.tsx
+|   |   \---vouchers.tsx
+|   +---auth
+|   |   +---account-completion.tsx
+|   |   +---callback.tsx
+|   |   +---forgot-password.tsx
+|   |   +---login.tsx
+|   |   +---otp.tsx
+|   |   +---register.tsx
+|   |   \---reset-password.tsx
+|   +---main
+|   |   +---(account)
+|   |   |   +---change-password.tsx
+|   |   |   +---notifications.tsx
+|   |   |   \---wishlist.tsx
+|   |   +---(address)
+|   |   |   +---addresses.tsx
+|   |   |   \---address-form.tsx
+|   |   +---(catalog)
+|   |   |   +---product-list.tsx
+|   |   |   \---search.tsx
+|   |   +---(checkout)
+|   |   |   \---checkout.tsx
+|   |   +---(order)
+|   |   |   +---order-detail.tsx
+|   |   |   +---orders.tsx
+|   |   |   \---order-tracking.tsx
+|   |   +---(payment)
+|   |   |   +---payment.tsx
+|   |   |   +---payment-failed.tsx
+|   |   |   +---payment-processing.tsx
+|   |   |   \---payment-success.tsx
+|   |   +---_layout.tsx
+|   |   +---cart.tsx
+|   |   +---categories.tsx
+|   |   +---chat.tsx
+|   |   +---home.tsx
+|   |   \---profile.tsx
+|   +---onboarding
+|   |   +---onboarding.tsx
+|   |   \---welcome.tsx
+|   +---order
+|   |   \---[id].tsx
+|   +---product
+|   |   +---_layout.tsx
+|   |   +---detail.tsx
+|   |   +---reviews.tsx
+|   |   \---write-review.tsx
+|   +---_layout.tsx
+|   \---index.tsx
++---assets
+|   \---images
+|       +---android-icon-background.png
+|       +---android-icon-foreground.png
+|       +---android-icon-monochrome.png
+|       +---favicon.png
+|       +---icon.png
+|       +---partial-react-logo.png
+|       +---react-logo.png
+|       +---react-logo@2x.png
+|       +---react-logo@3x.png
+|       \---splash-icon.png
++---components
+|   +---admin
+|   |   +---add-product
+|   |   |   +---product-basic-form.tsx
+|   |   |   +---product-description.tsx
+|   |   |   +---product-features.tsx
+|   |   |   +---product-image-picker.tsx
+|   |   |   +---product-price-stock.tsx
+|   |   |   +---product-specs.tsx
+|   |   |   \---product-variants.tsx
+|   |   +---categories
+|   |   |   +---admin-category-card.tsx
+|   |   |   +---admin-category-form.tsx
+|   |   |   \---admin-category-toolbar.tsx
+|   |   +---dashboard
+|   |   |   +---admin-recent-orders.tsx
+|   |   |   +---admin-sales-chart.tsx
+|   |   |   \---admin-stat-cards.tsx
+|   |   +---notifications
+|   |   |   +---admin-notification-composer.tsx
+|   |   |   \---admin-notification-history.tsx
+|   |   +---orders
+|   |   |   +---admin-order-actions.tsx
+|   |   |   +---admin-order-filters.tsx
+|   |   |   +---admin-order-stats.tsx
+|   |   |   \---admin-order-table.tsx
+|   |   +---products
+|   |   |   +---admin-product-list.tsx
+|   |   |   +---admin-search-filter.tsx
+|   |   |   \---admin-stock-summary.tsx
+|   |   +---shared
+|   |   |   +---admin-fab.tsx
+|   |   |   +---admin-header.tsx
+|   |   |   \---admin-tab-bar.tsx
+|   |   \---vouchers
+|   |       +---admin-voucher-card.tsx
+|   |       +---admin-voucher-form.tsx
+|   |       \---admin-voucher-toolbar.tsx
+|   +---auth
+|   |   +---account-completion
+|   |   |   \---account-completion-content.tsx
+|   |   +---auth-button.tsx
+|   |   +---auth-input.tsx
+|   |   +---auth-message.tsx
+|   |   +---auth-screen-shell.tsx
+|   |   +---delivery-method-toggle.tsx
+|   |   +---sello-auth-logo.tsx
+|   |   \---social-auth-options.tsx
+|   +---main
+|   |   +---address
+|   |   |   +---address-card.tsx
+|   |   |   \---address-form.tsx
+|   |   +---cart
+|   |   |   +---cart-content-states.tsx
+|   |   |   +---cart-item-card.tsx
+|   |   |   +---cart-summary-card.tsx
+|   |   |   \---index.ts
+|   |   +---checkout
+|   |   |   +---checkout-address-selector.tsx
+|   |   |   +---checkout-footer-bar.tsx
+|   |   |   +---checkout-order-summary.tsx
+|   |   |   +---checkout-payment-selector.tsx
+|   |   |   +---checkout-pricing.tsx
+|   |   |   +---checkout-section-card.tsx
+|   |   |   +---checkout-selected-address.tsx
+|   |   |   \---checkout-voucher-row.tsx
+|   |   +---home
+|   |   |   +---featured-categories-section.tsx
+|   |   |   +---flash-sales-section.tsx
+|   |   |   +---home-promo-banner.tsx
+|   |   |   \---suggested-products-section.tsx
+|   |   +---orders
+|   |   |   +---customer-order-card.tsx
+|   |   |   +---order-filter-tabs.tsx
+|   |   |   +---order-hero-status-card.tsx
+|   |   |   +---order-status-pill.tsx
+|   |   |   +---order-timeline.tsx
+|   |   |   \---recommended-products.tsx
+|   |   +---search
+|   |   |   +---index.ts
+|   |   |   +---search-header-bar.tsx
+|   |   |   +---search-history-section.tsx
+|   |   |   +---search-keyword-list-section.tsx
+|   |   |   \---search-promo-banner.tsx
+|   |   +---screen-states.tsx
+|   |   +---search-trigger-bar.tsx
+|   |   +---sello-header.tsx
+|   |   \---sello-tab-bar.tsx
+|   +---product
+|   |   +---detail
+|   |   |   +---index.ts
+|   |   |   +---product-banner.tsx
+|   |   |   +---product-basic-info.tsx
+|   |   |   +---product-bottom-action-bar.tsx
+|   |   |   +---product-color-selector.tsx
+|   |   |   +---product-description.tsx
+|   |   |   +---product-detail-header.tsx
+|   |   |   +---product-features.tsx
+|   |   |   +---product-image-gallery.tsx
+|   |   |   +---product-quantity-selector.tsx
+|   |   |   +---product-review-overview.tsx
+|   |   |   +---product-size-selector.tsx
+|   |   |   \---product-specs.tsx
+|   |   +---list
+|   |   |   +---filter-chip-dropdown.tsx
+|   |   |   +---filter-chip-group.tsx
+|   |   |   +---index.ts
+|   |   |   +---inline-promo-banner.tsx
+|   |   |   +---product-list-card.tsx
+|   |   |   +---product-list-footer-loading.tsx
+|   |   |   +---product-list-header-info.tsx
+|   |   |   +---sort-tab-group.tsx
+|   |   |   \---suggested-product-card.tsx
+|   |   +---review
+|   |   |   +---index.ts
+|   |   |   +---review-filter-bar.tsx
+|   |   |   +---review-header.tsx
+|   |   |   +---review-image-uploader.tsx
+|   |   |   +---review-item.tsx
+|   |   |   +---review-list.tsx
+|   |   |   +---review-rating-selector.tsx
+|   |   |   +---review-submit-bar.tsx
+|   |   |   +---review-summary.tsx
+|   |   |   +---review-text-box.tsx
+|   |   |   +---write-review-fab.tsx
+|   |   |   \---write-review-header.tsx
+|   |   +---shared
+|   |   |   +---index.ts
+|   |   |   +---product-favorite-button.tsx
+|   |   |   +---product-image.tsx
+|   |   |   +---product-price.tsx
+|   |   |   \---product-rating.tsx
+|   |   \---index.ts
+|   \---ui
+|       +---button.tsx
+|       +---card.tsx
+|       +---guest-placeholder.tsx
+|       +---index.ts
+|       +---input.tsx
+|       +---message.tsx
+|       \---section-header.tsx
++---constants
+|   +---api.ts
+|   \---theme.ts
++---contexts
+|   \---auth-context.tsx
++---hooks
+|   +---admin
+|   |   +---use-admin-brands-view.ts
+|   |   +---use-admin-categories-view.ts
+|   |   +---use-admin-notifications-view.ts
+|   |   +---use-admin-orders-view.ts
+|   |   \---use-admin-vouchers-view.ts
+|   +---auth
+|   |   +---use-account-completion.ts
+|   |   +---use-auth-action.ts
+|   |   \---use-permissions.ts
+|   +---customer
+|   |   +---use-addresses-view.ts
+|   |   +---use-checkout.ts
+|   |   +---use-notifications-view.ts
+|   |   +---use-orders-view.ts
+|   |   \---use-wishlist-view.ts
+|   +---main
+|   |   +---use-main-data.ts
+|   |   \---use-product-list-filters.ts
+|   +---use-color-scheme.ts
+|   +---use-color-scheme.web.ts
+|   \---use-theme-color.ts
++---scripts
+|   \---reset-project.js
++---services
+|   +---admin.service.ts
+|   +---auth.service.ts
+|   +---chat.service.ts
+|   +---customer.service.ts
+|   \---main.service.ts
++---types
+|   +---admin.ts
+|   +---auth.ts
+|   +---chat.ts
+|   +---customer.ts
+|   \---main.ts
++---utils
+|   +---local-notification.ts
+|   +---notification-store.ts
+|   \---search-text.ts
++---.env
++---.env.example
++---.gitignore
++---app.json
++---babel.config.js
++---CHANGELOG.md
++---eslint.config.js
++---expo-env.d.ts
++---folder-structure.txt
++---global.css
++---metro.config.js
++---nativewind-env.d.ts
++---package.json
++---package-lock.json
++---README.md
++---tailwind.config.js
++---trim-svg.js
+\---tsconfig.json

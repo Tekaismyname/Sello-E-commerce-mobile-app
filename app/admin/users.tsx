@@ -61,7 +61,7 @@ export default function AdminUsersScreen() {
     }
 
     if (!canReadUsers) {
-      setError("You don't have permission to view users.");
+      setError("You do not have permission to view users.");
       setLoading(false);
       return;
     }
@@ -362,7 +362,7 @@ export default function AdminUsersScreen() {
                   ) : null}
 
                   {!canUpdateUserRole && !canUpdateUserStatus ? (
-                    <Text className="text-[12px] text-[#9A6400]">You don't have permission to update users.</Text>
+                    <Text className="text-[12px] text-[#9A6400]">You do not have permission to update users.</Text>
                   ) : null}
                 </View>
               </ScrollView>

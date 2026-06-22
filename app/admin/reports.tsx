@@ -45,7 +45,7 @@ export default function AdminReportsScreen() {
     }
 
     if (!canReadReports) {
-      setError("You don't have permission to view reports.");
+      setError("You do not have permission to view reports.");
       setLoading(false);
       return;
     }
@@ -146,7 +146,7 @@ export default function AdminReportsScreen() {
             </Pressable>
           </View>
           {!canExportReports ? (
-            <Text className="mt-2 text-[12px] text-[#9A6400]">You don't have permission to export reports.</Text>
+            <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to export reports.</Text>
           ) : null}
         </View>
 

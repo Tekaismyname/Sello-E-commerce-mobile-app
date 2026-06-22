@@ -34,7 +34,7 @@ export default function AdminCategoryFormScreen() {
       </View>
       {!canSubmit ? (
         <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">You don't have permission to save categories.</Text>
+          <Text className="text-[12px] text-[#9A6400]">You do not have permission to save categories.</Text>
         </View>
       ) : null}
 
@@ -44,7 +44,7 @@ export default function AdminCategoryFormScreen() {
         loading={saving || loading || !canSubmit}
         onSubmit={async (payload) => {
           if (!canSubmit) {
-            Alert.alert("No Permission", "You don't have permission to save categories.");
+            Alert.alert("No Permission", "You do not have permission to save categories.");
             return;
           }
           try {

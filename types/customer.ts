@@ -209,6 +209,7 @@ export interface OrderStatusEvent {
   id: number;
   status: string;
   description: string | null;
+  reasonCode?: string | null;
   updatedBy?: number | null;
   createdAt: string;
   timestamp: string;

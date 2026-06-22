@@ -10,6 +10,7 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -24,6 +25,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const PRODUCT_STATUS_OPTIONS = ["all", "active", "draft", "out_of_stock", "inactive"] as const;
 type ProductStatusFilter = (typeof PRODUCT_STATUS_OPTIONS)[number];
 type ProductStatusValue = Exclude<ProductStatusFilter, "all">;
+const PRODUCT_PLACEHOLDER_IMAGE =
+  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80";
+
+const formatVnd = (value?: number | null) => `${new Intl.NumberFormat("vi-VN").format(value ?? 0)} d`;
+
+const getPrimaryProductImage = (product: AdminProduct) => {
+  const primaryImage = product.images?.find((image) => image.isPrimary)?.imageUrl;
+  const firstImage = product.images?.find((image) => image.imageUrl?.trim())?.imageUrl;
+  return primaryImage || firstImage || product.image || PRODUCT_PLACEHOLDER_IMAGE;
+};
 
 export default function AdminProductsScreen() {
   const { token } = useAuth();
@@ -63,7 +74,7 @@ export default function AdminProductsScreen() {
     }
 
     if (!canReadProducts) {
-      setError("You don't have permission to view products.");
+      setError("You do not have permission to view products.");
       setLoading(false);
       return;
     }
@@ -130,7 +141,7 @@ export default function AdminProductsScreen() {
 
   const handleUpdateStatus = async (product: AdminProduct, nextStatus: ProductStatusValue) => {
     if (!token || !product.productId || !canUpdateProductStatus) {
-      Alert.alert("Cannot update", "You don't have permission or missing valid product ID.");
+      Alert.alert("Cannot update", "You do not have permission or missing valid product ID.");
       return;
     }
 
@@ -245,11 +256,23 @@ export default function AdminProductsScreen() {
                 {filteredProducts.map((product) => (
                   <Pressable key={product.id} onPress={() => setSelectedProduct(product)} className="rounded-[14px] bg-white p-4">
                     <View className="flex-row items-start justify-between">
-                      <View className="flex-1 pr-4">
-                        <Text className="text-[15px] font-bold text-[#191C1F]">{product.name}</Text>
-                        <Text className="mt-1 text-[12px] text-[#5b6470]">
-                          {product.category} - SKU: {product.sku ?? product.id}
-                        </Text>
+                      <View className="flex-1 flex-row pr-4">
+                        <Image
+                          source={{ uri: getPrimaryProductImage(product) }}
+                          className="h-16 w-16 rounded-[12px] bg-[#EEF2F6]"
+                          resizeMode="cover"
+                        />
+                        <View className="ml-3 flex-1">
+                          <Text className="text-[15px] font-bold text-[#191C1F]" numberOfLines={2}>
+                            {product.name}
+                          </Text>
+                          <Text className="mt-1 text-[12px] text-[#5b6470]" numberOfLines={1}>
+                            {product.category} - SKU: {product.sku ?? product.id}
+                          </Text>
+                          <Text className="mt-1 text-[13px] font-extrabold text-[#006397]">
+                            {formatVnd(product.basePrice)}
+                          </Text>
+                        </View>
                       </View>
                       <View className="rounded-full bg-[#EEF5FA] px-3 py-1">
                         <Text className="text-[11px] font-bold text-[#006397]">{product.status ?? "active"}</Text>
@@ -257,7 +280,9 @@ export default function AdminProductsScreen() {
                     </View>
 
                     <View className="mt-3 flex-row items-center justify-between">
-                      <Text className="text-[12px] text-[#5b6470]">Price: {new Intl.NumberFormat("en-US").format(product.basePrice ?? 0)} d</Text>
+                      <Text className="text-[12px] text-[#5b6470]">
+                        Compare: {product.comparePrice ? formatVnd(product.comparePrice) : "N/A"}
+                      </Text>
                       <Text className="text-[12px] font-bold text-[#191C1F]">Stock: {product.stockQty ?? product.stock}</Text>
                     </View>
                   </Pressable>
@@ -289,6 +314,11 @@ export default function AdminProductsScreen() {
             {selectedProduct ? (
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View className="rounded-[16px] bg-[#F8F9FB] p-4">
+                  <Image
+                    source={{ uri: getPrimaryProductImage(selectedProduct) }}
+                    className="mb-4 h-44 w-full rounded-[14px] bg-[#EEF2F6]"
+                    resizeMode="cover"
+                  />
                   <Text className="text-[17px] font-bold text-[#191C1F]">{selectedProduct.name}</Text>
                   <Text className="mt-1 text-[13px] text-[#5b6470]">{selectedProduct.category}</Text>
                   <View className="mt-4 gap-2">
@@ -296,10 +326,13 @@ export default function AdminProductsScreen() {
                       Product ID: <Text className="font-bold">{selectedProduct.productId ?? selectedProduct.id}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Gia co ban: <Text className="font-bold">{new Intl.NumberFormat("vi-VN").format(selectedProduct.basePrice ?? 0)} d</Text>
+                      Base price: <Text className="font-bold">{formatVnd(selectedProduct.basePrice)}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
-                      Ton kho: <Text className="font-bold">{selectedProduct.stockQty ?? selectedProduct.stock}</Text>
+                      Compare price: <Text className="font-bold">{selectedProduct.comparePrice ? formatVnd(selectedProduct.comparePrice) : "N/A"}</Text>
+                    </Text>
+                    <Text className="text-[13px] text-[#3f4850]">
+                      Stock: <Text className="font-bold">{selectedProduct.stockQty ?? selectedProduct.stock}</Text>
                     </Text>
                     <Text className="text-[13px] text-[#3f4850]">
                       Status: <Text className="font-bold">{selectedProduct.status ?? "active"}</Text>
@@ -354,7 +387,7 @@ export default function AdminProductsScreen() {
                 ) : null}
 
                 {!canUpdateProducts && !canUpdateProductStatus && !canDeleteProducts ? (
-                  <Text className="mt-5 text-[12px] text-[#9A6400]">You don't have permission to update products.</Text>
+                  <Text className="mt-5 text-[12px] text-[#9A6400]">You do not have permission to update products.</Text>
                 ) : null}
               </ScrollView>
             ) : null}

@@ -36,7 +36,7 @@ export default function AdminVoucherFormScreen() {
       </View>
       {!canSubmit ? (
         <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">You don't have permission to save vouchers.</Text>
+          <Text className="text-[12px] text-[#9A6400]">You do not have permission to save vouchers.</Text>
         </View>
       ) : null}
 
@@ -45,7 +45,7 @@ export default function AdminVoucherFormScreen() {
         loading={saving || loading || !canSubmit}
         onSubmit={async (payload) => {
           if (!canSubmit) {
-            Alert.alert("No Permission", "You don't have permission to save vouchers.");
+            Alert.alert("No Permission", "You do not have permission to save vouchers.");
             return;
           }
           try {
