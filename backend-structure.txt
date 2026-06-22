@@ -1,0 +1,104 @@
+﻿Sello-Backend-Run
++---.expo
+|   +---cache
+|   |   \---eslint
+|   |       \---.cache_1t3s64v
+|   +---types
+|   |   \---router.d.ts
+|   +---devices.json
+|   \---README.md
++---exports
+|   +---report-overview-1776067499615.csv
+|   +---report-overview-1776246996157.json
+|   +---report-overview-1776853809051.csv
+|   +---report-overview-1776931906181.csv
+|   \---report-overview-1781095118145.csv
++---FrontEnd
+|   \---expo-env.d.ts
++---public
+|   \---uploads
++---src
+|   +---admin
+|   |   +---dto
+|   |   |   \---admin.dto.ts
+|   |   +---admin.controller.spec.ts
+|   |   +---admin.controller.ts
+|   |   +---admin.module.ts
+|   |   +---admin.service.spec.ts
+|   |   \---admin.service.ts
+|   +---auth
+|   |   +---decorators
+|   |   |   +---admin-levels.decorator.ts
+|   |   |   +---permissions.decorator.ts
+|   |   |   \---roles.decorator.ts
+|   |   +---dto
+|   |   |   +---auth.dto.ts
+|   |   |   \---logout.dto.ts
+|   |   +---guards
+|   |   |   +---admin-level.guard.ts
+|   |   |   +---google-auth.guard.ts
+|   |   |   +---jwt-auth.guard.ts
+|   |   |   +---permissions.guard.ts
+|   |   |   \---roles.guard.ts
+|   |   +---services
+|   |   |   +---email.service.spec.ts
+|   |   |   +---email.service.ts
+|   |   |   +---jwt-token.service.ts
+|   |   |   +---mysql-database.service.ts
+|   |   |   +---otp.service.ts
+|   |   |   \---password.service.ts
+|   |   +---types
+|   |   |   \---auth.types.ts
+|   |   +---auth.controller.spec.ts
+|   |   +---auth.controller.ts
+|   |   +---auth.module.ts
+|   |   \---auth.service.ts
+|   +---catalog
+|   |   +---catalog.controller.ts
+|   |   +---catalog.module.ts
+|   |   \---catalog.service.ts
+|   +---chat
+|   |   +---chat.controller.ts
+|   |   +---chat.gateway.ts
+|   |   +---chat.module.ts
+|   |   \---chat.service.ts
+|   +---common
+|   |   \---interceptors
+|   |       \---request-audit.interceptor.ts
+|   +---customer
+|   |   +---dto
+|   |   |   \---customer.dto.ts
+|   |   +---account.controller.ts
+|   |   +---cart.controller.ts
+|   |   +---checkout.controller.ts
+|   |   +---customer.module.ts
+|   |   +---customer.service.ts
+|   |   +---orders.controller.ts
+|   |   \---paypal.service.ts
+|   +---product
+|   |   +---product.controller.ts
+|   |   +---product.module.ts
+|   |   \---product.service.ts
+|   +---app.controller.spec.ts
+|   +---app.controller.ts
+|   +---app.module.ts
+|   \---main.ts
++---test
+|   +---app.e2e-spec.ts
+|   \---jest-e2e.json
++---.env
++---.env.example
++---.gitignore
++---.prettierrc
++---backend-structure.txt
++---CHANGELOG.md
++---eslint.config.mjs
++---expo-env.d.ts
++---google.strategy.ts
++---nest-cli.json
++---package.json
++---package-lock.json
++---README.md
++---Sello-Auth.postman_collection.json
++---tsconfig.build.json
+\---tsconfig.json

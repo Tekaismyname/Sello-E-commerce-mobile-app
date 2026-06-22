@@ -31,6 +31,16 @@ export class MockPaymentCallbackDto {
   result!: 'success' | 'failed';
 }
 
+export class CancelOrderDto {
+  reasonCode?: string;
+  note?: string;
+}
+
+export class RequestReturnDto {
+  reasonCode?: string;
+  note?: string;
+}
+
 export class UpdateProfileDto {
   fullName?: string;
   avatarUrl?: string;

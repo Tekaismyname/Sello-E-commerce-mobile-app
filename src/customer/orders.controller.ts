@@ -14,7 +14,7 @@ import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtPayload } from '../auth/types/auth.types';
 import { CustomerService } from './customer.service';
-import { MockPaymentCallbackDto } from './dto/customer.dto';
+import { CancelOrderDto, MockPaymentCallbackDto, RequestReturnDto } from './dto/customer.dto';
 
 type AuthenticatedRequest = Request & { user?: JwtPayload };
 
@@ -37,12 +37,13 @@ export class OrdersController {
   requestOrderReturn(
     @Req() request: AuthenticatedRequest,
     @Param('orderId', ParseIntPipe) orderId: number,
-    @Body('reason') reason: string,
+    @Body() body: RequestReturnDto,
   ) {
     return this.customerService.requestOrderReturn(
       request.user!.sub,
       orderId,
-      reason,
+      body.reasonCode,
+      body.note,
     );
   }
 
@@ -60,8 +61,14 @@ export class OrdersController {
   cancelOrder(
     @Req() request: AuthenticatedRequest,
     @Param('orderId', ParseIntPipe) orderId: number,
+    @Body() body: CancelOrderDto,
   ) {
-    return this.customerService.cancelOrder(request.user!.sub, orderId);
+    return this.customerService.cancelOrder(
+      request.user!.sub,
+      orderId,
+      body?.reasonCode,
+      body?.note,
+    );
   }
 
   @Get('orders/:orderId/tracking')

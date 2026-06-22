@@ -231,8 +231,22 @@ export class CustomerService {
     };
   }
 
-  async requestOrderReturn(userId: number, orderId: number, reason: string) {
-    const result = await this.database.requestUserOrderReturn(userId, orderId, reason);
+  async requestOrderReturn(
+    userId: number,
+    orderId: number,
+    reasonCode?: string,
+    note?: string,
+  ) {
+    if (!reasonCode && !note?.trim()) {
+      throw new BadRequestException('A return reason is required');
+    }
+
+    const result = await this.database.requestUserOrderReturn(
+      userId,
+      orderId,
+      reasonCode,
+      note,
+    );
 
     if (!result) {
       throw new NotFoundException('Order not found or cannot be returned');
@@ -257,8 +271,18 @@ export class CustomerService {
     };
   }
 
-  async cancelOrder(userId: number, orderId: number) {
-    const result = await this.database.cancelUserOrder(userId, orderId);
+  async cancelOrder(
+    userId: number,
+    orderId: number,
+    reasonCode?: string,
+    note?: string,
+  ) {
+    const result = await this.database.cancelUserOrder(
+      userId,
+      orderId,
+      reasonCode,
+      note,
+    );
 
     if (!result) {
       throw new NotFoundException('Order not found');

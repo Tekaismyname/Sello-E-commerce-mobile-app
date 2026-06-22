@@ -27,6 +27,7 @@ import {
   UserOtp,
   UserRole,
 } from '../types/auth.types';
+import { getCancelReasonLabel, getReturnReasonLabel } from '../../common/order-reason-codes';
 
 interface UserRow extends RowDataPacket {
   user_id: number;
@@ -173,6 +174,7 @@ interface OrderStatusHistoryRow extends RowDataPacket {
   history_id: number;
   status: string;
   description: string | null;
+  reason_code: string | null;
   updated_by: number | null;
   created_at: Date | string;
 }
@@ -1619,7 +1621,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       ),
       this.pool.query<OrderStatusHistoryRow[]>(
         `
-          SELECT history_id, status, description, updated_by, created_at
+          SELECT history_id, status, description, reason_code, updated_by, created_at
           FROM order_status_histories
           WHERE order_id = ?
           ORDER BY history_id DESC
@@ -1691,13 +1693,19 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         id: row.history_id,
         status: row.status,
         description: row.description,
+        reasonCode: row.reason_code,
         updatedBy: row.updated_by,
         createdAt: new Date(row.created_at),
       })),
     };
   }
 
-  async cancelUserOrder(userId: number, orderId: number) {
+  async cancelUserOrder(
+    userId: number,
+    orderId: number,
+    reasonCode?: string,
+    note?: string,
+  ) {
     const connection = await this.pool.getConnection();
 
     try {
@@ -1732,12 +1740,17 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         [orderId],
       );
 
+      const description =
+        note?.trim() ||
+        getCancelReasonLabel(reasonCode) ||
+        'Cancelled by customer';
+
       await connection.execute(
         `
-          INSERT INTO order_status_histories (order_id, status, description, updated_by)
-          VALUES (?, 'cancelled', 'Cancelled by customer', ?)
+          INSERT INTO order_status_histories (order_id, status, description, reason_code, updated_by)
+          VALUES (?, 'cancelled', ?, ?, ?)
         `,
-        [orderId, userId],
+        [orderId, description, reasonCode || null, userId],
       );
 
       const [itemRows] = await connection.query<RowDataPacket[]>(
@@ -3475,6 +3488,37 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       });
     }
 
+    const riskOrderIds = rows
+      .filter((r) => ['cancelled', 'returned', 'return_requested'].includes(r.order_status))
+      .map((r) => r.order_id);
+
+    const historyByOrderId: Record<number, any[]> = {};
+    if (riskOrderIds.length > 0) {
+      const [historyRows] = await this.pool.query<RowDataPacket[]>(
+        `
+          SELECT history_id, order_id, status, description, reason_code, updated_by, created_at
+          FROM order_status_histories
+          WHERE order_id IN (${riskOrderIds.map(() => '?').join(',')})
+          ORDER BY created_at ASC
+        `,
+        riskOrderIds,
+      );
+
+      for (const row of historyRows) {
+        if (!historyByOrderId[row.order_id]) {
+          historyByOrderId[row.order_id] = [];
+        }
+        historyByOrderId[row.order_id].push({
+          id: row.history_id,
+          status: row.status,
+          description: row.description,
+          reasonCode: row.reason_code,
+          updatedBy: row.updated_by,
+          createdAt: new Date(row.created_at),
+        });
+      }
+    }
+
     const mappedOrders = rows.map((row) => ({
       id: row.order_id,
       orderCode: row.order_code,
@@ -3489,6 +3533,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       paymentStatus: row.payment_status,
       placedAt: new Date(row.placed_at),
       items: itemsByOrderId[row.order_id] || [],
+      statusHistory: historyByOrderId[row.order_id] || [],
     }));
 
     if (page !== undefined && limit !== undefined) {
@@ -3569,7 +3614,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         ),
         this.pool.query<OrderStatusHistoryRow[]>(
           `
-            SELECT history_id, status, description, updated_by, created_at
+            SELECT history_id, status, description, reason_code, updated_by, created_at
             FROM order_status_histories
             WHERE order_id = ?
             ORDER BY history_id DESC
@@ -3654,6 +3699,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         id: row.history_id,
         status: row.status,
         description: row.description,
+        reasonCode: row.reason_code,
         updatedBy: row.updated_by,
         createdAt: new Date(row.created_at),
       })),
@@ -4209,7 +4255,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   }
 
   async getReportOverview() {
-    const [usersQuery, ordersQuery, revenueQuery, topProductQuery, statusQuery] =
+    const [usersQuery, ordersQuery, revenueQuery, revenueByDayQuery, topProductQuery, statusQuery] =
       await Promise.all([
         this.pool.query<CountRow[]>(`SELECT COUNT(*) AS total FROM users`),
         this.pool.query<CountRow[]>(`SELECT COUNT(*) AS total FROM orders`),
@@ -4218,6 +4264,15 @@ export class MySqlDatabaseService implements OnModuleDestroy {
             SELECT DATE_FORMAT(placed_at, '%Y-%m') AS period, COALESCE(SUM(total_amount), 0) AS revenue
             FROM orders
             GROUP BY DATE_FORMAT(placed_at, '%Y-%m')
+            ORDER BY period ASC
+          `,
+        ),
+        this.pool.query<RowDataPacket[]>(
+          `
+            SELECT DATE_FORMAT(placed_at, '%Y-%m-%d') AS period, COALESCE(SUM(total_amount), 0) AS revenue
+            FROM orders
+            WHERE placed_at >= DATE_SUB(CURDATE(), INTERVAL 13 DAY)
+            GROUP BY DATE_FORMAT(placed_at, '%Y-%m-%d')
             ORDER BY period ASC
           `,
         ),
@@ -4244,8 +4299,20 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     const usersResult = usersQuery[0][0];
     const ordersResult = ordersQuery[0][0];
     const revenueRows = revenueQuery[0];
+    const revenueByDayRows = revenueByDayQuery[0];
     const topProductRows = topProductQuery[0];
     const statusRows = statusQuery[0];
+
+    const revenueByDay = revenueByDayRows.map((row) => ({
+      period: row.period,
+      revenue: Number(row.revenue ?? 0),
+    }));
+
+    const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+    const todayKey = formatDate(new Date());
+    const yesterdayKey = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const todayRevenue = revenueByDay.find((row) => row.period === todayKey)?.revenue ?? 0;
+    const yesterdayRevenue = revenueByDay.find((row) => row.period === yesterdayKey)?.revenue ?? 0;
 
     return {
       users: Number(usersResult?.total ?? 0),
@@ -4254,6 +4321,9 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         period: row.period,
         revenue: Number(row.revenue ?? 0),
       })),
+      revenueByDay,
+      todayRevenue,
+      yesterdayRevenue,
       topSellingProducts: topProductRows.map((row) => ({
         productId: row.product_id,
         name: row.name,
@@ -5270,6 +5340,13 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       await this.pool.execute(`
         ALTER TABLE notifications
         ADD COLUMN image_url VARCHAR(255) NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('order_status_histories', 'reason_code'))) {
+      await this.pool.execute(`
+        ALTER TABLE order_status_histories
+        ADD COLUMN reason_code VARCHAR(64) NULL
       `);
     }
 
@@ -6461,7 +6538,12 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     }));
   }
 
-  async requestUserOrderReturn(userId: number, orderId: number, reason: string) {
+  async requestUserOrderReturn(
+    userId: number,
+    orderId: number,
+    reasonCode?: string,
+    note?: string,
+  ) {
     const connection = await this.pool.getConnection();
 
     try {
@@ -6496,12 +6578,17 @@ export class MySqlDatabaseService implements OnModuleDestroy {
         [orderId],
       );
 
+      const description =
+        note?.trim() ||
+        getReturnReasonLabel(reasonCode) ||
+        'Return requested by customer';
+
       await connection.execute(
         `
-          INSERT INTO order_status_histories (order_id, status, description, updated_by)
-          VALUES (?, 'return_requested', ?, ?)
+          INSERT INTO order_status_histories (order_id, status, description, reason_code, updated_by)
+          VALUES (?, 'return_requested', ?, ?, ?)
         `,
-        [orderId, reason || 'Return requested by customer', userId],
+        [orderId, description, reasonCode || null, userId],
       );
 
       await connection.commit();
