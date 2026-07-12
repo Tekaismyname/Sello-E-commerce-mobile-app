@@ -94,10 +94,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@Req() request: AuthenticatedRequest) {
-    return {
-      message: 'Current authenticated user',
-      user: request.user,
-    };
+    return this.authService.me(request.user!.sub);
   }
 
   @Get('admin/ping')

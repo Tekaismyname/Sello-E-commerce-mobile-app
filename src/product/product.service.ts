@@ -18,6 +18,25 @@ export class ProductService {
     };
   }
 
+  async getProductReviews(
+    productId: number,
+    query: { page?: string; limit?: string },
+  ) {
+    const result = await this.database.getPublicProductReviews(productId, {
+      page: query.page ? parseInt(query.page, 10) : undefined,
+      limit: query.limit ? parseInt(query.limit, 10) : undefined,
+    });
+
+    if (!result) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return {
+      message: 'Product reviews fetched successfully',
+      data: result,
+    };
+  }
+
   async listProducts(query: {
     search?: string;
     categoryId?: string;

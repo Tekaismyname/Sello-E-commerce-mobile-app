@@ -253,6 +253,7 @@ interface NotificationRow extends RowDataPacket {
   content: string | null;
   notification_type: string;
   image_url?: string | null;
+  reference_id?: number | null;
   is_read: number | boolean;
   created_at: Date | string;
 }
@@ -764,6 +765,110 @@ export class MySqlDatabaseService implements OnModuleDestroy {
     };
   }
 
+  async getPublicProductReviews(
+    productId: number,
+    options: { page?: number; limit?: number } = {},
+  ) {
+    const [productRows] = await this.pool.query<RowDataPacket[]>(
+      `SELECT product_id FROM products WHERE product_id = ? LIMIT 1`,
+      [productId],
+    );
+
+    if (!productRows[0]) {
+      return undefined;
+    }
+
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(50, Math.max(1, options.limit ?? 10));
+    const offset = (page - 1) * limit;
+
+    const [summaryRows] = await this.pool.query<RowDataPacket[]>(
+      `
+        SELECT
+          COUNT(*) AS total_reviews,
+          COALESCE(AVG(pr.rating), 0) AS average_rating,
+          COALESCE(SUM(pr.rating = 5), 0) AS five_star,
+          COALESCE(SUM(pr.rating = 4), 0) AS four_star,
+          COALESCE(SUM(pr.rating = 3), 0) AS three_star,
+          COALESCE(SUM(pr.rating = 2), 0) AS two_star,
+          COALESCE(SUM(pr.rating = 1), 0) AS one_star,
+          (
+            SELECT COUNT(*)
+            FROM review_media rm
+            INNER JOIN product_reviews pr2 ON pr2.review_id = rm.review_id
+            WHERE pr2.product_id = ?
+              AND COALESCE(pr2.moderation_status, 'visible') = 'visible'
+          ) AS total_photos
+        FROM product_reviews pr
+        WHERE pr.product_id = ?
+          AND COALESCE(pr.moderation_status, 'visible') = 'visible'
+      `,
+      [productId, productId],
+    );
+
+    const summary = summaryRows[0];
+    const total = Number(summary?.total_reviews ?? 0);
+
+    const [rows] = await this.pool.query<ReviewListRow[]>(
+      `
+        SELECT
+          pr.review_id,
+          pr.user_id,
+          u.full_name,
+          pr.rating,
+          pr.title,
+          pr.comment,
+          pr.is_verified_purchase,
+          pr.created_at,
+          GROUP_CONCAT(rm.media_url ORDER BY rm.media_id ASC SEPARATOR '||') AS media_urls
+        FROM product_reviews pr
+        INNER JOIN users u ON u.user_id = pr.user_id
+        LEFT JOIN review_media rm ON rm.review_id = pr.review_id
+        WHERE pr.product_id = ?
+          AND COALESCE(pr.moderation_status, 'visible') = 'visible'
+        GROUP BY pr.review_id
+        ORDER BY pr.review_id DESC
+        LIMIT ? OFFSET ?
+      `,
+      [productId, limit, offset],
+    );
+
+    return {
+      items: rows.map((row) => ({
+        id: row.review_id,
+        userId: row.user_id,
+        userName: row.full_name,
+        rating: row.rating,
+        title: row.title,
+        comment: row.comment,
+        isVerifiedPurchase: Boolean(row.is_verified_purchase),
+        mediaUrls: row.media_urls
+          ? row.media_urls.split('||').filter(Boolean)
+          : [],
+        createdAt: new Date(row.created_at),
+      })),
+      summary: {
+        averageRating:
+          Math.round(Number(summary?.average_rating ?? 0) * 10) / 10,
+        totalReviews: total,
+        totalPhotos: Number(summary?.total_photos ?? 0),
+        ratingBreakdown: {
+          5: Number(summary?.five_star ?? 0),
+          4: Number(summary?.four_star ?? 0),
+          3: Number(summary?.three_star ?? 0),
+          2: Number(summary?.two_star ?? 0),
+          1: Number(summary?.one_star ?? 0),
+        },
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
+  }
+
   async getCartDetail(userId: number) {
     const cart = await this.findOrCreateCart(userId);
     const items = await this.getCartItemsByCartId(cart.cartId);
@@ -1137,10 +1242,15 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
         await connection.execute(
           `
-            INSERT INTO notifications (user_id, title, content, notification_type)
-            VALUES (?, ?, ?, 'order')
+            INSERT INTO notifications (user_id, title, content, notification_type, reference_id)
+            VALUES (?, ?, ?, 'order', ?)
           `,
-          [userId, `Order ${orderCode} created`, 'Your order has been placed successfully'],
+          [
+            userId,
+            `Order ${orderCode} created`,
+            'Your order has been placed successfully',
+            orderId,
+          ],
         );
 
         await connection.commit();
@@ -1282,13 +1392,14 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
         await connection.execute(
           `
-            INSERT INTO notifications (user_id, title, content, notification_type)
-            VALUES (?, ?, ?, 'order')
+            INSERT INTO notifications (user_id, title, content, notification_type, reference_id)
+            VALUES (?, ?, ?, 'order', ?)
           `,
           [
             payment.user_id,
             `Payment for ${payment.order_code} succeeded`,
             'Your payment has been confirmed successfully',
+            payment.order_id,
           ],
         );
       }
@@ -2202,7 +2313,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
   async getUserNotifications(userId: number) {
     const [rows] = await this.pool.query<NotificationRow[]>(
       `
-        SELECT notification_id, user_id, title, content, notification_type, image_url, is_read, created_at
+        SELECT notification_id, user_id, title, content, notification_type, image_url, reference_id, is_read, created_at
         FROM notifications
         WHERE user_id = ?
         ORDER BY notification_id DESC
@@ -2217,6 +2328,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       content: row.content,
       notificationType: row.notification_type,
       imageUrl: row.image_url ?? null,
+      referenceId: row.reference_id ?? null,
       isRead: Boolean(row.is_read),
       createdAt: new Date(row.created_at),
     }));
@@ -2238,7 +2350,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
     const [rows] = await this.pool.query<NotificationRow[]>(
       `
-        SELECT notification_id, user_id, title, content, notification_type, image_url, is_read, created_at
+        SELECT notification_id, user_id, title, content, notification_type, image_url, reference_id, is_read, created_at
         FROM notifications
         WHERE notification_id = ? AND user_id = ?
         LIMIT 1
@@ -2255,6 +2367,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           content: row.content,
           notificationType: row.notification_type,
           imageUrl: row.image_url ?? null,
+          referenceId: row.reference_id ?? null,
           isRead: Boolean(row.is_read),
           createdAt: new Date(row.created_at),
         }
@@ -3108,6 +3221,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           n.content,
           n.notification_type,
           n.image_url,
+          n.reference_id,
           n.is_read,
           n.created_at
         FROM notifications n
@@ -3126,6 +3240,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       content: row.content,
       notificationType: row.notification_type,
       imageUrl: row.image_url ?? null,
+      referenceId: row.reference_id ?? null,
       isRead: Boolean(row.is_read),
       createdAt: new Date(row.created_at),
     }));
@@ -3743,13 +3858,14 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       if (order?.user_id) {
         await connection.execute(
           `
-            INSERT INTO notifications (user_id, title, content, notification_type)
-            VALUES (?, ?, ?, 'order')
+            INSERT INTO notifications (user_id, title, content, notification_type, reference_id)
+            VALUES (?, ?, ?, 'order', ?)
           `,
           [
             order.user_id,
             `Order ${order.order_code} updated`,
             `Your order status is now ${status}`,
+            orderId,
           ],
         );
       }
@@ -5287,8 +5403,8 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
       await connection.execute(
         `
-          INSERT INTO notifications (user_id, title, content, notification_type)
-          VALUES (?, ?, ?, 'order')
+          INSERT INTO notifications (user_id, title, content, notification_type, reference_id)
+          VALUES (?, ?, ?, 'order', ?)
         `,
         [
           payment.user_id,
@@ -5298,6 +5414,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           result === 'success'
             ? 'Giao dịch thanh toán qua ví PayPal của bạn đã được xác nhận thành công.'
             : 'Giao dịch thanh toán qua ví PayPal của bạn đã bị từ chối hoặc thất bại.',
+          payment.order_id,
         ],
       );
 
@@ -5340,6 +5457,13 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       await this.pool.execute(`
         ALTER TABLE notifications
         ADD COLUMN image_url VARCHAR(255) NULL
+      `);
+    }
+
+    if (!(await this.hasColumn('notifications', 'reference_id'))) {
+      await this.pool.execute(`
+        ALTER TABLE notifications
+        ADD COLUMN reference_id BIGINT NULL
       `);
     }
 
@@ -5842,8 +5966,8 @@ export class MySqlDatabaseService implements OnModuleDestroy {
 
       await connection.execute(
         `
-          INSERT INTO notifications (user_id, title, content, notification_type)
-          VALUES (?, ?, ?, 'order')
+          INSERT INTO notifications (user_id, title, content, notification_type, reference_id)
+          VALUES (?, ?, ?, 'order', ?)
         `,
         [
           payment.user_id,
@@ -5853,6 +5977,7 @@ export class MySqlDatabaseService implements OnModuleDestroy {
           result === 'success'
             ? 'Your mock bank confirmation has been received successfully'
             : 'Your mock bank confirmation was declined',
+          payment.order_id,
         ],
       );
 
@@ -6656,15 +6781,16 @@ export class MySqlDatabaseService implements OnModuleDestroy {
       if (order.user_id) {
         await connection.execute(
           `
-            INSERT INTO notifications (user_id, title, content, notification_type)
-            VALUES (?, ?, ?, 'order')
+            INSERT INTO notifications (user_id, title, content, notification_type, reference_id)
+            VALUES (?, ?, ?, 'order', ?)
           `,
           [
             order.user_id,
             `Yêu cầu đổi trả đơn hàng ${order.order_code} đã được xử lý`,
-            action === 'approve' 
+            action === 'approve'
               ? `Yêu cầu đổi trả của bạn đã được chấp thuận. Trạng thái: ${nextStatus}.`
-              : `Yêu cầu đổi trả của bạn bị từ chối. Trạng thái đơn hàng: ${nextStatus}. Lý do: ${description || 'Không có'}`
+              : `Yêu cầu đổi trả của bạn bị từ chối. Trạng thái đơn hàng: ${nextStatus}. Lý do: ${description || 'Không có'}`,
+            orderId,
           ],
         );
       }

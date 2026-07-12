@@ -204,6 +204,29 @@ export class AuthService {
     };
   }
 
+  async me(userId: number) {
+    const user = await this.database.findUserById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('User no longer exists');
+    }
+
+    if (user.status !== 'active') {
+      throw new UnauthorizedException('User is blocked');
+    }
+
+    // Recompute permissions from the current role/adminLevel instead of
+    // echoing the (possibly stale) list embedded in the access token, so a
+    // successful /auth/me always carries the full, up-to-date permission set.
+    return {
+      message: 'Current authenticated user',
+      user: {
+        ...this.toSafeUser(user),
+        permissions: this.database.getPermissionsForUser(user),
+      },
+    };
+  }
+
   async oAuthLogin(userPayload: any): Promise<AuthLoginResult> {
     if (!userPayload || !userPayload.email) {
       throw new BadRequestException('Invalid OAuth payload');

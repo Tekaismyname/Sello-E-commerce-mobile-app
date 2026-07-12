@@ -8,8 +8,10 @@ import { MySqlDatabaseService } from './auth/services/mysql-database.service';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
-  // Serve static assets from the public directory
-  app.useStaticAssets(join(__dirname, '..', 'public'));
+  // Serve static assets from the public directory. Resolve from the process
+  // working directory to match multer's './public/uploads' destination —
+  // __dirname points into dist/ after build, where no public folder exists.
+  app.useStaticAssets(join(process.cwd(), 'public'));
 
   const port = Number(process.env.PORT ?? 3000);
   const database = app.get(MySqlDatabaseService);

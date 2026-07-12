@@ -22,6 +22,14 @@ export class ProductController {
     return this.productService.listProducts(query);
   }
 
+  @Get(':productId/reviews')
+  getProductReviews(
+    @Param('productId', ParseIntPipe) productId: number,
+    @Query() query: { page?: string; limit?: string },
+  ) {
+    return this.productService.getProductReviews(productId, query);
+  }
+
   @Get(':productId')
   getProductDetail(@Param('productId', ParseIntPipe) productId: number) {
     return this.productService.getProductDetail(productId);
