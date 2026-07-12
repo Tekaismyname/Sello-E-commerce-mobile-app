@@ -9,6 +9,8 @@ type ProductBasicInfoProps = {
   discount?: string;
   rating: number;
   reviewsCount: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 };
 
 export function ProductBasicInfo({
@@ -19,6 +21,8 @@ export function ProductBasicInfo({
   discount,
   rating,
   reviewsCount,
+  isFavorite = false,
+  onToggleFavorite,
 }: ProductBasicInfoProps) {
   return (
     <View className="bg-white px-4 pt-4 pb-2">
@@ -32,7 +36,12 @@ export function ProductBasicInfo({
           </Text>
         </View>
         <View className="mt-1">
-          <ProductFavoriteButton isFavorite={true} className="bg-transparent h-8 w-8" color="#BA1A1A" />
+          <ProductFavoriteButton
+            isFavorite={isFavorite}
+            onPress={onToggleFavorite}
+            className="bg-transparent h-8 w-8"
+            color="#BA1A1A"
+          />
         </View>
       </View>
 

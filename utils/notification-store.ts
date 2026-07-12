@@ -19,6 +19,13 @@ export const notificationStore = {
     adminUnreadCount = count;
     listeners.forEach((l) => l());
   },
+  // Clears both badges at once — used on signIn/signOut so a new session
+  // never shows counts that belong to the previous account.
+  reset() {
+    customerUnreadCount = 0;
+    adminUnreadCount = 0;
+    listeners.forEach((l) => l());
+  },
   subscribe(listener: () => void) {
     listeners.add(listener);
     return () => {

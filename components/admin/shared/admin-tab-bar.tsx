@@ -96,14 +96,14 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
             >
               <View className="relative">
                 <Feather name={tab.icon} size={16} color={tintColor} />
-                {tab.key === "orders" && pendingCount > 0 && (
+                {tab.key === "orders" && !isFocused && pendingCount > 0 && (
                   <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
                     <Text className="text-[8px] font-bold text-white leading-none">
                       {pendingCount}
                     </Text>
                   </View>
                 )}
-                {tab.key === "chats" && pendingChatsCount > 0 && (
+                {tab.key === "chats" && !isFocused && pendingChatsCount > 0 && (
                   <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
                     <Text className="text-[8px] font-bold text-white leading-none">
                       {pendingChatsCount}

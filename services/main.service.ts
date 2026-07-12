@@ -357,6 +357,34 @@ const mapPublicProductToCard = (
     imageUrl: product.primaryImageUrl ?? fallbackImages[index % fallbackImages.length],
   };
 };
+export interface ProductReviewItem {
+  id: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  isVerifiedPurchase: boolean;
+  mediaUrls: string[];
+  createdAt: string;
+}
+
+export interface ProductReviewsData {
+  items: ProductReviewItem[];
+  summary: {
+    averageRating: number;
+    totalReviews: number;
+    totalPhotos: number;
+    ratingBreakdown: Record<"1" | "2" | "3" | "4" | "5", number>;
+  };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 async function requestMain<T>(path: string): Promise<T> {
   let response: Response | null = null;
   const triedBaseUrls: string[] = [];
@@ -464,6 +492,22 @@ export const mainService = {
       })),
       brands: homeData.brands,
     };
+  },
+
+  async getProductReviews(
+    productId: number,
+    params?: { page?: number; limit?: number },
+  ): Promise<ProductReviewsData> {
+    const queryParts: string[] = [];
+    if (params?.page) queryParts.push(`page=${params.page}`);
+    if (params?.limit) queryParts.push(`limit=${params.limit}`);
+
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+    const response = await requestMain<{ message: string; data: ProductReviewsData }>(
+      `${API_ENDPOINTS.products.reviews(productId)}${queryString}`,
+    );
+
+    return response.data;
   },
 
   async getProducts(params: {

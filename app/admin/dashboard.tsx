@@ -1,7 +1,9 @@
 import { AdminRecentOrders } from "@/components/admin/dashboard/admin-recent-orders";
 import { AdminSalesChart } from "@/components/admin/dashboard/admin-sales-chart";
+import { WeeklyProfitChart } from "@/components/admin/dashboard/weekly-profit-chart";
 import { AdminStatCards } from "@/components/admin/dashboard/admin-stat-cards";
 import { AdminHeader } from "@/components/admin/shared/admin-header";
+import { AdminDashboardSkeleton } from "@/components/admin/shared/admin-dashboard-skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { adminService } from "@/services/admin.service";
 import { AdminDashboardData, AdminOrder, AdminReportOverview } from "@/types/admin";
@@ -9,11 +11,11 @@ import { getReasonLabel } from "@/utils/order-reasons";
 import { Feather } from "@expo/vector-icons";
 import { Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AdminDashboardScreen() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [report, setReport] = useState<AdminReportOverview | null>(null);
@@ -98,7 +100,9 @@ export default function AdminDashboardScreen() {
         </View>
 
         <View className="mb-6">
-          <Text className="mb-2 text-[28px] font-extrabold leading-[36px] text-[#191C1F]">Hello Admin</Text>
+          <Text className="mb-2 text-[28px] font-extrabold leading-[36px] text-[#191C1F]">
+            {user?.fullName ? `Hello, ${user.fullName}!` : "Hello Admin"}
+          </Text>
           <Text className="text-[15px] leading-[24px] text-[#3F4850]">This is the current system overview. From here you can quickly navigate to reports and system config.</Text>
         </View>
 
@@ -119,11 +123,7 @@ export default function AdminDashboardScreen() {
           </Pressable>
         </View>
 
-        {loading && (
-          <View className="mt-10 flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#006397" />
-          </View>
-        )}
+        {loading && <AdminDashboardSkeleton />}
 
         {!loading && error && (
           <View className="rounded-[12px] bg-white p-4">
@@ -209,6 +209,7 @@ export default function AdminDashboardScreen() {
               todayRevenue={report?.todayRevenue}
               yesterdayRevenue={report?.yesterdayRevenue}
             />
+            <WeeklyProfitChart revenueByDay={report?.revenueByDay} />
             <View className="mt-4" />
             <AdminRecentOrders orders={data.recentOrders} />
           </>

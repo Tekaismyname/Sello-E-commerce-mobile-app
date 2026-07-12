@@ -1,7 +1,10 @@
 import { useAuth } from "@/contexts/auth-context";
 import { useNotificationsView } from "@/hooks/customer/use-notifications-view";
+import { notificationStore } from "@/utils/notification-store";
+import { Notification } from "@/types/customer";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Href, router } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,6 +23,46 @@ export default function NotificationsScreen() {
   const { token } = useAuth();
   const { notifications, loading, saving, error, markRead, markAllRead } = useNotificationsView(token);
   const unreadCount = notifications.filter((item) => !item.isRead).length;
+
+  // Keep the header bell badge in sync with the list (e.g. right after reading),
+  // instead of waiting for the 12s background poll to catch up.
+  useEffect(() => {
+    if (!loading && !error) {
+      notificationStore.setCustomerCount(unreadCount);
+    }
+  }, [unreadCount, loading, error]);
+
+  // Route to the relevant screen based on the notification category. Order
+  // notifications carry the order id in referenceId, so they deep-link straight
+  // to the order detail; older rows without one fall back to the orders list.
+  const goToTarget = (item: Notification) => {
+    switch (item.notificationType) {
+      case "order":
+        if (item.referenceId) {
+          router.push((`/main/order-detail?orderId=${item.referenceId}` as unknown) as Href);
+        } else {
+          router.push("/main/orders" as Href);
+        }
+        break;
+      case "promotion":
+        router.push("/main/home" as Href);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handlePress = async (item: Notification) => {
+    try {
+      if (!item.isRead) {
+        await markRead(item.id);
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message ?? "Unable to update the notification.");
+    } finally {
+      goToTarget(item);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
@@ -64,14 +107,8 @@ export default function NotificationsScreen() {
               return (
                 <Pressable
                   key={item.id}
-                  disabled={item.isRead || saving}
-                  onPress={async () => {
-                    try {
-                      await markRead(item.id);
-                    } catch (err: any) {
-                      Alert.alert("Error", err?.message ?? "Unable to update the notification.");
-                    }
-                  }}
+                  disabled={saving}
+                  onPress={() => handlePress(item)}
                   className={`flex-row gap-3 rounded-[16px] border p-4 shadow-[0px_4px_12px_rgba(0,0,0,0.015)] ${
                     !item.isRead
                       ? "border-[#BFDBFE] border-l-[4px] border-l-[#0369A1] bg-[#F0F7FF]"

@@ -5,9 +5,18 @@ import { Feather } from "@expo/vector-icons";
 import { Alert, Pressable, Text, View } from "react-native";
 import { useNotificationCount } from "@/utils/notification-store";
 
+const ADMIN_ROLE_CONFIG: Record<number, { label: string; color: string; bg: string }> = {
+  1: { label: "SUPER ADMIN", color: "#006397", bg: "#EAF5FC" },
+  2: { label: "STAFF", color: "#7C3AED", bg: "#F3EEFF" },
+  3: { label: "VIEWER", color: "#B45309", bg: "#FEF3C7" },
+};
+
 export function AdminHeader({ title }: { title?: string }) {
-  const { refreshToken, signOut } = useAuth();
+  const { refreshToken, signOut, user } = useAuth();
   const unreadCount = useNotificationCount("admin");
+  const roleCfg =
+    (user?.adminLevel != null ? ADMIN_ROLE_CONFIG[user.adminLevel] : undefined) ??
+    { label: "ADMIN", color: "#006397", bg: "#EAF5FC" };
 
   const handleLogout = async () => {
     Alert.alert("Log out", "Do you want to log out of admin account?", [
@@ -40,7 +49,21 @@ export function AdminHeader({ title }: { title?: string }) {
         {title ? (
           <Text className="text-[20px] font-extrabold text-[#1a232d]">{title}</Text>
         ) : (
-          <Text className="text-[24px] font-extrabold text-[#006397] tracking-tight">Sello</Text>
+          <View>
+            <Text className="text-[24px] font-extrabold text-[#006397] tracking-tight">Sello</Text>
+            <View className="mt-0.5 flex-row items-center gap-2">
+              {user?.fullName ? (
+                <Text className="max-w-[120px] text-[11px] font-semibold text-[#6b7682]" numberOfLines={1}>
+                  {user.fullName}
+                </Text>
+              ) : null}
+              <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: roleCfg.bg }}>
+                <Text className="text-[9px] font-black tracking-widest" style={{ color: roleCfg.color }}>
+                  {roleCfg.label}
+                </Text>
+              </View>
+            </View>
+          </View>
         )}
       </View>
       <View className="flex-row items-center gap-3">

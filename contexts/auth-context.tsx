@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AuthUser, LoginResponse } from "@/types/auth";
+import { authService } from "@/services/auth.service";
+import { notificationStore } from "@/utils/notification-store";
+import { wishlistStore } from "@/utils/wishlist-store";
 
 // ─── Storage Keys ─────────────────────────────────────────
 const STORAGE_KEYS = {
@@ -63,6 +66,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user,
           isLoading: false,
         });
+
+        // Refresh role/permissions from the server so admin gating uses the
+        // latest data. /auth/me recomputes permissions from the DB, so a
+        // successful call always carries the full set for the user's adminLevel.
+        if (accessToken && user) {
+          try {
+            const { user: fresh } = await authService.me(accessToken);
+            const mergedUser: AuthUser = {
+              ...user,
+              role: fresh.role ?? user.role,
+              // adminLevel: null is meaningful (customer / unleveled admin),
+              // so only fall back when the field is absent entirely.
+              adminLevel:
+                fresh.adminLevel !== undefined ? fresh.adminLevel : user.adminLevel,
+              // Never downgrade to an empty list on a successful response —
+              // keep the permissions from the last login instead, so admin
+              // write buttons don't vanish because of a partial payload.
+              permissions:
+                Array.isArray(fresh.permissions) && fresh.permissions.length > 0
+                  ? fresh.permissions
+                  : user.permissions,
+            };
+            await AsyncStorage.setItem(STORAGE_KEYS.user, JSON.stringify(mergedUser));
+            setState((prev) => ({ ...prev, user: mergedUser }));
+          } catch (error: any) {
+            // /auth/me failed — expired access token (1h lifetime, no refresh
+            // flow), offline, or server down. Keep the cached user AND the
+            // permissions from the last successful login instead of wiping
+            // them; the fail-closed check in use-permissions still protects
+            // users that never had permissions. Do NOT sign out here: an
+            // expired token after 1h is the normal case, not an attack.
+            console.warn(
+              "[auth] Could not refresh role/permissions from /auth/me — keeping cached values.",
+              error?.message ?? error,
+            );
+          }
+        }
       } catch {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
@@ -71,6 +111,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (loginResponse: LoginResponse) => {
     const { tokens, user } = loginResponse;
+
+    // Badge counts belong to a session: clear leftovers from the previous
+    // account right away instead of waiting for the background poll.
+    notificationStore.reset();
+    wishlistStore.reset();
 
     await Promise.all([
       AsyncStorage.setItem(STORAGE_KEYS.accessToken, tokens.accessToken),
@@ -87,6 +132,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    notificationStore.reset();
+    wishlistStore.reset();
+
     await Promise.all([
       AsyncStorage.removeItem(STORAGE_KEYS.accessToken),
       AsyncStorage.removeItem(STORAGE_KEYS.refreshToken),

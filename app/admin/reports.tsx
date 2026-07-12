@@ -1,4 +1,5 @@
 import { AdminHeader } from "@/components/admin/shared/admin-header";
+import { WeeklyProfitChart } from "@/components/admin/dashboard/weekly-profit-chart";
 import { useAuth } from "@/contexts/auth-context";
 import { usePermissions } from "@/hooks/auth/use-permissions";
 import { adminService } from "@/services/admin.service";
@@ -178,6 +179,8 @@ export default function AdminReportsScreen() {
                 <Text className="mt-2 text-[24px] font-extrabold text-[#191C1F]">{report.orders}</Text>
               </View>
             </View>
+
+            <WeeklyProfitChart revenueByDay={report.revenueByDay} />
 
             <View className="rounded-[14px] bg-white p-4">
               <View className="flex-row items-center justify-between">

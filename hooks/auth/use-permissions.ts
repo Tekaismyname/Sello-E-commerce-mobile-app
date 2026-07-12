@@ -25,7 +25,10 @@ export function usePermissions() {
   const hasPermission = (permission: string) => {
     if (!permission.trim()) return true;
     if (!isAdmin) return false;
-    if (!permissions.length) return true;
+    // Fail closed: an admin whose permission list is missing/empty (e.g. a stale
+    // cached user) gets no privileged actions rather than all of them. Fresh
+    // permissions are re-fetched on app start via authService.me().
+    if (!permissions.length) return false;
 
     const expected = normalize(permission);
     return permissions.some(

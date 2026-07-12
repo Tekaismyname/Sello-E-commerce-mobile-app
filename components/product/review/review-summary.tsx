@@ -4,16 +4,17 @@ import { Text, View } from "react-native";
 type ReviewSummaryProps = {
   rating: number;
   reviewsCount: number;
+  breakdown?: Record<"1" | "2" | "3" | "4" | "5", number>;
 };
 
-export function ReviewSummary({ rating, reviewsCount }: ReviewSummaryProps) {
-  const bars = [
-    { star: 5, percent: 85 },
-    { star: 4, percent: 10 },
-    { star: 3, percent: 3 },
-    { star: 2, percent: 1 },
-    { star: 1, percent: 1 },
-  ];
+export function ReviewSummary({ rating, reviewsCount, breakdown }: ReviewSummaryProps) {
+  const bars = ([5, 4, 3, 2, 1] as const).map((star) => ({
+    star,
+    percent:
+      breakdown && reviewsCount > 0
+        ? Math.round(((breakdown[String(star) as keyof typeof breakdown] ?? 0) / reviewsCount) * 100)
+        : 0,
+  }));
 
   return (
     <View className="bg-white px-4 pb-2 pt-5">

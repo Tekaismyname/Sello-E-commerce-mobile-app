@@ -90,6 +90,16 @@ const resolveApiBaseUrls = () => {
 export const API_BASE_URL_CANDIDATES = resolveApiBaseUrls();
 export const API_BASE_URL = API_BASE_URL_CANDIDATES[0] ?? "http://127.0.0.1:3000";
 
+// Public web domain used for shareable links (copy product link, ...).
+// sello.app is a placeholder until a real domain exists — override it via
+// EXPO_PUBLIC_SHARE_BASE_URL in .env without touching component code.
+export const SHARE_BASE_URL =
+  process.env.EXPO_PUBLIC_SHARE_BASE_URL?.trim().replace(/\/$/, "") ||
+  "https://sello.app";
+
+export const buildProductShareUrl = (productId: number) =>
+  `${SHARE_BASE_URL}/product/${productId}`;
+
 export const API_ENDPOINTS = {
   auth: {
     register: "/auth/register",
@@ -113,6 +123,7 @@ export const API_ENDPOINTS = {
   products: {
     list: "/products",
     detail: (productId: number) => `/products/${productId}`,
+    reviews: (productId: number) => `/products/${productId}/reviews`,
   },
   customer: {
     profile: "/me",
@@ -131,6 +142,7 @@ export const API_ENDPOINTS = {
     addWishlistItem: "/wishlist/items",
     deleteWishlistItem: (wishlistItemId: number) => `/wishlist/items/${wishlistItemId}`,
     createReview: "/reviews",
+    uploadImage: "/uploads",
   },
   cart: {
     get: "/cart",

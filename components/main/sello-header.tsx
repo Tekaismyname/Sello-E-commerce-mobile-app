@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useNotificationCount } from "@/utils/notification-store";
+import { useWishlistCount } from "@/utils/wishlist-store";
 
 type SelloHeaderProps = {
   onMenuPress?: () => void;
@@ -15,6 +16,7 @@ export function SelloHeader({
   onNotificationPress,
 }: SelloHeaderProps) {
   const unreadCount = useNotificationCount("customer");
+  const wishlistCount = useWishlistCount();
 
   return (
     <View className="flex-row items-center justify-between px-4 py-3">
@@ -33,6 +35,19 @@ export function SelloHeader({
       </View>
 
       <View className="flex-row items-center gap-1">
+        <Pressable
+          className="h-8 w-8 items-center justify-center rounded-full active:bg-[#f0f2f5] relative"
+          onPress={() => router.push("/main/wishlist" as Href)}
+        >
+          <Feather name="heart" size={17} color="#2d3640" />
+          {wishlistCount > 0 && (
+            <View className="absolute -right-0.5 -top-0.5 h-4 min-w-[16px] items-center justify-center rounded-full bg-[#EE4D2D] px-1">
+              <Text className="text-[8px] font-bold text-white leading-none">
+                {wishlistCount > 99 ? "99+" : wishlistCount}
+              </Text>
+            </View>
+          )}
+        </Pressable>
         <Pressable
           className="h-8 w-8 items-center justify-center rounded-full active:bg-[#f0f2f5] relative"
           onPress={onNotificationPress ?? (() => router.push("/main/notifications" as Href))}

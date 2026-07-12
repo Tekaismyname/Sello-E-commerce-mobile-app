@@ -79,6 +79,7 @@ export interface Notification {
   message?: string;
   notificationType?: "promotion" | "order" | "system";
   imageUrl?: string | null;
+  referenceId?: number | null;
   isRead: boolean;
   createdAt: string;
 }

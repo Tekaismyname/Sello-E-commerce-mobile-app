@@ -258,11 +258,14 @@ export const authService = {
     return request<{
       message: string;
       user: {
-        sub: number;
+        id: number;
+        fullName: string;
         email: string;
         phone: string;
         role: string;
         adminLevel: number | null;
+        status: string;
+        isVerified: boolean;
         permissions: string[];
       };
     }>(API_ENDPOINTS.auth.me, {

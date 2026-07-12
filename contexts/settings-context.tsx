@@ -426,7 +426,7 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en"); // English as default
-  const [theme, setThemeState] = useState<ThemeMode>("system");
+  const [theme, setThemeState] = useState<ThemeMode>("light"); // Light-only (theme switching disabled)
   const [toast, setToast] = useState<ToastState>({
     visible: false,
     title: "",
@@ -441,21 +441,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [savedLang, savedTheme] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEYS.language),
-          AsyncStorage.getItem(STORAGE_KEYS.theme),
-        ]);
+        const savedLang = await AsyncStorage.getItem(STORAGE_KEYS.language);
         if (savedLang === "vi" || savedLang === "en") {
           setLanguageState(savedLang);
         } else {
           setLanguageState("en");
         }
-        if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "system") {
-          setThemeState(savedTheme);
-          applyTheme(savedTheme);
-        } else {
-          applyTheme("system");
-        }
+        // Theme switching is disabled — always force Light regardless of saved value.
+        setThemeState("light");
+        applyTheme("light");
       } catch (e) {
         console.warn("Failed to load settings from storage:", e);
       }

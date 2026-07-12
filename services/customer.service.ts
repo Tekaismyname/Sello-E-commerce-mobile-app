@@ -386,6 +386,7 @@ const mapNotification = (raw: Record<string, unknown>): Notification => ({
       ? raw.notificationType
       : "system",
   imageUrl: typeof raw.imageUrl === "string" ? raw.imageUrl : null,
+  referenceId: raw.referenceId == null ? null : toNumber(raw.referenceId),
   isRead: Boolean(raw.isRead),
   createdAt: toDateString(raw.createdAt),
 });
@@ -571,6 +572,81 @@ export const reviewService = {
       token,
       { method: "POST", body: JSON.stringify(payload) },
     );
+  },
+};
+
+// ─── Uploads ──────────────────────────────────────────────
+
+export const uploadService = {
+  // Uploads a local image (file://...) and returns the absolute public URL,
+  // matching the convention the admin screens use for product images.
+  async uploadImage(token: string, fileUri: string): Promise<string> {
+    const filename = fileUri.split("/").pop() || "upload.jpg";
+    const match = /\.(\w+)$/.exec(filename);
+    const fileType = match ? `image/${match[1].toLowerCase()}` : "image/jpeg";
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: fileUri,
+      name: filename,
+      type: fileType,
+    } as unknown as Blob);
+
+    let response: Response | null = null;
+    let usedBaseUrl = "";
+    const triedBaseUrls: string[] = [];
+
+    for (const baseUrl of API_BASE_URL_CANDIDATES) {
+      triedBaseUrls.push(baseUrl);
+
+      try {
+        // No explicit Content-Type: fetch adds the multipart boundary itself.
+        response = await fetch(`${baseUrl}${API_ENDPOINTS.customer.uploadImage}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        usedBaseUrl = baseUrl;
+        const idx = API_BASE_URL_CANDIDATES.indexOf(baseUrl);
+        if (idx > 0) {
+          API_BASE_URL_CANDIDATES.splice(idx, 1);
+          API_BASE_URL_CANDIDATES.unshift(baseUrl);
+        }
+        break;
+      } catch {
+        continue;
+      }
+    }
+
+    if (!response) {
+      throw new Error(
+        `Không thể kết nối backend để upload ảnh. Đã thử: ${triedBaseUrls.join(", ")}.`,
+      );
+    }
+
+    const raw = await response.text();
+    let payload: Record<string, unknown> = {};
+
+    if (raw) {
+      try {
+        payload = JSON.parse(raw) as Record<string, unknown>;
+      } catch {
+        payload = {};
+      }
+    }
+
+    if (!response.ok) {
+      const message =
+        typeof payload.message === "string" ? payload.message : "Upload ảnh thất bại";
+      throw new Error(message);
+    }
+
+    const url = typeof payload.url === "string" ? payload.url : "";
+    if (!url) {
+      throw new Error("Upload ảnh thất bại");
+    }
+
+    return url.startsWith("http") ? url : `${usedBaseUrl}${url}`;
   },
 };
 

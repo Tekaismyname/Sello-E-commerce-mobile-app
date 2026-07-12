@@ -1,4 +1,4 @@
-import { ReviewImageUploader } from "@/components/product/review/review-image-uploader";
+import { ReviewImage, ReviewImageUploader } from "@/components/product/review/review-image-uploader";
 import {
   ReviewRatingSelector,
   ReviewSubmitBar,
@@ -23,6 +23,7 @@ export default function WriteReviewScreen() {
   const { token } = useAuth();
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [images, setImages] = useState<ReviewImage[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const rawProductId =
@@ -61,6 +62,20 @@ export default function WriteReviewScreen() {
       return;
     }
 
+    if (images.some((img) => img.status === "uploading")) {
+      Alert.alert("Notice", "Please wait for your photos to finish uploading.");
+      return;
+    }
+
+    if (images.some((img) => img.status === "error")) {
+      Alert.alert("Notice", "Some photos failed to upload. Retry or remove them before submitting.");
+      return;
+    }
+
+    const mediaUrls = images
+      .map((img) => img.remoteUrl)
+      .filter((url): url is string => Boolean(url));
+
     setSubmitting(true);
 
     try {
@@ -68,6 +83,9 @@ export default function WriteReviewScreen() {
         productId,
         rating,
         comment: reviewText || undefined,
+        media: mediaUrls.length
+          ? mediaUrls.map((url) => ({ mediaUrl: url, mediaType: "image" as const }))
+          : undefined,
       });
 
       triggerLocalNotification("Review submitted!", "Thank you for sharing your feedback on this product.");
@@ -104,7 +122,7 @@ export default function WriteReviewScreen() {
           <View className="rounded-[16px] bg-white p-5 shadow-sm">
             <ReviewRatingSelector rating={rating} onRatingChange={setRating} />
             <ReviewTextBox value={reviewText} onChangeText={setReviewText} />
-            <ReviewImageUploader />
+            <ReviewImageUploader images={images} onImagesChange={setImages} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

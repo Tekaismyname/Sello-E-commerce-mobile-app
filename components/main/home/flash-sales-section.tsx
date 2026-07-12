@@ -2,9 +2,11 @@ import { ProductCard } from "@/types/main";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Href, router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Text, View } from "react-native";
 import { useSettings } from "@/contexts/settings-context";
+
+const CARD_STEP = 132; // 120px card + 12px gap
 
 type FlashSalesSectionProps = {
   countdownValues: string[];
@@ -47,26 +49,96 @@ export function FlashSalesSection({ countdownValues, flashSaleEndsAt, products }
     [countdownValues, liveCountdown],
   );
 
+  // Shimmer/glow loop on the "FLASH SALE" wordmark.
+  const shimmer = useRef(new Animated.Value(0.4)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, { toValue: 1, duration: 900, easing: Easing.ease, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0.4, duration: 900, easing: Easing.ease, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmer]);
+
+  // Pulse the seconds box each time the second changes.
+  const digitPulse = useRef(new Animated.Value(1)).current;
+  const prevSeconds = useRef<string | null>(null);
+  const seconds = displayedCountdown[2];
+  useEffect(() => {
+    if (seconds !== prevSeconds.current) {
+      prevSeconds.current = seconds ?? null;
+      Animated.sequence([
+        Animated.timing(digitPulse, { toValue: 1.25, duration: 90, useNativeDriver: true }),
+        Animated.timing(digitPulse, { toValue: 1, duration: 90, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [seconds, digitPulse]);
+
+  // Slow auto-scroll through the products; pauses while the user is dragging.
+  const scrollRef = useRef<ScrollView>(null);
+  const offsetRef = useRef(0);
+  const contentWidthRef = useRef(0);
+  const viewportWidthRef = useRef(0);
+  const draggingRef = useRef(false);
+
+  useEffect(() => {
+    if (products.length <= 2) return undefined;
+    const timer = setInterval(() => {
+      if (draggingRef.current) return;
+      const maxOffset = Math.max(0, contentWidthRef.current - viewportWidthRef.current);
+      let next = offsetRef.current + CARD_STEP;
+      if (next > maxOffset) next = 0;
+      offsetRef.current = next;
+      scrollRef.current?.scrollTo({ x: next, animated: true });
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [products.length]);
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    offsetRef.current = e.nativeEvent.contentOffset.x;
+  };
+
   return (
     <View className="mb-5 rounded-[16px] border border-[#FFE5DF] bg-[#FFF3F0] px-3 py-3">
       <View className="mb-3 flex-row items-center justify-between">
         <View className="flex-row items-center gap-1.5">
           <Feather name="zap" size={18} color="#EE4D2D" />
-          <Text className="text-[20px] font-black uppercase tracking-tighter text-[#EE4D2D]">FLASH SALE</Text>
+          <Animated.Text
+            style={{ opacity: shimmer }}
+            className="text-[20px] font-black uppercase tracking-tighter text-[#EE4D2D]"
+          >
+            FLASH SALE
+          </Animated.Text>
         </View>
         <View className="flex-row items-center gap-1">
           {displayedCountdown.map((value, index) => (
             <View key={`${value}-${index}`} className="flex-row items-center">
-              <View className="min-w-[22px] h-[20px] items-center justify-center rounded-[4px] bg-[#222222] px-1">
+              <Animated.View
+                style={index === 2 ? { transform: [{ scale: digitPulse }] } : undefined}
+                className="min-w-[22px] h-[20px] items-center justify-center rounded-[4px] bg-[#222222] px-1"
+              >
                 <Text className="text-center text-[11px] font-black text-white">{value}</Text>
-              </View>
+              </Animated.View>
               {index < 2 && <Text className="mx-[2px] self-center text-[12px] font-extrabold text-[#EE4D2D]">:</Text>}
             </View>
           ))}
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 py-1">
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerClassName="gap-3 py-1"
+        scrollEventThrottle={16}
+        onScroll={onScroll}
+        onScrollBeginDrag={() => { draggingRef.current = true; }}
+        onScrollEndDrag={() => { draggingRef.current = false; }}
+        onLayout={(e) => { viewportWidthRef.current = e.nativeEvent.layout.width; }}
+        onContentSizeChange={(w) => { contentWidthRef.current = w; }}
+      >
         {products.map((product, index) => {
           const percent = 30 + (index % 7) * 10;
           return (

@@ -9,8 +9,8 @@ export type ReviewData = {
   date: string;
   content: string;
   images: string[];
-  color: string;
-  size: string;
+  color?: string;
+  size?: string;
 };
 
 type ReviewItemProps = {

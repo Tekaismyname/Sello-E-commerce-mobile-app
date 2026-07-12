@@ -4,7 +4,18 @@ import { ProductCard } from "@/types/main";
 import { mainService } from "@/services/main.service";
 import { useSettings } from "@/contexts/settings-context";
 
-export type PriceFilterValue = "all" | "lt500" | "500to1000" | "1000to2000" | "gt2000";
+export type PriceFilterValue = "all" | "lt500" | "500to1000" | "1000to2000" | "gt2000" | "custom";
+
+export type CustomPriceRange = { min: number | null; max: number | null };
+
+// Compact VND label: 300000 -> "300k", 1500000 -> "1.5M".
+const formatPriceShort = (value: number) => {
+  if (value >= 1_000_000) {
+    const millions = value / 1_000_000;
+    return `${Number.isInteger(millions) ? millions : millions.toFixed(1)}M`;
+  }
+  return `${Math.round(value / 1000)}k`;
+};
 export type RatingFilterValue = "all" | "4up" | "45up";
 
 export type DropdownOption = {
@@ -24,11 +35,27 @@ const syntheticRating = (product: ProductCard) => {
   return 3.5 + (seed % 16) / 10;
 };
 
-const getPriceLabel = (value: PriceFilterValue, t: (key: string, def?: string) => string) => {
+const getPriceLabel = (
+  value: PriceFilterValue,
+  customRange: CustomPriceRange | null,
+  t: (key: string, def?: string) => string,
+) => {
   if (value === "lt500") return t("price_lt500", "Price: < 500k");
   if (value === "500to1000") return t("price_500to1000", "Price: 500k-1M");
   if (value === "1000to2000") return t("price_1000to2000", "Price: 1M-2M");
   if (value === "gt2000") return t("price_gt2000", "Price: > 2M");
+  if (value === "custom" && customRange) {
+    const prefix = t("price_filter", "Price");
+    if (customRange.min != null && customRange.max != null) {
+      return `${prefix}: ${formatPriceShort(customRange.min)}-${formatPriceShort(customRange.max)}`;
+    }
+    if (customRange.min != null) {
+      return `${prefix}: > ${formatPriceShort(customRange.min)}`;
+    }
+    if (customRange.max != null) {
+      return `${prefix}: < ${formatPriceShort(customRange.max)}`;
+    }
+  }
   return t("price_filter", "Price");
 };
 
@@ -42,8 +69,11 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
   const { t } = useSettings();
   const [openChipId, setOpenChipId] = useState<string | null>(null);
   const [priceFilter, setPriceFilter] = useState<PriceFilterValue>("all");
+  const [customPriceRange, setCustomPriceRange] = useState<CustomPriceRange | null>(null);
+  const [priceModalVisible, setPriceModalVisible] = useState(false);
   const [ratingFilter, setRatingFilter] = useState<RatingFilterValue>("all");
   const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>(categoryIdString ?? "all");
   
   const [metadata, setMetadata] = useState<{ categories: any[]; brands: any[] } | null>(null);
   const [products, setProducts] = useState<ProductCard[]>([]);
@@ -73,7 +103,10 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
       let queryCategoryId: number | undefined;
       let querySearch: string | undefined = searchKeyword;
 
-      if (categoryIdString) {
+      if (categoryFilter !== "all") {
+        queryCategoryId = Number(categoryFilter);
+        querySearch = undefined;
+      } else if (categoryIdString) {
         queryCategoryId = Number(categoryIdString);
         querySearch = undefined;
       } else if (metadata && searchKeyword) {
@@ -98,6 +131,9 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
         maxPrice = 2000000;
       } else if (priceFilter === "gt2000") {
         minPrice = 2000000;
+      } else if (priceFilter === "custom" && customPriceRange) {
+        minPrice = customPriceRange.min ?? undefined;
+        maxPrice = customPriceRange.max ?? undefined;
       }
 
       const queryBrandId = brandFilter !== "all" ? Number(brandFilter) : undefined;
@@ -156,13 +192,21 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
   useEffect(() => {
     setPage(1);
     fetchProducts(1, false);
-  }, [searchKeyword, categoryIdString, priceFilter, ratingFilter, brandFilter, metadata]);
+  }, [searchKeyword, categoryIdString, priceFilter, customPriceRange, ratingFilter, brandFilter, categoryFilter, metadata]);
 
   const brandOptions = useMemo(() => {
     if (!metadata) return [{ label: t("all", "All"), value: "all" }];
     return [
       { label: t("all", "All"), value: "all" },
       ...metadata.brands.map((b) => ({ label: b.name, value: String(b.id) })),
+    ];
+  }, [metadata, t]);
+
+  const categoryOptions = useMemo(() => {
+    if (!metadata) return [{ label: t("all", "All"), value: "all" }];
+    return [
+      { label: t("all", "All"), value: "all" },
+      ...metadata.categories.map((c) => ({ label: c.name, value: String(c.id) })),
     ];
   }, [metadata, t]);
 
@@ -174,12 +218,20 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
         brandName = `${t("brand_filter", "Brand")}: ${found.name}`;
       }
     }
+    let categoryName = t("category_filter", "Category");
+    if (categoryFilter !== "all" && metadata) {
+      const foundCat = metadata.categories.find((c) => String(c.id) === categoryFilter);
+      if (foundCat) {
+        categoryName = `${t("category_filter", "Category")}: ${foundCat.name}`;
+      }
+    }
     return [
-      { id: "price", label: getPriceLabel(priceFilter, t), active: priceFilter !== "all" },
+      { id: "category", label: categoryName, active: categoryFilter !== "all" },
+      { id: "price", label: getPriceLabel(priceFilter, customPriceRange, t), active: priceFilter !== "all" },
       { id: "rating", label: getRatingLabel(ratingFilter, t), active: ratingFilter !== "all" },
       { id: "brand", label: brandName, active: brandFilter !== "all" },
     ];
-  }, [brandFilter, priceFilter, ratingFilter, metadata, t]);
+  }, [brandFilter, categoryFilter, priceFilter, customPriceRange, ratingFilter, metadata, t]);
 
   const dropdownOptions = useMemo<DropdownOption[]>(() => {
     if (openChipId === "price") {
@@ -189,6 +241,7 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
         { label: t("price_option_500to1000", "500k - 1M"), value: "500to1000" },
         { label: t("price_option_1000to2000", "1M - 2M"), value: "1000to2000" },
         { label: t("price_option_gt2000", "Over 2M"), value: "gt2000" },
+        { label: t("price_option_custom", "Custom range..."), value: "custom" },
       ];
     }
 
@@ -204,14 +257,37 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
       return brandOptions;
     }
 
+    if (openChipId === "category") {
+      return categoryOptions;
+    }
+
     return [];
-  }, [brandOptions, openChipId, t]);
+  }, [brandOptions, categoryOptions, openChipId, t]);
 
   const applyDropdownOption = (value: string) => {
-    if (openChipId === "price") setPriceFilter(value as PriceFilterValue);
+    if (openChipId === "price") {
+      if (value === "custom") {
+        // Open the min-max input modal instead of applying immediately.
+        setPriceModalVisible(true);
+      } else {
+        setCustomPriceRange(null);
+        setPriceFilter(value as PriceFilterValue);
+      }
+    }
     if (openChipId === "rating") setRatingFilter(value as RatingFilterValue);
     if (openChipId === "brand") setBrandFilter(value);
+    if (openChipId === "category") setCategoryFilter(value);
     setOpenChipId(null);
+  };
+
+  const applyCustomPriceRange = (min: number | null, max: number | null) => {
+    setCustomPriceRange({ min, max });
+    setPriceFilter("custom");
+    setPriceModalVisible(false);
+  };
+
+  const closePriceModal = () => {
+    setPriceModalVisible(false);
   };
 
   const handleOpenChip = (chipId: string) => {
@@ -238,6 +314,10 @@ export function useProductListFilters(searchKeyword: string, categoryIdString?: 
     handleLoadMore,
     loading,
     error,
+    priceModalVisible,
+    customPriceRange,
+    applyCustomPriceRange,
+    closePriceModal,
   };
 }
 

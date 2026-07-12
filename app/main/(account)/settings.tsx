@@ -3,10 +3,10 @@ import { ScrollView, Text, View, Pressable, Switch, ActivityIndicator } from "re
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useSettings, Language, ThemeMode } from "@/contexts/settings-context";
+import { useSettings, Language } from "@/contexts/settings-context";
 
 export default function SettingsScreen() {
-  const { language, theme, setLanguage, setTheme, t, clearAppCache } = useSettings();
+  const { language, setLanguage, t, clearAppCache } = useSettings();
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -14,10 +14,6 @@ export default function SettingsScreen() {
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
-  };
-
-  const handleThemeChange = (mode: ThemeMode) => {
-    setTheme(mode);
   };
 
   const handleClearCache = async () => {
@@ -79,53 +75,6 @@ export default function SettingsScreen() {
               </Text>
               {language === "en" && <Feather name="check" size={14} color="#2d6dff" />}
             </Pressable>
-          </View>
-        </View>
-
-        {/* Theme Section */}
-        <View className="rounded-[16px] bg-white p-4">
-          <View className="flex-row items-center gap-2 mb-3">
-            <Feather name="sliders" size={16} color="#2d6dff" />
-            <Text className="text-[14px] font-extrabold text-[#1F2937]">
-              {t("theme_label", "Giao diện (Theme)")}
-            </Text>
-          </View>
-
-          <View className="flex-row gap-2">
-            {(["light", "dark", "system"] as ThemeMode[]).map((mode) => {
-              const label =
-                mode === "light"
-                  ? t("theme_light", "Sáng")
-                  : mode === "dark"
-                  ? t("theme_dark", "Tối")
-                  : t("theme_system", "Hệ thống");
-
-              const icon =
-                mode === "light" ? "sun" : mode === "dark" ? "moon" : "monitor";
-
-              const isSelected = theme === mode;
-
-              return (
-                <Pressable
-                  key={mode}
-                  onPress={() => handleThemeChange(mode)}
-                  className={`flex-1 flex-col items-center gap-1.5 py-3 rounded-[12px] border ${
-                    isSelected
-                      ? "bg-[#EAF4FF] border-[#2d6dff]"
-                      : "bg-white border-[#E5E7EB]"
-                  }`}
-                >
-                  <Feather
-                    name={icon as any}
-                    size={16}
-                    color={isSelected ? "#2d6dff" : "#4B5563"}
-                  />
-                  <Text className={`text-[12px] font-bold ${isSelected ? "text-[#2d6dff]" : "text-[#4B5563]"}`}>
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
           </View>
         </View>
 

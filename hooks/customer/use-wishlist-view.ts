@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { wishlistService } from "@/services/customer.service";
 import { WishlistItem } from "@/types/customer";
+import { wishlistStore } from "@/utils/wishlist-store";
 
 export function useWishlistView(token: string) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
@@ -30,6 +31,13 @@ export function useWishlistView(token: string) {
   useEffect(() => {
     fetchWishlist();
   }, [fetchWishlist]);
+
+  // Keep the header badge in sync with the loaded list.
+  useEffect(() => {
+    if (!loading && !error) {
+      wishlistStore.setCount(wishlist.length);
+    }
+  }, [wishlist, loading, error]);
 
   const addItem = useCallback(
     async (productId: number) => {

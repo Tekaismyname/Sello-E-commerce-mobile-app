@@ -16,6 +16,7 @@ import {
   ProductSpecs,
 } from "@/components/product";
 import { productService } from "@/services/customer.service";
+import { useProductWishlist } from "@/hooks/customer/use-product-wishlist";
 import { ProductDetail } from "@/types/customer";
 
 export default function ProductDetailScreen() {
@@ -25,6 +26,9 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const parsedProductId = Number(Array.isArray(id) ? id[0] : id);
+  const wishlist = useProductWishlist(Number.isNaN(parsedProductId) ? 0 : parsedProductId);
 
   useEffect(() => {
     const rawId = Array.isArray(id) ? id[0] : id;
@@ -109,7 +113,7 @@ export default function ProductDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
-      <ProductDetailHeader />
+      <ProductDetailHeader productId={product.id} />
 
       <ScrollView className="flex-1 bg-[#F2F3F7]" showsVerticalScrollIndicator={false} bounces={false}>
         <ProductImageGallery images={images} />
@@ -122,6 +126,8 @@ export default function ProductDetailScreen() {
           discount={discountPercent}
           rating={product.averageRating ?? 0}
           reviewsCount={product.totalReviews ?? 0}
+          isFavorite={wishlist.inWishlist}
+          onToggleFavorite={wishlist.toggle}
         />
 
         {colors.length > 0 && (
@@ -157,7 +163,13 @@ export default function ProductDetailScreen() {
         <View className="h-[80px]" />
       </ScrollView>
 
-      <ProductBottomActionBar productId={product.id} variantId={selectedVariant?.id ?? null} />
+      <ProductBottomActionBar
+        productId={product.id}
+        variantId={selectedVariant?.id ?? null}
+        inWishlist={wishlist.inWishlist}
+        wishlistLoading={wishlist.loading}
+        onToggleWishlist={wishlist.toggle}
+      />
     </SafeAreaView>
   );
 }

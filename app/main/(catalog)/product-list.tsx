@@ -6,6 +6,7 @@ import {
   FilterChipDropdown,
   FilterChipGroup,
   InlinePromoBanner,
+  PriceRangeModal,
   ProductListCard,
   ProductListFooterLoading,
   ProductListHeaderInfo,
@@ -35,6 +36,10 @@ export default function ProductListScreen() {
     handleLoadMore,
     loading,
     error,
+    priceModalVisible,
+    customPriceRange,
+    applyCustomPriceRange,
+    closePriceModal,
   } = useProductListFilters(searchKeyword, categoryId);
 
   return (
@@ -108,6 +113,14 @@ export default function ProductListScreen() {
           />
         </View>
       ) : null}
+
+      <PriceRangeModal
+        visible={priceModalVisible}
+        initialMin={customPriceRange?.min ?? null}
+        initialMax={customPriceRange?.max ?? null}
+        onApply={applyCustomPriceRange}
+        onClose={closePriceModal}
+      />
     </SafeAreaView>
   );
 }
