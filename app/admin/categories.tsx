@@ -37,23 +37,41 @@ export default function AdminCategoriesScreen() {
   } = useAdminCategoriesView(token);
 
   const openCreate = () => {
-    if (!canCreate) return;
+    if (!canCreate) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to create categories."
+      );
+      return;
+    }
     router.push("/admin/category-form" as Href);
   };
 
   const openEdit = (item: AdminCategory) => {
-    if (!canUpdate) return;
+    if (!canUpdate) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to edit categories."
+      );
+      return;
+    }
     router.push(
       `/admin/category-form?categoryId=${item.id}` as unknown as Href,
     );
   };
 
   const hideCategory = (category: AdminCategory) => {
+    if (!canHide) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to delete categories."
+      );
+      return;
+    }
     Alert.alert("Hide Category", `Hide category ${category.name}?`, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Hidden",
-        style: "destructive",
         onPress: () => {
           const action = canDelete
             ? deleteCategory(category.id)
@@ -65,6 +83,25 @@ export default function AdminCategoriesScreen() {
         },
       },
     ]);
+  };
+
+  const handleToggleStatus = (category: AdminCategory) => {
+    if (!canUpdate) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to edit categories."
+      );
+      return;
+    }
+    updateCategoryStatus(
+      category.id,
+      category.status === "active" ? "inactive" : "active",
+    ).catch((err: any) => {
+      Alert.alert(
+        "Error",
+        err?.message ?? "Cannot update status."
+      );
+    });
   };
 
   return (
@@ -80,12 +117,8 @@ export default function AdminCategoriesScreen() {
           value={search}
           onChange={setSearch}
           onOpenCreate={openCreate}
-          canCreate={canCreate}
+          canCreate={true}
         />
-
-        {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to create categories.</Text>
-        ) : null}
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
@@ -107,23 +140,9 @@ export default function AdminCategoriesScreen() {
               <AdminCategoryCard
                 key={item.id}
                 category={item}
-                onEdit={canUpdate ? openEdit : undefined}
-                onToggleStatus={
-                  canUpdate
-                    ? (category) => {
-                        updateCategoryStatus(
-                          category.id,
-                          category.status === "active" ? "inactive" : "active",
-                        ).catch((err: any) => {
-                          Alert.alert(
-                            "Error",
-                            err?.message ?? "Cannot update status.",
-                          );
-                        });
-                      }
-                    : undefined
-                }
-                onDelete={canHide ? hideCategory : undefined}
+                onEdit={openEdit}
+                onToggleStatus={handleToggleStatus}
+                onDelete={hideCategory}
               />
             ))}
 
@@ -142,14 +161,14 @@ export default function AdminCategoriesScreen() {
         </View>
       ) : null}
 
-      {canCreate ? (
-        <Pressable
-          className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-[#2F95D2]"
-          onPress={openCreate}
-        >
-          <Text className="text-[24px] font-bold text-white">+</Text>
-        </Pressable>
-      ) : null}
+      <Pressable
+        className={`absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-[#2F95D2] ${
+          !canCreate ? "opacity-50" : ""
+        }`}
+        onPress={openCreate}
+      >
+        <Text className="text-[24px] font-bold text-white">+</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }

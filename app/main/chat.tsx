@@ -20,7 +20,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { io, Socket } from "socket.io-client";
 
 let NativeVideo: any = null;
@@ -31,8 +31,9 @@ try {
   console.warn("Native Video module not found, fallback enabled.");
 }
 
-export default function CustomerChatScreen() {
+function CustomerChatScreen() {
   const { token, user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { t, showToast } = useSettings();
   const [room, setRoom] = useState<ChatRoom | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -89,8 +90,17 @@ export default function CustomerChatScreen() {
     socket.on("newMessage", (msg: ChatMessage) => {
       if (!msg || !msg.message_id) return;
       setMessages((prev) => {
-        if (prev.some((item) => item.message_id === msg.message_id)) return prev;
-        return [...prev, msg];
+        // Remove the temporary optimistic message (with negative ID) if it has the same content
+        const filtered = prev.filter(
+          (item) =>
+            !(
+              item.message_id < 0 &&
+              item.content === msg.content &&
+              item.sender_type === msg.sender_type
+            )
+        );
+        if (filtered.some((item) => item.message_id === msg.message_id)) return filtered;
+        return [...filtered, msg];
       });
 
       if (msg.sender_type === "admin") {
@@ -109,6 +119,18 @@ export default function CustomerChatScreen() {
     const messageContent = text.trim();
     setText("");
 
+    // Create optimistic message to display immediately in UI
+    const optimisticMessage: ChatMessage = {
+      message_id: -Date.now(), // Temporary negative ID
+      room_id: room.room_id,
+      sender_id: user.id,
+      sender_type: "customer",
+      content: messageContent,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+
     socketRef.current.emit("sendMessage", {
       roomId: room.room_id,
       senderId: user.id,
@@ -119,7 +141,10 @@ export default function CustomerChatScreen() {
 
   const uploadMediaFile = async (fileUri: string, isVideo: boolean): Promise<string> => {
     const formData = new FormData();
-    const filename = fileUri.split("/").pop() || (isVideo ? "upload.mp4" : "upload.jpg");
+    let filename = fileUri.split("/").pop() || (isVideo ? "upload.mp4" : "upload.jpg");
+    if (!filename.includes(".")) {
+      filename = `${filename}.${isVideo ? "mp4" : "jpg"}`;
+    }
     const match = /\.(\w+)$/.exec(filename);
     const fileType = isVideo ? "video/mp4" : match ? `image/${match[1]}` : "image/jpeg";
 
@@ -132,9 +157,6 @@ export default function CustomerChatScreen() {
     const res = await fetch("https://tmpfiles.org/api/v1/upload", {
       method: "POST",
       body: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
     });
 
     if (!res.ok) {
@@ -259,15 +281,15 @@ export default function CustomerChatScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-[#F6F8FC]">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F6F8FC", paddingTop: insets.top, paddingBottom: insets.bottom }}>
         <ActivityIndicator size="large" color="#2d6dff" />
         <Text className="mt-3 text-[14px] font-bold text-[#6B7280]">{t("loading", "Đang tải...")}</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
+    <View style={{ flex: 1, backgroundColor: "#F6F8FC", paddingTop: insets.top, paddingBottom: insets.bottom }}>
       {/* Header */}
       <View className="flex-row items-center border-b border-[#E5E7EB] bg-white px-4 py-3 shadow-sm shadow-black/5">
         <Pressable
@@ -309,7 +331,7 @@ export default function CustomerChatScreen() {
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          className="flex-1"
+          style={{ flex: 1 }}
           keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
         >
           <FlatList
@@ -350,7 +372,14 @@ export default function CustomerChatScreen() {
               <Pressable
                 onPress={() => handlePickMedia("image")}
                 disabled={mediaUploading}
-                className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF]"
+                style={{
+                  height: 36,
+                  width: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 18,
+                  backgroundColor: "#F3F4F6",
+                }}
               >
                 <Feather name="image" size={17} color="#2d6dff" />
               </Pressable>
@@ -358,7 +387,15 @@ export default function CustomerChatScreen() {
               <Pressable
                 onPress={() => handlePickMedia("video")}
                 disabled={mediaUploading}
-                className="mr-1 h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF]"
+                style={{
+                  marginRight: 4,
+                  height: 36,
+                  width: 36,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 18,
+                  backgroundColor: "#F3F4F6",
+                }}
               >
                 <Feather name="video" size={17} color="#2d6dff" />
               </Pressable>
@@ -370,16 +407,31 @@ export default function CustomerChatScreen() {
                 placeholderTextColor="#9CA3AF"
                 multiline
                 maxLength={500}
-                className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F3F4F6] px-4 py-2 text-[14px] text-[#111827] border border-[#E5E7EB]"
+                style={{
+                  maxHeight: 100,
+                  minHeight: 40,
+                  flex: 1,
+                  borderRadius: 20,
+                  backgroundColor: "#F3F4F6",
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  fontSize: 14,
+                  color: "#111827",
+                  borderWidth: 1,
+                  borderColor: "#E5E7EB",
+                }}
               />
               <Pressable
                 onPress={handleSend}
                 disabled={!text.trim() || mediaUploading}
-                className={`h-10 w-10 items-center justify-center rounded-full ${
-                  text.trim() && !mediaUploading
-                    ? "bg-[#2d6dff] shadow-md shadow-blue-500/10"
-                    : "bg-[#F3F4F6]"
-                }`}
+                style={{
+                  height: 40,
+                  width: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 20,
+                  backgroundColor: text.trim() && !mediaUploading ? "#2d6dff" : "#F3F4F6",
+                }}
               >
                 <Feather
                   name="send"
@@ -391,6 +443,10 @@ export default function CustomerChatScreen() {
           </View>
         </KeyboardAvoidingView>
       )}
-    </SafeAreaView>
+    </View>
   );
+}
+
+export default function CustomerChatScreenWrapper() {
+  return <CustomerChatScreen />;
 }

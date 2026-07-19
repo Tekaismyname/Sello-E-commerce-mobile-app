@@ -84,6 +84,28 @@ export default function AdminDashboardScreen() {
     };
   }, [data?.systemSummary?.ordersByStatus, orders]);
 
+  const revenueIncreasePercent = useMemo(() => {
+    if (!report || report.yesterdayRevenue === undefined || report.todayRevenue === undefined) {
+      return "+0.0%";
+    }
+    const today = report.todayRevenue;
+    const yesterday = report.yesterdayRevenue;
+    if (yesterday === 0) {
+      return today > 0 ? "+100.0%" : "+0.0%";
+    }
+    const diff = ((today - yesterday) / yesterday) * 100;
+    const sign = diff >= 0 ? "+" : "";
+    return `${sign}${diff.toFixed(1)}%`;
+  }, [report]);
+
+  const statsWithDynamicIncrease = useMemo(() => {
+    if (!data) return null;
+    return {
+      ...data.stats,
+      revenueIncrease: revenueIncreasePercent,
+    };
+  }, [data, revenueIncreasePercent]);
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8F9FB]" edges={["top", "bottom"]}>
       <AdminHeader />
@@ -131,9 +153,9 @@ export default function AdminDashboardScreen() {
           </View>
         )}
 
-        {!loading && !error && data && (
+        {!loading && !error && data && statsWithDynamicIncrease && (
           <>
-            <AdminStatCards data={data.stats} />
+            <AdminStatCards data={statsWithDynamicIncrease} />
             {data.systemSummary && (
               <View className="mt-4 rounded-[16px] bg-white p-5 shadow-sm">
                 <Text className="text-[16px] font-bold text-[#191C1F]">System Today</Text>

@@ -113,7 +113,14 @@ export default function AdminUsersScreen() {
   };
 
   const handleToggleStatus = async (user: AdminUser) => {
-    if (!token || !canUpdateUserStatus) return;
+    if (!canUpdateUserStatus) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to lock/unlock users."
+      );
+      return;
+    }
+    if (!token) return;
 
     const nextStatus = user.status === "blocked" ? "active" : "blocked";
 
@@ -129,7 +136,14 @@ export default function AdminUsersScreen() {
   };
 
   const handleSetRole = async (user: AdminUser, nextRole: "admin" | "customer") => {
-    if (!token || !canUpdateUserRole) return;
+    if (!canUpdateUserRole) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to update user roles."
+      );
+      return;
+    }
+    if (!token) return;
 
     try {
       await adminService.updateUserRole(token, user.id, nextRole, nextRole === "admin" ? 3 : null);
@@ -333,37 +347,35 @@ export default function AdminUsersScreen() {
 
                 <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Quick Actions</Text>
                 <View className="mt-3 gap-3">
-                  {canUpdateUserStatus ? (
+                  <Pressable
+                    onPress={() => handleToggleStatus(selectedUser)}
+                    className={`items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3 ${
+                      !canUpdateUserStatus ? "opacity-50" : ""
+                    }`}
+                  >
+                    <Text className="text-[13px] font-bold text-[#344252]">
+                      {selectedUser.status === "blocked" ? "Unlock Account" : "Lock Account"}
+                    </Text>
+                  </Pressable>
+
+                  <View className="flex-row gap-3">
                     <Pressable
-                      onPress={() => handleToggleStatus(selectedUser)}
-                      className="items-center justify-center rounded-[12px] border border-[#D5DCE5] py-3"
+                      onPress={() => handleSetRole(selectedUser, "customer")}
+                      className={`flex-1 items-center justify-center rounded-[12px] bg-[#EEF2F6] py-3 ${
+                        !canUpdateUserRole ? "opacity-50" : ""
+                      }`}
                     >
-                      <Text className="text-[13px] font-bold text-[#344252]">
-                        {selectedUser.status === "blocked" ? "Unlock Account" : "Lock Account"}
-                      </Text>
+                      <Text className="text-[13px] font-bold text-[#344252]">Set Customer Role</Text>
                     </Pressable>
-                  ) : null}
-
-                  {canUpdateUserRole ? (
-                    <View className="flex-row gap-3">
-                      <Pressable
-                        onPress={() => handleSetRole(selectedUser, "customer")}
-                        className="flex-1 items-center justify-center rounded-[12px] bg-[#EEF2F6] py-3"
-                      >
-                        <Text className="text-[13px] font-bold text-[#344252]">Set Customer Role</Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={() => handleSetRole(selectedUser, "admin")}
-                        className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
-                      >
-                        <Text className="text-[13px] font-bold text-white">Set Admin Role</Text>
-                      </Pressable>
-                    </View>
-                  ) : null}
-
-                  {!canUpdateUserRole && !canUpdateUserStatus ? (
-                    <Text className="text-[12px] text-[#9A6400]">You do not have permission to update users.</Text>
-                  ) : null}
+                    <Pressable
+                      onPress={() => handleSetRole(selectedUser, "admin")}
+                      className={`flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3 ${
+                        !canUpdateUserRole ? "opacity-50" : ""
+                      }`}
+                    >
+                      <Text className="text-[13px] font-bold text-white">Set Admin Role</Text>
+                    </Pressable>
+                  </View>
                 </View>
               </ScrollView>
             )}

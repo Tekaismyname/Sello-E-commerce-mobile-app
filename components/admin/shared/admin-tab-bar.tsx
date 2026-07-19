@@ -48,10 +48,16 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
 
   return (
     <View
-      style={{ paddingBottom: Math.max(insets.bottom, 8) }}
-      className="border-t border-[#F2F3F7] bg-white px-1 pt-1"
+      style={{
+        paddingBottom: Math.max(insets.bottom, 8),
+        borderTopWidth: 1,
+        borderTopColor: "#F2F3F7",
+        backgroundColor: "white",
+        paddingHorizontal: 4,
+        paddingTop: 4,
+      }}
     >
-      <View className="flex-row items-center justify-between">
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         {visibleTabs.map((tab) => {
           const routeIndex = state.routes.findIndex((route) => route.name === tab.key);
 
@@ -92,26 +98,58 @@ export function AdminTabBar({ state, descriptors, navigation }: BottomTabBarProp
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={descriptor.options?.tabBarAccessibilityLabel}
               onPress={onPress}
-              className="h-[56px] flex-1 items-center justify-center"
+              style={{
+                height: 56,
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <View className="relative">
+              <View style={{ position: "relative" }}>
                 <Feather name={tab.icon} size={16} color={tintColor} />
                 {tab.key === "orders" && !isFocused && pendingCount > 0 && (
-                  <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
-                    <Text className="text-[8px] font-bold text-white leading-none">
+                  <View style={{
+                    position: "absolute",
+                    right: -8,
+                    top: -6,
+                    height: 14,
+                    minWidth: 14,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 7,
+                    backgroundColor: "#BA1A1A",
+                    paddingHorizontal: 2,
+                  }}>
+                    <Text style={{ fontSize: 8, fontWeight: "bold", color: "white", lineHeight: 10 }}>
                       {pendingCount}
                     </Text>
                   </View>
                 )}
                 {tab.key === "chats" && !isFocused && pendingChatsCount > 0 && (
-                  <View className="absolute -right-2 -top-1.5 h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#BA1A1A] px-0.5">
-                    <Text className="text-[8px] font-bold text-white leading-none">
+                  <View style={{
+                    position: "absolute",
+                    right: -8,
+                    top: -6,
+                    height: 14,
+                    minWidth: 14,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 7,
+                    backgroundColor: "#BA1A1A",
+                    paddingHorizontal: 2,
+                  }}>
+                    <Text style={{ fontSize: 8, fontWeight: "bold", color: "white", lineHeight: 10 }}>
                       {pendingChatsCount}
                     </Text>
                   </View>
                 )}
               </View>
-              <Text className={`mt-1 text-[10px] font-bold ${isFocused ? "text-[#006397]" : "text-[#97A0AB]"}`}>
+              <Text style={{
+                marginTop: 4,
+                fontSize: 10,
+                fontWeight: "bold",
+                color: isFocused ? "#006397" : "#97A0AB",
+              }}>
                 {tab.label}
               </Text>
             </Pressable>

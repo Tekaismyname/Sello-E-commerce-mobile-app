@@ -32,11 +32,6 @@ export default function AdminCategoryFormScreen() {
         </Pressable>
         <Text className="ml-2 text-[18px] font-extrabold text-[#0F4C6B]">{initialValue ? "Edit Category" : "Add Category"}</Text>
       </View>
-      {!canSubmit ? (
-        <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">You do not have permission to save categories.</Text>
-        </View>
-      ) : null}
 
       <AdminCategoryForm
         initialValue={initialValue}

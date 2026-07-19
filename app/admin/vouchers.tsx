@@ -30,23 +30,67 @@ export default function AdminVouchersScreen() {
   } = useAdminVouchersView(token);
 
   const openCreate = () => {
-    if (!canCreate) return;
+    if (!canCreate) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to create vouchers."
+      );
+      return;
+    }
     router.push("/admin/voucher-form" as Href);
   };
 
   const openEdit = (item: AdminVoucher) => {
-    if (!canUpdate) return;
+    if (!canUpdate) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to edit vouchers."
+      );
+      return;
+    }
     router.push((`/admin/voucher-form?voucherId=${item.id}` as unknown) as Href);
+  };
+
+  const handleToggleStatus = (voucher: AdminVoucher) => {
+    if (!canUpdate) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to edit vouchers."
+      );
+      return;
+    }
+    updateVoucherStatus(voucher.id, !voucher.isActive).catch((err: any) => {
+      Alert.alert("Error", err?.message ?? "Cannot update voucher.");
+    });
+  };
+
+  const handleDeleteVoucher = (voucher: AdminVoucher) => {
+    if (!canDelete) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to delete vouchers."
+      );
+      return;
+    }
+    Alert.alert("Delete Voucher", `Delete voucher ${voucher.code}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteVoucher(voucher.id).catch((err: any) => {
+            Alert.alert("Error", err?.message ?? "Cannot delete voucher.");
+          });
+        },
+      },
+    ]);
   };
 
   return (
     <SafeAreaView className="flex-1 bg-[#F3F5FA]" edges={["top", "bottom"]}>
       <AdminHeader title="Manage Vouchers" />
       <ScrollView className="flex-1" contentContainerClassName="p-4 pb-24" showsVerticalScrollIndicator={false}>
-        <AdminVoucherToolbar value={search} onChange={setSearch} onOpenCreate={openCreate} canCreate={canCreate} />
-        {!canCreate ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to create vouchers.</Text>
-        ) : null}
+        <AdminVoucherToolbar value={search} onChange={setSearch} onOpenCreate={openCreate} canCreate={true} />
 
         {!canRead ? (
           <View className="mt-4 rounded-[14px] bg-white p-4">
@@ -66,26 +110,9 @@ export default function AdminVouchersScreen() {
               <AdminVoucherCard
                 key={item.id}
                 voucher={item}
-                onEdit={canUpdate ? openEdit : undefined}
-                onToggleStatus={canUpdate ? (voucher) => {
-                  updateVoucherStatus(voucher.id, !voucher.isActive).catch((err: any) => {
-                    Alert.alert("Error", err?.message ?? "Cannot update voucher.");
-                  });
-                } : undefined}
-                onDelete={canDelete ? (voucher) => {
-                  Alert.alert("Delete Voucher", `Delete voucher ${voucher.code}?`, [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Delete",
-                      style: "destructive",
-                      onPress: () => {
-                        deleteVoucher(voucher.id).catch((err: any) => {
-                          Alert.alert("Error", err?.message ?? "Cannot delete voucher.");
-                        });
-                      },
-                    },
-                  ]);
-                } : undefined}
+                onEdit={openEdit}
+                onToggleStatus={handleToggleStatus}
+                onDelete={handleDeleteVoucher}
               />
             ))}
 

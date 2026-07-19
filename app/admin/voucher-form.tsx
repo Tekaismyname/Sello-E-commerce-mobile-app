@@ -34,11 +34,6 @@ export default function AdminVoucherFormScreen() {
           {initialValue ? "Edit Voucher" : "Create New Voucher"}
         </Text>
       </View>
-      {!canSubmit ? (
-        <View className="px-4 pt-3">
-          <Text className="text-[12px] text-[#9A6400]">You do not have permission to save vouchers.</Text>
-        </View>
-      ) : null}
 
       <AdminVoucherForm
         initialValue={initialValue}

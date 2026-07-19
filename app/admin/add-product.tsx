@@ -86,6 +86,45 @@ export default function AddProductScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  const handleBasePriceChange = (val: string) => {
+    const digits = onlyDigits(val);
+    setBasePrice(digits);
+    if (variants.length === 1) {
+      setVariants((prev) =>
+        prev.map((v) => ({
+          ...v,
+          price: Number(digits || "0"),
+        })),
+      );
+    }
+  };
+
+  const handleStockQtyChange = (val: string) => {
+    const digits = onlyDigits(val);
+    setStockQty(digits);
+    if (variants.length === 1) {
+      setVariants((prev) =>
+        prev.map((v) => ({
+          ...v,
+          stockQty: Number(digits || "0"),
+        })),
+      );
+    }
+  };
+
+  const handleVariantsChange = (newVariants: AdminProductVariant[]) => {
+    setVariants(newVariants);
+    if (newVariants.length === 1) {
+      const v = newVariants[0];
+      if (v.price !== undefined && v.price !== null) {
+        setBasePrice(String(v.price));
+      }
+      if (v.stockQty !== undefined && v.stockQty !== null) {
+        setStockQty(String(v.stockQty));
+      }
+    }
+  };
+
   useEffect(() => {
     if (!hasWritePermission) {
       Alert.alert(
@@ -252,25 +291,23 @@ export default function AddProductScreen() {
       .map((item) => item.trim())
       .filter(Boolean);
     const normalizedVariants = variants
-      .map((variant) => ({
-        skuVariant: variant.skuVariant?.trim() || undefined,
-        color: variant.color?.trim() || undefined,
-        size: variant.size?.trim() || undefined,
-        price:
-          variant.price !== undefined && variant.price !== null
-            ? Number(variant.price)
-            : basePriceNumber,
-        stockQty:
-          variant.stockQty !== undefined && variant.stockQty !== null
-            ? Number(variant.stockQty)
-            : stockQtyNumber,
-        weight:
-          variant.weight !== undefined && variant.weight !== null
-            ? Number(variant.weight)
-            : null,
-        imageUrl: variant.imageUrl?.trim() || undefined,
-        status: variant.status ?? "active",
-      }))
+      .map((variant) => {
+        // If this is a single variant product, we always sync its price and stock with the root inputs.
+        const isSingleVariant = variants.length === 1;
+        return {
+          skuVariant: variant.skuVariant?.trim() || undefined,
+          color: variant.color?.trim() || undefined,
+          size: variant.size?.trim() || undefined,
+          price: isSingleVariant ? basePriceNumber : (variant.price !== undefined && variant.price !== null ? Number(variant.price) : basePriceNumber),
+          stockQty: isSingleVariant ? stockQtyNumber : (variant.stockQty !== undefined && variant.stockQty !== null ? Number(variant.stockQty) : stockQtyNumber),
+          weight:
+            variant.weight !== undefined && variant.weight !== null
+              ? Number(variant.weight)
+              : null,
+          imageUrl: variant.imageUrl?.trim() || undefined,
+          status: variant.status ?? "active",
+        };
+      })
       .filter((variant) => Number.isFinite(variant.price) && variant.price > 0);
 
     const payload = {
@@ -317,7 +354,10 @@ export default function AddProductScreen() {
         "Thanh cong",
         editingProductId ? "Product updated." : "New product created.",
       );
-      router.replace("/admin/products" as Href);
+      router.replace({
+        pathname: "/admin/products",
+        params: { refresh: Date.now().toString() },
+      } as any);
     } catch (error: any) {
       Alert.alert("Cannot save", error?.message ?? "An error occurred.");
     } finally {
@@ -361,15 +401,15 @@ export default function AddProductScreen() {
               onNameChange={setName}
               onCategoryIdChange={setCategoryId}
             />
-            <ProductPriceStock
+             <ProductPriceStock
               basePrice={basePrice}
               comparePrice={comparePrice}
               stockQty={stockQty}
-              onBasePriceChange={(value) => setBasePrice(onlyDigits(value))}
+              onBasePriceChange={handleBasePriceChange}
               onComparePriceChange={(value) =>
                 setComparePrice(onlyDigits(value))
               }
-              onStockQtyChange={(value) => setStockQty(onlyDigits(value))}
+              onStockQtyChange={handleStockQtyChange}
             />
             <ProductSpecs
               sku={sku}
@@ -382,7 +422,7 @@ export default function AddProductScreen() {
               }
             />
             <ProductFeatures features={features} onChange={setFeatures} />
-            <ProductVariants variants={variants} onChange={setVariants} />
+            <ProductVariants variants={variants} onChange={handleVariantsChange} />
             <ProductDescription
               description={description}
               onDescriptionChange={setDescription}

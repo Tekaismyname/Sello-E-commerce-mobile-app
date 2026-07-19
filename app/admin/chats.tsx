@@ -11,7 +11,7 @@ import {
   Image,
   DeviceEventEmitter,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/auth-context";
 import { chatService } from "@/services/chat.service";
@@ -30,8 +30,9 @@ try {
   console.warn("Native Video module not found, fallback enabled.");
 }
 
-export default function AdminChatsScreen() {
+function AdminChatsScreen() {
   const { token, user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
 
@@ -124,8 +125,17 @@ export default function AdminChatsScreen() {
     socket.on("newMessage", (msg: ChatMessage) => {
       if (!msg || !msg.message_id) return;
       setMessages((prev) => {
-        if (prev.some((m) => m.message_id === msg.message_id)) return prev;
-        return [...prev, msg];
+        // Remove the temporary optimistic message (with negative ID) if it has the same content
+        const filtered = prev.filter(
+          (item) =>
+            !(
+              item.message_id < 0 &&
+              item.content === msg.content &&
+              item.sender_type === msg.sender_type
+            )
+        );
+        if (filtered.some((m) => m.message_id === msg.message_id)) return filtered;
+        return [...filtered, msg];
       });
 
       if (msg.sender_type === "customer") {
@@ -144,6 +154,18 @@ export default function AdminChatsScreen() {
     const messageContent = text.trim();
     setText("");
 
+    // Create optimistic message to display immediately in UI
+    const optimisticMessage: ChatMessage = {
+      message_id: -Date.now(), // Temporary negative ID
+      room_id: selectedRoom.room_id,
+      sender_id: user.id,
+      sender_type: "admin",
+      content: messageContent,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+
     socketRef.current.emit("sendMessage", {
       roomId: selectedRoom.room_id,
       senderId: user.id,
@@ -154,9 +176,12 @@ export default function AdminChatsScreen() {
 
   const uploadMediaFile = async (fileUri: string, isVideo: boolean): Promise<string> => {
     const formData = new FormData();
-    const filename = fileUri.split("/").pop() || (isVideo ? "upload.mp4" : "upload.jpg");
+    let filename = fileUri.split("/").pop() || (isVideo ? "upload.mp4" : "upload.jpg");
+    if (!filename.includes(".")) {
+      filename = `${filename}.${isVideo ? "mp4" : "jpg"}`;
+    }
     const match = /\.(\w+)$/.exec(filename);
-    const fileType = isVideo ? "video/mp4" : match ? `image/${match[1]}` : `image/jpeg`;
+    const fileType = isVideo ? "video/mp4" : match ? `image/${match[1]}` : "image/jpeg";
 
     formData.append("file", {
       uri: fileUri,
@@ -167,9 +192,6 @@ export default function AdminChatsScreen() {
     const res = await fetch("https://tmpfiles.org/api/v1/upload", {
       method: "POST",
       body: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
     });
 
     if (!res.ok) {
@@ -399,7 +421,7 @@ export default function AdminChatsScreen() {
 
   if (!hasPermission) {
     return (
-      <SafeAreaView className="flex-1 bg-[#F6F8FC] items-center justify-center p-6">
+      <View style={{ flex: 1, backgroundColor: "#F6F8FC", alignItems: "center", justifyContent: "center", padding: 24, paddingTop: insets.top, paddingBottom: insets.bottom }}>
         <Feather name="lock" size={48} color="#EF4444" />
         <Text className="mt-4 text-center text-[16px] font-bold text-[#111827]">
           Access Denied
@@ -407,14 +429,14 @@ export default function AdminChatsScreen() {
         <Text className="mt-2 text-center text-[14px] leading-5 text-[#6B7280]">
           Your account does not have permission to access support chat.
         </Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Room List View
   if (!selectedRoom) {
     return (
-      <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
+      <View style={{ flex: 1, backgroundColor: "#F6F8FC", paddingTop: insets.top, paddingBottom: insets.bottom }}>
         {/* Header */}
         <View className="flex-row items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3 shadow-sm shadow-black/5">
           {isSelectionMode ? (
@@ -513,13 +535,13 @@ export default function AdminChatsScreen() {
             }
           />
         )}
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Conversation Detail View
   return (
-    <SafeAreaView className="flex-1 bg-[#F6F8FC]" edges={["top", "bottom"]}>
+    <View style={{ flex: 1, backgroundColor: "#F6F8FC", paddingTop: insets.top, paddingBottom: insets.bottom }}>
       {/* Header */}
       <View className="flex-row items-center border-b border-[#E5E7EB] bg-white px-4 py-3 shadow-sm shadow-black/5">
         <Pressable
@@ -552,7 +574,7 @@ export default function AdminChatsScreen() {
       {/* Messages list */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
+        style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         {loadingHistory ? (
@@ -586,7 +608,14 @@ export default function AdminChatsScreen() {
             <Pressable
               onPress={() => handlePickMedia("image")}
               disabled={mediaUploading}
-              className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF]"
+              style={{
+                height: 36,
+                width: 36,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 18,
+                backgroundColor: "#F3F4F6",
+              }}
             >
               <Feather name="image" size={17} color="#0F6CBD" />
             </Pressable>
@@ -595,7 +624,15 @@ export default function AdminChatsScreen() {
             <Pressable
               onPress={() => handlePickMedia("video")}
               disabled={mediaUploading}
-              className="h-9 w-9 items-center justify-center rounded-full bg-[#F3F4F6] active:bg-[#EAF4FF] mr-1"
+              style={{
+                marginRight: 4,
+                height: 36,
+                width: 36,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 18,
+                backgroundColor: "#F3F4F6",
+              }}
             >
               <Feather name="video" size={17} color="#0F6CBD" />
             </Pressable>
@@ -607,22 +644,41 @@ export default function AdminChatsScreen() {
               placeholderTextColor="#9CA3AF"
               multiline
               maxLength={500}
-              className="max-h-[100px] min-h-[40px] flex-1 rounded-[20px] bg-[#F3F4F6] px-4 py-2 text-[14px] text-[#111827] border border-[#E5E7EB]"
+              style={{
+                maxHeight: 100,
+                minHeight: 40,
+                flex: 1,
+                borderRadius: 20,
+                backgroundColor: "#F3F4F6",
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                fontSize: 14,
+                color: "#111827",
+                borderWidth: 1,
+                borderColor: "#E5E7EB",
+              }}
             />
             <Pressable
               onPress={handleSend}
               disabled={!text.trim() || mediaUploading}
-              className={`h-10 w-10 items-center justify-center rounded-full ${
-                text.trim() && !mediaUploading
-                  ? "bg-[#0F6CBD] shadow-md shadow-blue-500/10"
-                  : "bg-[#F3F4F6]"
-              }`}
+              style={{
+                height: 40,
+                width: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 20,
+                backgroundColor: text.trim() && !mediaUploading ? "#0F6CBD" : "#F3F4F6",
+              }}
             >
               <Feather name="send" size={16} color={text.trim() && !mediaUploading ? "white" : "#9CA3AF"} />
             </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
+}
+
+export default function AdminChatsScreenWrapper() {
+  return <AdminChatsScreen />;
 }

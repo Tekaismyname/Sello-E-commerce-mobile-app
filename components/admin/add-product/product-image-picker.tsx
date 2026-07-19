@@ -75,7 +75,10 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
 
   const uploadImageFile = async (fileUri: string): Promise<string> => {
     const formData = new FormData();
-    const filename = fileUri.split("/").pop() || "upload.jpg";
+    let filename = fileUri.split("/").pop() || "upload.jpg";
+    if (!filename.includes(".")) {
+      filename = `${filename}.jpg`;
+    }
     const match = /\.(\w+)$/.exec(filename);
     const fileType = match ? `image/${match[1]}` : `image/jpeg`;
 
@@ -93,10 +96,7 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
     const res = await fetch(`${API_BASE_URL}/admin/upload`, {
       method: "POST",
       body: formData,
-      headers: {
-        ...headers,
-        "Content-Type": "multipart/form-data",
-      },
+      headers,
     });
 
     if (!res.ok) {
@@ -107,12 +107,11 @@ export function ProductImagePicker({ images, onChange }: ProductImagePickerProps
     const json = await res.json();
     return `${API_BASE_URL}${json.url}`;
   };
-
   const pickImage = async (index: number) => {
     const options: ImagePicker.ImagePickerOptions = {
       mediaTypes: ["images"],
       allowsEditing: true,
-      quality: 0.8,
+      quality: 0.4,
     };
 
     const result = await ImagePicker.launchImageLibraryAsync(options);

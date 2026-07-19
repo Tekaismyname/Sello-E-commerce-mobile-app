@@ -4,6 +4,8 @@ import { AdminStatOverview } from "@/types/admin";
 import { router } from "expo-router";
 
 export function AdminStatCards({ data }: { data: AdminStatOverview }) {
+  const isNegative = String(data.revenueIncrease ?? "").startsWith("-");
+
   return (
     <View className="gap-4">
       {/* Doanh thu */}
@@ -12,9 +14,19 @@ export function AdminStatCards({ data }: { data: AdminStatOverview }) {
           <View className="h-10 w-10 items-center justify-center rounded-[10px] bg-[#E1F0FF]">
             <Feather name="credit-card" size={20} color="#006397" />
           </View>
-          <View className="rounded-full bg-[#E8F5E9] px-2 py-1 flex-row items-center gap-1">
-            <Feather name="trending-up" size={12} color="#064E3B" />
-            <Text className="text-[12px] font-bold text-[#064E3B]">+12.5%</Text>
+          <View className={`rounded-full px-2 py-1 flex-row items-center gap-1 ${
+            isNegative ? "bg-[#FFF1F0]" : "bg-[#E8F5E9]"
+          }`}>
+            <Feather
+              name={isNegative ? "trending-down" : "trending-up"}
+              size={12}
+              color={isNegative ? "#BA1A1A" : "#064E3B"}
+            />
+            <Text className={`text-[12px] font-bold ${
+              isNegative ? "text-[#BA1A1A]" : "text-[#064E3B]"
+            }`}>
+              {data.revenueIncrease}
+            </Text>
           </View>
         </View>
         <Text className="text-[14px] text-[#3F4850] mb-1">Total Revenue</Text>

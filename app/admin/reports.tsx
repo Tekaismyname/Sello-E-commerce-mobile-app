@@ -132,23 +132,42 @@ export default function AdminReportsScreen() {
 
           <View className="mt-4 flex-row gap-2">
             <Pressable
-              onPress={() => handleExport("csv")}
-              disabled={exporting || !report || !canExportReports}
-              className="flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-3 disabled:opacity-50"
+              onPress={() => {
+                if (!canExportReports) {
+                  Alert.alert(
+                    "No Permission",
+                    "Your account does not have permission to export reports."
+                  );
+                  return;
+                }
+                handleExport("csv");
+              }}
+              disabled={exporting || !report}
+              className={`flex-1 items-center justify-center rounded-[10px] bg-[#006397] py-3 ${
+                !canExportReports ? "opacity-50" : ""
+              }`}
             >
               <Text className="text-[12px] font-bold text-white">Export CSV</Text>
             </Pressable>
             <Pressable
-              onPress={() => handleExport("json")}
-              disabled={exporting || !report || !canExportReports}
-              className="flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3 disabled:opacity-50"
+              onPress={() => {
+                if (!canExportReports) {
+                  Alert.alert(
+                    "No Permission",
+                    "Your account does not have permission to export reports."
+                  );
+                  return;
+                }
+                handleExport("json");
+              }}
+              disabled={exporting || !report}
+              className={`flex-1 items-center justify-center rounded-[10px] border border-[#006397] py-3 ${
+                !canExportReports ? "opacity-50" : ""
+              }`}
             >
               <Text className="text-[12px] font-bold text-[#006397]">Export JSON</Text>
             </Pressable>
           </View>
-          {!canExportReports ? (
-            <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to export reports.</Text>
-          ) : null}
         </View>
 
         {loading && (

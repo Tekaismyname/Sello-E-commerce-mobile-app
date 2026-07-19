@@ -40,7 +40,7 @@ export default function AdminProductsScreen() {
   const { token } = useAuth();
   const { hasPermission } = usePermissions();
   const router = useRouter();
-  const { status } = useLocalSearchParams<{ status?: string }>();
+  const { status, refresh } = useLocalSearchParams<{ status?: string; refresh?: string }>();
 
   const canReadProducts = hasPermission("products:read");
   const canCreateProducts = hasPermission("products:create");
@@ -56,6 +56,11 @@ export default function AdminProductsScreen() {
       setStatusFilter(status as ProductStatusFilter);
     }
   }, [status]);
+
+  // Force reload products list whenever the screen is focused or the refresh token parameter updates
+  useEffect(() => {
+    fetchProducts();
+  }, [refresh, fetchProducts]);
 
   const [data, setData] = useState<AdminProductsData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
@@ -119,12 +124,24 @@ export default function AdminProductsScreen() {
   );
 
   const handleAddProduct = () => {
-    if (!canCreateProducts) return;
+    if (!canCreateProducts) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to add products."
+      );
+      return;
+    }
     router.push("/admin/add-product");
   };
 
   const handleEditProduct = (product: AdminProduct) => {
-    if (!canUpdateProducts) return;
+    if (!canUpdateProducts) {
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to edit products."
+      );
+      return;
+    }
 
     const params = new URLSearchParams({
       productId: String(product.productId ?? product.id),
@@ -141,7 +158,10 @@ export default function AdminProductsScreen() {
 
   const handleUpdateStatus = async (product: AdminProduct, nextStatus: ProductStatusValue) => {
     if (!token || !product.productId || !canUpdateProductStatus) {
-      Alert.alert("Cannot update", "You do not have permission or missing valid product ID.");
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to update product status."
+      );
       return;
     }
 
@@ -161,7 +181,10 @@ export default function AdminProductsScreen() {
 
   const handleDeleteProduct = (product: AdminProduct) => {
     if (!token || !canDeleteProducts || !product.productId) {
-      Alert.alert("Khong the xoa", "Ban khong co quyen hoac thieu product id hop le.");
+      Alert.alert(
+        "No Permission",
+        "Your account does not have permission to delete products."
+      );
       return;
     }
 
@@ -298,7 +321,10 @@ export default function AdminProductsScreen() {
           )}
         </ScrollView>
 
-        {canCreateProducts ? <AdminFab onPress={handleAddProduct} /> : null}
+        <AdminFab
+          onPress={handleAddProduct}
+          style={{ opacity: canCreateProducts ? 1 : 0.6 }}
+        />
       </KeyboardAvoidingView>
 
       <Modal visible={!!selectedProduct} animationType="slide" transparent onRequestClose={() => setSelectedProduct(null)}>
@@ -320,7 +346,11 @@ export default function AdminProductsScreen() {
                     resizeMode="cover"
                   />
                   <Text className="text-[17px] font-bold text-[#191C1F]">{selectedProduct.name}</Text>
-                  <Text className="mt-1 text-[13px] text-[#5b6470]">{selectedProduct.category}</Text>
+                  <Text className="mt-1 text-[13px] text-[#5b6470]">
+                    {typeof selectedProduct.category === "object" && selectedProduct.category
+                      ? (selectedProduct.category as any).name
+                      : selectedProduct.category}
+                  </Text>
                   <View className="mt-4 gap-2">
                     <Text className="text-[13px] text-[#3f4850]">
                       Product ID: <Text className="font-bold">{selectedProduct.productId ?? selectedProduct.id}</Text>
@@ -340,55 +370,47 @@ export default function AdminProductsScreen() {
                   </View>
                 </View>
 
-                {canUpdateProducts ? (
-                  <View className="mt-5 flex-row gap-3">
-                    <Pressable
-                      onPress={() => handleEditProduct(selectedProduct)}
-                      className="flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3"
-                    >
-                      <Text className="text-[13px] font-bold text-white">Edit Info</Text>
-                    </Pressable>
-                    {canDeleteProducts ? (
+                <View className="mt-5 flex-row gap-3">
+                  <Pressable
+                    onPress={() => handleEditProduct(selectedProduct)}
+                    className={`flex-1 items-center justify-center rounded-[12px] bg-[#006397] py-3 ${
+                      !canUpdateProducts ? "opacity-50" : ""
+                    }`}
+                  >
+                    <Text className="text-[13px] font-bold text-white">Edit Info</Text>
+                  </Pressable>
+                  <Pressable
+                    disabled={updating}
+                    onPress={() => handleDeleteProduct(selectedProduct)}
+                    className={`flex-1 items-center justify-center rounded-[12px] py-3 ${
+                      !canDeleteProducts ? "opacity-50 bg-[#d93025]/50" : "bg-[#d93025]"
+                    }`}
+                  >
+                    <Text className="text-[13px] font-bold text-white">Delete Product</Text>
+                  </Pressable>
+                </View>
+
+                <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Change Status</Text>
+                <View className="mt-3 flex-row flex-wrap gap-2">
+                  {PRODUCT_STATUS_OPTIONS.filter((status) => status !== "all").map((status) => {
+                    const typedStatus = status as ProductStatusValue;
+                    const isActive = selectedProduct.status === typedStatus;
+                    return (
                       <Pressable
+                        key={typedStatus}
                         disabled={updating}
-                        onPress={() => handleDeleteProduct(selectedProduct)}
-                        className={`flex-1 items-center justify-center rounded-[12px] py-3 ${
-                          updating ? "bg-[#f4c7c5]" : "bg-[#d93025]"
-                        }`}
+                        onPress={() => handleUpdateStatus(selectedProduct, typedStatus)}
+                        className={`rounded-full px-4 py-2 ${
+                          isActive ? "bg-[#006397]" : "bg-[#E8EDF2]"
+                        } ${!canUpdateProductStatus ? "opacity-50" : ""}`}
                       >
-                        <Text className="text-[13px] font-bold text-white">Delete Product</Text>
+                        <Text className={`text-[12px] font-bold ${isActive ? "text-white" : "text-[#44515F]"}`}>
+                          {typedStatus}
+                        </Text>
                       </Pressable>
-                    ) : null}
-                  </View>
-                ) : null}
-
-                {canUpdateProductStatus ? (
-                  <>
-                    <Text className="mt-5 text-[12px] font-bold uppercase tracking-[0.6px] text-[#6b7682]">Change Status</Text>
-                    <View className="mt-3 flex-row flex-wrap gap-2">
-                      {PRODUCT_STATUS_OPTIONS.filter((status) => status !== "all").map((status) => {
-                        const typedStatus = status as ProductStatusValue;
-                        const isActive = selectedProduct.status === typedStatus;
-                        return (
-                          <Pressable
-                            key={typedStatus}
-                            disabled={updating || isActive}
-                            onPress={() => handleUpdateStatus(selectedProduct, typedStatus)}
-                            className={`rounded-full px-4 py-2 ${isActive ? "bg-[#006397]" : "bg-[#E8EDF2]"}`}
-                          >
-                            <Text className={`text-[12px] font-bold ${isActive ? "text-white" : "text-[#44515F]"}`}>
-                              {typedStatus}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-                  </>
-                ) : null}
-
-                {!canUpdateProducts && !canUpdateProductStatus && !canDeleteProducts ? (
-                  <Text className="mt-5 text-[12px] text-[#9A6400]">You do not have permission to update products.</Text>
-                ) : null}
+                    );
+                  })}
+                </View>
               </ScrollView>
             ) : null}
           </View>

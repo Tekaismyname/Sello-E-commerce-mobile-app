@@ -12,8 +12,8 @@ import { buildOrderPaymentHref } from "@/utils/order-payment";
 import { CANCEL_REASON_OPTIONS } from "@/utils/order-reasons";
 import { prepareOrderItemsForCheckout } from "@/utils/order-reorder";
 import { Feather } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, Href, router } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View, LayoutAnimation, Platform, UIManager } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -28,6 +28,14 @@ export default function OrdersScreen() {
   const { data: homeData } = useHomeData();
   const { filteredOrders, filter, loading, error, setFilter, fetchOrders } = useOrdersView(token);
   const { t } = useSettings();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        fetchOrders();
+      }
+    }, [token, fetchOrders])
+  );
 
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const [cancelReasonCode, setCancelReasonCode] = useState<string | null>(null);

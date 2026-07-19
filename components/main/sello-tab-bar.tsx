@@ -31,15 +31,29 @@ export function SelloTabBar({ state, descriptors, navigation }: BottomTabBarProp
 
   return (
     <View
-      style={{ paddingBottom: Math.max(insets.bottom, 8) }}
-      className="border-t border-[#e8edf4] bg-white px-2 pt-1"
+      style={{
+        paddingBottom: Math.max(insets.bottom, 8),
+        borderTopWidth: 1,
+        borderTopColor: "#e8edf4",
+        backgroundColor: "white",
+        paddingHorizontal: 8,
+        paddingTop: 4,
+      }}
     >
-      <View className="flex-row items-center justify-between">
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         {tabs.map((tab) => {
           const routeIndex = state.routes.findIndex((route) => routeKey(route.name) === tab.key);
 
           if (routeIndex < 0) {
-            return <View key={tab.key} className="h-[56px] flex-1" />;
+            return (
+              <View
+                key={tab.key}
+                style={{
+                  height: 56,
+                  flex: 1,
+                }}
+              />
+            );
           }
 
           const route = state.routes[routeIndex];
@@ -76,13 +90,21 @@ export function SelloTabBar({ state, descriptors, navigation }: BottomTabBarProp
               testID={descriptor.options?.tabBarButtonTestID}
               onPress={onPress}
               onLongPress={onLongPress}
-              className="h-[56px] flex-1 items-center justify-center"
+              style={{
+                height: 56,
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <Feather name={tab.icon} size={18} color={tintColor} />
               <Text
-                className={`mt-1 text-[11px] font-semibold ${
-                  isFocused ? "text-[#2d6dff]" : "text-[#8c96a2]"
-                }`}
+                style={{
+                  marginTop: 4,
+                  fontSize: 11,
+                  fontWeight: "600",
+                  color: isFocused ? "#2d6dff" : "#8c96a2",
+                }}
               >
                 {tab.label}
               </Text>

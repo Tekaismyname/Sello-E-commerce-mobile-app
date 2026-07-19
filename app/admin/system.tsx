@@ -421,19 +421,26 @@ export default function AdminSystemScreen() {
               )}
             </View>
 
-            {canUpdateSystemConfig ? (
-              <Pressable
-                onPress={handleSave}
-                disabled={saving}
-                className="mt-5 items-center justify-center rounded-[14px] bg-[#006397] py-4"
-              >
-                <Text className="text-[14px] font-bold text-white">
-                  {saving ? "Saving..." : "Save System Config"}
-                </Text>
-              </Pressable>
-            ) : (
-              <Text className="mt-5 text-[12px] text-[#9A6400]">You do not have permission to update system config.</Text>
-            )}
+            <Pressable
+              onPress={() => {
+                if (!canUpdateSystemConfig) {
+                  Alert.alert(
+                    "No Permission",
+                    "Your account does not have permission to update system config."
+                  );
+                  return;
+                }
+                handleSave();
+              }}
+              disabled={saving}
+              className={`mt-5 items-center justify-center rounded-[14px] bg-[#006397] py-4 ${
+                !canUpdateSystemConfig ? "opacity-50" : ""
+              }`}
+            >
+              <Text className="text-[14px] font-bold text-white">
+                {saving ? "Saving..." : "Save System Config"}
+              </Text>
+            </Pressable>
           </>
         )}
       </ScrollView>

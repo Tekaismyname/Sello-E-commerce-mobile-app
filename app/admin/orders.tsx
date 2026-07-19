@@ -10,7 +10,8 @@ import { adminService } from "@/services/admin.service";
 import { AdminOrder, AdminOrderStatus } from "@/types/admin";
 import { getReasonLabel } from "@/utils/order-reasons";
 import { Image as ExpoImage } from "expo-image";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -62,6 +63,14 @@ export default function AdminOrdersScreen() {
   const [statusDraft, setStatusDraft] = useState<AdminOrderStatus>("pending");
   const [statusNote, setStatusNote] = useState("");
   const [savingStatus, setSavingStatus] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (token && canReadOrders) {
+        fetchOrders();
+      }
+    }, [token, canReadOrders, fetchOrders])
+  );
 
   useEffect(() => {
     if (selectedOrder) {
@@ -177,9 +186,6 @@ export default function AdminOrdersScreen() {
           disableExport={!canExportReport}
           disableCreate
         />
-        {!canExportReport ? (
-          <Text className="mt-2 text-[12px] text-[#9A6400]">You do not have permission to export reports.</Text>
-        ) : null}
 
         {loading ? (
           <View className="mt-8 items-center">
@@ -477,9 +483,7 @@ export default function AdminOrdersScreen() {
                       </Pressable>
                     </View>
                   )
-                ) : (
-                  <Text className="mt-4 text-[12px] text-[#9A6400]">You do not have permission to update order status.</Text>
-                )}
+                ) : null}
               </ScrollView>
             ) : null}
           </View>

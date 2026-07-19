@@ -1,4 +1,38 @@
 import "../global.css";
+import { NavigationStateContext } from "@react-navigation/core";
+import { LinkingContext, UnhandledLinkingContext } from "@react-navigation/native";
+
+// Prevent Object.entries/Object.assign traversal crashes from React Navigation getter traps
+try {
+  if (NavigationStateContext && NavigationStateContext._currentValue) {
+    const val = NavigationStateContext._currentValue;
+    const dummyFunc = () => undefined;
+    Object.defineProperties(val, {
+      getKey: { get: undefined, value: dummyFunc, configurable: true, writable: true },
+      setKey: { get: undefined, value: dummyFunc, configurable: true, writable: true },
+      getState: { get: undefined, value: dummyFunc, configurable: true, writable: true },
+      setState: { get: undefined, value: dummyFunc, configurable: true, writable: true },
+      getIsInitial: { get: undefined, value: dummyFunc, configurable: true, writable: true },
+    });
+  }
+  if (LinkingContext && LinkingContext._currentValue) {
+    Object.defineProperty(LinkingContext._currentValue, "options", {
+      get: undefined,
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+  }
+  if (UnhandledLinkingContext && UnhandledLinkingContext._currentValue) {
+    Object.defineProperties(UnhandledLinkingContext._currentValue, {
+      lastUnhandledLink: { get: undefined, value: undefined, configurable: true, writable: true },
+      setLastUnhandledLink: { get: undefined, value: () => undefined, configurable: true, writable: true },
+    });
+  }
+} catch (e) {
+  console.warn("Failed to apply navigation context monkey-patches:", e);
+}
+
 import { useEffect, useRef } from "react";
 import {
   DarkTheme,
